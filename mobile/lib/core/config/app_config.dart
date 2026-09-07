@@ -43,6 +43,6 @@ class AppConfig {
   /// FastAPI backend can verify. Also empty by default.
   static const String googleServerClientId = String.fromEnvironment(
     'GOOGLE_SERVER_CLIENT_ID',
-    defaultValue: '',
+    defaultValue: '25428716712-l0shacb415h281dmr7q1hd3fs6c3vha3.apps.googleusercontent.com',
   );
 }
