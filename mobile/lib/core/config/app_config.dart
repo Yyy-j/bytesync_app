@@ -35,7 +35,8 @@ class AppConfig {
   /// value as "Google sign-in not configured yet" rather than crashing.
   static const String googleClientId = String.fromEnvironment(
     'GOOGLE_CLIENT_ID',
-    defaultValue: '',
+    defaultValue:
+        '25428716712-6ou134auo1b4lmj5pnc9jn20f5oh8uuu.apps.googleusercontent.com',
   );
 
   /// Server client id (Web client) used to request an ID token that the
