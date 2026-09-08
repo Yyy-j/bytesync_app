@@ -52,11 +52,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return location == '/splash' ? null : '/splash';
         }
         if (pairState is PairConnected) {
-          final canShowInvite = pairState.showInviteCode && location == '/pairing';
-          if (canShowInvite) return null;
-          return (location == '/login' || location == '/splash' || location == '/pairing')
-              ? '/'
-              : null;
+          return (location == '/login' || location == '/splash') ? '/' : null;
         }
         return (location == '/login' || location == '/splash') ? '/pairing' : null;
       }

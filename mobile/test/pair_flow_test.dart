@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:bytesync/app/app.dart';
@@ -23,6 +24,16 @@ final _pair = Pair(
   inviteCode: 'ABC123',
   members: const [
     PairMember(userId: 'user-1', displayName: 'One', avatarUrl: null, isSelf: true),
+  ],
+  createdAt: DateTime(2026),
+);
+
+final _completedPair = Pair(
+  pairId: 'pair-1',
+  inviteCode: 'ABC123',
+  members: const [
+    PairMember(userId: 'user-1', displayName: 'One', avatarUrl: null, isSelf: true),
+    PairMember(userId: 'user-2', displayName: 'Two', avatarUrl: null, isSelf: false),
   ],
   createdAt: DateTime(2026),
 );
@@ -73,6 +84,15 @@ class _FakePairRepository implements PairRepository {
 class _FixedAuthController extends AuthController {
   @override
   AuthState build() => AuthAuthenticated(_user);
+}
+
+class _FixedPairController extends PairController {
+  _FixedPairController(this.pair);
+
+  final Pair pair;
+
+  @override
+  PairState build() => PairConnected(pair);
 }
 
 Future<void> _settle(WidgetTester tester) async {
@@ -134,7 +154,8 @@ void main() {
 
     GoRouter.of(tester.element(find.byType(HomeShell))).go('/pairing');
     await _settle(tester);
-    expect(find.byType(PairingPage), findsNothing);
+    expect(find.byType(PairingPage), findsOneWidget);
+    expect(find.text('ABC123'), findsOneWidget);
   });
 
   test('create and join update pair state', () async {
@@ -195,5 +216,64 @@ void main() {
 
     await container.read(authControllerProvider.notifier).signOut();
     expect(container.read(pairControllerProvider), isA<PairInitial>());
+  });
+
+  testWidgets('PairConnected 始终显示邀请码和单成员等待状态', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(_pair),
+          ),
+        ],
+        child: const MaterialApp(home: PairingPage()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.textContaining('pair-1'), findsOneWidget);
+    expect(find.text('ABC123'), findsOneWidget);
+    expect(find.text('等待搭档加入'), findsOneWidget);
+    expect(find.text('创建配对'), findsNothing);
+    expect(find.text('加入配对'), findsNothing);
+  });
+
+  testWidgets('创建配对后页面显示邀请码', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(_FixedAuthController.new),
+          pairRepositoryProvider.overrideWithValue(_FakePairRepository()),
+        ],
+        child: const MaterialApp(home: PairingPage()),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.tap(find.text('创建配对'));
+    await _settle(tester);
+
+    expect(find.text('ABC123'), findsOneWidget);
+    expect(find.text('等待搭档加入'), findsOneWidget);
+  });
+
+  testWidgets('PairConnected 双成员显示已完成配对和双方成员', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(_completedPair),
+          ),
+        ],
+        child: const MaterialApp(home: PairingPage()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('已完成配对'), findsOneWidget);
+    expect(find.textContaining('One'), findsOneWidget);
+    expect(find.textContaining('Two'), findsOneWidget);
+    expect(find.text('创建配对'), findsNothing);
+    expect(find.text('加入配对'), findsNothing);
   });
 }

@@ -37,12 +37,14 @@ class _PairingPageState extends ConsumerState<PairingPage> {
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          const Text('先创建一个配对，或输入搭档发来的邀请码。'),
+          Text(
+            connected == null ? '先创建一个配对，或输入搭档发来的邀请码。' : '查看当前配对详情。',
+          ),
           if (pairState is PairFailure) ...[
             const SizedBox(height: 20),
             Text(pairState.message, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ],
-          if (connected?.showInviteCode ?? false) ...[
+          if (connected != null) ...[
             const SizedBox(height: 24),
             Card(
               child: Padding(
@@ -50,13 +52,16 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('你的邀请码'),
+                    const Text('配对详情'),
+                    const SizedBox(height: 12),
+                    Text('pair_id：${connected.pair.pairId}'),
                     const SizedBox(height: 8),
+                    const Text('邀请码'),
                     Row(
                       children: [
                         Expanded(
                           child: SelectableText(
-                            connected!.pair.inviteCode,
+                            connected.pair.inviteCode,
                             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -74,8 +79,28 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    Text(
+                      connected.pair.members.length == 1
+                          ? '等待搭档加入'
+                          : '已完成配对',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('成员'),
                     const SizedBox(height: 8),
-                    const Text('让搭档输入此邀请码'),
+                    ...connected.pair.members.map(
+                      (member) => ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(
+                          member.isSelf ? Icons.person : Icons.people_outline,
+                        ),
+                        title: Text(member.displayName),
+                        subtitle: Text(
+                          member.isSelf ? '当前用户 · ${member.userId}' : '搭档 · ${member.userId}',
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     FilledButton(
                       onPressed: () => ref.read(pairControllerProvider.notifier).continueToHome(),

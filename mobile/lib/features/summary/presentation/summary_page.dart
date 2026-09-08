@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -23,7 +24,16 @@ class SummaryPage extends ConsumerWidget {
     final state = ref.watch(summaryControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('今日')),
+      appBar: AppBar(
+        title: const Text('今日'),
+        actions: [
+          IconButton(
+            tooltip: '配对详情',
+            icon: const Icon(Icons.people_outline),
+            onPressed: () => context.push('/pairing'),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
