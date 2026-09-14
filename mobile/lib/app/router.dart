@@ -8,6 +8,8 @@ import '../features/auth/presentation/login_page.dart';
 import '../features/pair/domain/pair_state.dart';
 import '../features/pair/presentation/pair_controller.dart';
 import '../features/pair/presentation/pairing_page.dart';
+import '../features/training/presentation/history/training_history_page.dart';
+import '../features/training/presentation/template/training_template_page.dart';
 import 'home_shell.dart';
 import 'splash_page.dart';
 
@@ -65,6 +67,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(path: '/pairing', builder: (context, state) => const PairingPage()),
       GoRoute(path: '/', builder: (context, state) => const HomeShell()),
+      GoRoute(
+        path: '/training/template',
+        builder: (context, state) => const TrainingTemplatePage(),
+      ),
+      GoRoute(
+        path: '/training/history',
+        builder: (context, state) => const TrainingHistoryPage(),
+      ),
+      GoRoute(
+        path: '/training/history/:weekId',
+        builder: (context, state) => TrainingHistoryDetailPage(
+          weekId: state.pathParameters['weekId']!,
+        ),
+      ),
     ],
   );
 });

@@ -3,14 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../features/meals/presentation/add_meal_page.dart';
 import '../features/summary/presentation/summary_page.dart';
+import '../features/training/presentation/training_page.dart';
 
-/// Currently selected bottom-nav tab. MVP has exactly two tabs (今日 /
-/// 记录) — training is intentionally not shown yet (see project brief).
-/// A third tab can be added later by extending this without touching the
-/// pages themselves.
+/// Currently selected bottom-nav tab (今日 / 记录 / 训练).
 final homeTabIndexProvider = StateProvider<int>((ref) => 0);
 
-/// Bottom-nav shell hosting the two MVP tabs. Kept as a plain
+/// Bottom-nav shell hosting the primary app tabs. Kept as a plain
 /// [IndexedStack] (rather than nested go_router routes) since there is no
 /// deep-linking requirement for individual tabs at this stage.
 class HomeShell extends ConsumerWidget {
@@ -23,7 +21,7 @@ class HomeShell extends ConsumerWidget {
     return Scaffold(
       body: IndexedStack(
         index: index,
-        children: const [SummaryPage(), AddMealPage()],
+        children: const [SummaryPage(), AddMealPage(), TrainingPage()],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: index,
@@ -38,6 +36,11 @@ class HomeShell extends ConsumerWidget {
             icon: Icon(Icons.add_circle_outline),
             activeIcon: Icon(Icons.add_circle),
             label: '记录',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.fitness_center_outlined),
+            activeIcon: Icon(Icons.fitness_center),
+            label: '训练',
           ),
         ],
       ),
