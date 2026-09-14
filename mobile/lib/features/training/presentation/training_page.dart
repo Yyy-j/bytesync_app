@@ -48,6 +48,7 @@ class _TrainingBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final week = state.week;
     final selectedDay = _findDay(week.days, state.selectedDayIndex);
     final videoState = ref.watch(trainingExerciseVideoControllerProvider);
@@ -56,7 +57,7 @@ class _TrainingBody extends ConsumerWidget {
         : const <String, TrainingExerciseVideo>{};
 
     return RefreshIndicator(
-      color: AppColors.primary,
+      color: theme.colorScheme.primary,
       onRefresh: () async {
         await Future.wait([
           ref.read(trainingControllerProvider.notifier).refresh(),
@@ -70,9 +71,9 @@ class _TrainingBody extends ConsumerWidget {
           Text(
             '本周 ${DateFormat('M/d').format(week.weekStart)} - '
             '${DateFormat('M/d').format(week.weekEnd)}',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -220,6 +221,7 @@ class _ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Opacity(
       opacity: exercise.removedFromTemplate ? 0.62 : 1,
       child: AppCard(
@@ -240,9 +242,9 @@ class _ExerciseCard extends StatelessWidget {
                 if (exercise.category.isNotEmpty)
                   Text(
                     exercise.category,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textTertiary,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
               ],
@@ -256,7 +258,7 @@ class _ExerciseCard extends StatelessWidget {
                 targetWeight: exercise.targetWeight,
                 targetDurationSeconds: exercise.targetDurationSeconds,
               ),
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
             if (videoUrl != null) ...[
               const SizedBox(height: AppSpacing.xs),
@@ -269,8 +271,8 @@ class _ExerciseCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xs),
             Text(
               '进度：${exercise.completedSets} / ${exercise.targetSets} 组',
-              style: const TextStyle(
-                color: AppColors.primaryDark,
+              style: TextStyle(
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -286,11 +288,11 @@ class _ExerciseCard extends StatelessWidget {
             ],
             if (exercise.removedFromTemplate) ...[
               const SizedBox(height: AppSpacing.sm),
-              const Text(
+              Text(
                 '已从当前模板移除',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textSecondary,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -570,6 +572,7 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AnimatedPadding(
       duration: const Duration(milliseconds: 150),
       padding: EdgeInsets.only(
@@ -587,9 +590,9 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.xs),
-            const Text(
+            Text(
               '清空字段后保存，会删除该项记录值。',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: AppSpacing.lg),
             if (widget.exercise.itemType == TrainingItemType.strength)

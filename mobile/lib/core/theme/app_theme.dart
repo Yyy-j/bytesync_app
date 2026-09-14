@@ -143,9 +143,23 @@ ThemeData buildDarkTheme() {
     surface: AppColors.darkBackground,
     onSurface: Colors.white,
   );
+  final darkColorScheme = colorScheme.copyWith(
+    surface: AppColors.darkBackground,
+    surfaceDim: AppColors.darkBackground,
+    surfaceBright: AppColors.darkSurface,
+    surfaceContainerLowest: AppColors.darkBackground,
+    surfaceContainerLow: AppColors.darkCard,
+    surfaceContainer: AppColors.darkCard,
+    surfaceContainerHigh: AppColors.darkSurface,
+    surfaceContainerHighest: AppColors.darkSurface,
+    onSurface: Colors.white,
+    onSurfaceVariant: Colors.white.withValues(alpha: 0.70),
+    outline: Colors.white.withValues(alpha: 0.20),
+    outlineVariant: Colors.white.withValues(alpha: 0.10),
+  );
   final base = ThemeData(
     useMaterial3: true,
-    colorScheme: colorScheme,
+    colorScheme: darkColorScheme,
     scaffoldBackgroundColor: AppColors.darkBackground,
     canvasColor: AppColors.darkBackground,
     fontFamily: 'PingFang SC',
@@ -166,6 +180,18 @@ ThemeData buildDarkTheme() {
       ),
     ),
     textTheme: base.textTheme.copyWith(
+      displayLarge: base.textTheme.displayLarge?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      displayMedium: base.textTheme.displayMedium?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      displaySmall: base.textTheme.displaySmall?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
       bodyLarge: base.textTheme.bodyLarge?.copyWith(
         color: Colors.white,
         fontWeight: FontWeight.w600,
@@ -201,6 +227,18 @@ ThemeData buildDarkTheme() {
       headlineSmall: base.textTheme.headlineSmall?.copyWith(
         color: Colors.white,
         fontWeight: FontWeight.w700,
+      ),
+      labelLarge: base.textTheme.labelLarge?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+      ),
+      labelMedium: base.textTheme.labelMedium?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+      ),
+      labelSmall: base.textTheme.labelSmall?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
       ),
     ),
     dialogTheme: const DialogThemeData(backgroundColor: AppColors.darkCard),

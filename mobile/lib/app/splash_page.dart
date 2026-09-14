@@ -9,15 +9,16 @@ class SplashPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: AppColors.background,
+    final theme = Theme.of(context);
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('🥗', style: TextStyle(fontSize: 48)),
             SizedBox(height: AppSpacing.lg),
-            CircularProgressIndicator(color: AppColors.primary),
+            CircularProgressIndicator(color: theme.colorScheme.primary),
           ],
         ),
       ),

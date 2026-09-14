@@ -568,6 +568,7 @@ class _CustomExerciseEditorSheetState
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AnimatedPadding(
       duration: const Duration(milliseconds: 150),
       padding: EdgeInsets.only(
@@ -648,7 +649,7 @@ class _CustomExerciseEditorSheetState
               ),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text(_error!, style: const TextStyle(color: AppColors.warning)),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
             const SizedBox(height: AppSpacing.lg),
             SizedBox(
@@ -680,10 +681,11 @@ class _EmptyExercises extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Text(
         message,
-        style: const TextStyle(color: AppColors.textSecondary),
+        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
       ),
     );
   }

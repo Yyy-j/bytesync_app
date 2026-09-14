@@ -19,6 +19,7 @@ class SummaryPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final state = ref.watch(summaryControllerProvider);
 
     return Scaffold(
@@ -39,7 +40,7 @@ class SummaryPage extends ConsumerWidget {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          color: AppColors.primary,
+          color: theme.colorScheme.primary,
           onRefresh: () =>
               ref.read(summaryControllerProvider.notifier).refresh(),
           child: switch (state) {
@@ -75,6 +76,7 @@ class _SummaryBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final managementState = ref.watch(mealManagementControllerProvider);
     return ListView(
       // Ensures pull-to-refresh works even when content is short (empty
@@ -84,7 +86,7 @@ class _SummaryBody extends ConsumerWidget {
       children: [
         Text(
           DateFormat('yyyy年M月d日 EEEE', 'zh_CN').format(summary.date),
-          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.md),
         _NutritionCard(
@@ -103,12 +105,12 @@ class _SummaryBody extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: AppSpacing.xl),
-        const Text(
+        Text(
           '今日记录',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -528,16 +530,17 @@ class _NutritionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -550,25 +553,25 @@ class _NutritionCard extends StatelessWidget {
                   '$name ${slice.calories.round()}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
               ),
               const SizedBox(width: 4),
               Text(
                 '/ ${goals.calorieGoal.round()} kcal',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: AppColors.textTertiary,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          const Divider(height: 1, color: AppColors.border),
+          Divider(height: 1, color: theme.dividerColor),
           const SizedBox(height: AppSpacing.md),
           MacroBar(
             protein: slice.protein,
@@ -599,6 +602,7 @@ class _MealListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -617,17 +621,17 @@ class _MealListItem extends StatelessWidget {
                 children: [
                   Text(
                     meal.mealTime,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textTertiary,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   Text(
                     ownerName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primaryDark,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                 ],
@@ -653,9 +657,9 @@ class _MealListItem extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             '${meal.calories.round()} kcal',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -694,16 +698,24 @@ class _MacroTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: bg,
+        color: isDark ? theme.colorScheme.surfaceContainerHighest : bg,
         borderRadius: BorderRadius.circular(AppRadius.full),
       ),
-      child: Text(label, style: TextStyle(fontSize: 11, color: color)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          color: isDark ? theme.colorScheme.onSurface : color,
+        ),
+      ),
     );
   }
 }

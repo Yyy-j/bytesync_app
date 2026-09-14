@@ -53,6 +53,7 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
   }
 
   Widget _buildForm(NutritionGoalsReady state) {
+    final theme = Theme.of(context);
     if (!_populated) {
       _setValues(state.profile.goals);
       _populated = true;
@@ -60,9 +61,9 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
       children: [
-        const Text(
+        Text(
           '设置你的每日热量和营养素目标。',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.lg),
         AppCard(
@@ -78,7 +79,7 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     _validationError!,
-                    style: const TextStyle(color: AppColors.warning),
+                    style: TextStyle(color: theme.colorScheme.error),
                   ),
                 ),
               ],

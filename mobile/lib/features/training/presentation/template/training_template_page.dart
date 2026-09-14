@@ -43,13 +43,14 @@ class _TemplateBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     ref.watch(trainingExerciseVideoControllerProvider);
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
       children: [
-        const Text(
+        Text(
           '设置每周固定训练。保存模板后，可由你决定是否同步到本周。',
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.lg),
         ...state.days.map(
@@ -69,9 +70,9 @@ class _TemplateBody extends ConsumerWidget {
                   day.exercises.isEmpty
                       ? '休息日'
                       : '${day.exercises.length} 个动作',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 childrenPadding: const EdgeInsets.fromLTRB(
@@ -283,10 +284,11 @@ class _ExerciseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
       child: Row(
         children: [
@@ -308,9 +310,9 @@ class _ExerciseRow extends StatelessWidget {
                     targetDurationSeconds: exercise.targetDurationSeconds,
                   ).replaceFirst('目标：', '')}'
                   '${exercise.category.isEmpty ? '' : ' · ${exercise.category}'}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -468,6 +470,7 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AnimatedPadding(
       duration: const Duration(milliseconds: 150),
       padding: EdgeInsets.only(
@@ -495,7 +498,7 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 _categoryController.text,
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
               ),
             ] else ...[
               TextField(
@@ -531,7 +534,7 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
             if (_isFixed)
               Text(
                 '类型：${_typeLabel(_itemType)}',
-                style: const TextStyle(color: AppColors.textSecondary),
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
               ),
             if (_isFixed) const SizedBox(height: AppSpacing.md),
             Row(
@@ -569,7 +572,7 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
               ),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text(_error!, style: const TextStyle(color: AppColors.warning)),
+              Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
             const SizedBox(height: AppSpacing.lg),
             SizedBox(

@@ -148,6 +148,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     final selectedImagePath = ref.watch(selectedRecordImagePathProvider);
     final pairState = ref.watch(pairControllerProvider);
     final partner = pairState is PairConnected ? pairState.pair.partner : null;
+    final theme = Theme.of(context);
     final draft = switch (state) {
       RecordResult(:final draft) => draft,
       RecordError(:final draft) => draft,
@@ -170,7 +171,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
             children: [
               const Text('AI 识别', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               const SizedBox(height: AppSpacing.xs),
-              const Text('描述你吃了什么，或上传一张食物照片', style: TextStyle(color: AppColors.textSecondary)),
+                Text('描述你吃了什么，或上传一张食物照片', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
               const SizedBox(height: AppSpacing.sm),
               TextField(
                 controller: _textController,
@@ -215,7 +216,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
               ),
               if (error != null) ...[
                 const SizedBox(height: AppSpacing.sm),
-                Text(error, style: const TextStyle(color: AppColors.warning)),
+                  Text(error, style: TextStyle(color: theme.colorScheme.error)),
               ],
               const SizedBox(height: AppSpacing.lg),
               _YesterdayReuseSection(
@@ -348,6 +349,7 @@ class _YesterdayReuseSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -358,21 +360,21 @@ class _YesterdayReuseSection extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         meals.when(
           loading: () => const LinearProgressIndicator(minHeight: 2),
-          error: (_, _) => const Text(
+          error: (_, _) => Text(
             '昨天的记录暂时无法加载',
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.textTertiary,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           data: (values) {
             final visible = values.take(3).toList(growable: false);
             if (visible.isEmpty) {
-              return const Text(
+              return Text(
                 '昨天没有可复用的记录',
                 style: TextStyle(
                   fontSize: 12,
-                  color: AppColors.textTertiary,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               );
             }
@@ -390,14 +392,12 @@ class _YesterdayReuseSection extends StatelessWidget {
                       title: Text(visible[index].name),
                       trailing: Text(
                         '${visible[index].calories.round()} kcal',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                        ),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                       ),
                       onTap: enabled ? () => onSelected(visible[index]) : null,
                     ),
                     if (index != visible.length - 1)
-                      const Divider(height: 1, color: AppColors.border),
+                      Divider(height: 1, color: theme.dividerColor),
                   ],
                 ],
               ),
@@ -438,6 +438,7 @@ class _ResultPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final effectiveShareMode =
         partnerName == null ? MealShareMode.solo : draft.shareMode;
 
@@ -486,7 +487,7 @@ class _ResultPanel extends StatelessWidget {
           ),
           if (partnerName != null && effectiveShareMode.isShared) ...[
             const SizedBox(height: AppSpacing.sm),
-            const Text('怎么分？', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            Text('怎么分？', style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12)),
             Wrap(
               spacing: AppSpacing.sm,
               children: [
@@ -513,13 +514,18 @@ class _ResultPanel extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: AppColors.primaryLight,
+                color: theme.brightness == Brightness.dark
+                  ? AppColors.darkSurface
+                  : AppColors.primaryLight,
               borderRadius: BorderRadius.circular(AppRadius.md),
             ),
             child: Text(
               '分配预览：我 ${_value(draft.calories * effectiveShareMode.meRatio)} kcal'
               '${partnerName == null ? '' : '  $partnerName ${_value(draft.calories * effectiveShareMode.partnerRatio)} kcal'}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
           ),
           if (draft.dishes.isNotEmpty) ...[
@@ -530,10 +536,10 @@ class _ResultPanel extends StatelessWidget {
           ],
           if (draft.source != MealSource.manual) ...[
             const SizedBox(height: AppSpacing.sm),
-            const Text(
+            Text(
               'AI 估算，仅供参考',
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: theme.colorScheme.onSurfaceVariant,
                 fontSize: 12,
               ),
             ),

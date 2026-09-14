@@ -17,21 +17,46 @@ class BiteSyncScreenFrame extends StatelessWidget {
         child,
         Positioned.fill(
           child: IgnorePointer(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border.all(color: color, width: 3),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: isDark ? 0.28 : 0.22),
-                    blurRadius: isDark ? 11 : 9,
-                  ),
-                ],
-              ),
+            child: CustomPaint(
+              painter: _ScreenFramePainter(color),
             ),
           ),
         ),
       ],
     );
+  }
+}
+
+class _ScreenFramePainter extends CustomPainter {
+  const _ScreenFramePainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const strokeWidth = 3.0;
+    final inset = strokeWidth / 2 + 1;
+    final shortestSide = size.shortestSide;
+    final radius = (shortestSide * 0.12).clamp(44.0, 56.0).toDouble();
+    final rect = Rect.fromLTWH(
+      inset,
+      inset,
+      size.width - inset * 2,
+      size.height - inset * 2,
+    );
+    final border = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+
+    canvas.drawRRect(
+      border,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..color = color,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ScreenFramePainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }

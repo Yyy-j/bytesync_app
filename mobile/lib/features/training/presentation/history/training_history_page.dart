@@ -49,9 +49,10 @@ class _HistoryList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     if (history.weeks.isEmpty) {
       return RefreshIndicator(
-        color: AppColors.primary,
+        color: theme.colorScheme.primary,
         onRefresh: () =>
             ref.read(trainingHistoryControllerProvider.notifier).refresh(),
         child: ListView(
@@ -64,7 +65,7 @@ class _HistoryList extends ConsumerWidget {
       );
     }
     return RefreshIndicator(
-      color: AppColors.primary,
+      color: theme.colorScheme.primary,
       onRefresh: () =>
           ref.read(trainingHistoryControllerProvider.notifier).refresh(),
       child: ListView.separated(
@@ -99,16 +100,16 @@ class _HistoryList extends ConsumerWidget {
                         const SizedBox(height: AppSpacing.sm),
                         Text(
                           '$completed / $target 组',
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
-                    color: AppColors.textTertiary,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -151,6 +152,7 @@ class _WeekDetail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final videoState = ref.watch(trainingExerciseVideoControllerProvider);
     final videos = videoState is TrainingExerciseVideoReady
         ? videoState.videos
@@ -166,7 +168,7 @@ class _WeekDetail extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xs),
         Text(
           '${_completedSets(week)} / ${_targetSets(week)} 组',
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.lg),
         ...week.days.map(
@@ -186,9 +188,9 @@ class _WeekDetail extends ConsumerWidget {
                   ),
                   const SizedBox(height: AppSpacing.md),
                   if (day.exercises.isEmpty)
-                    const Text(
+                    Text(
                       '休息日',
-                      style: TextStyle(color: AppColors.textSecondary),
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                     )
                   else
                     ...day.exercises.map(
@@ -217,6 +219,7 @@ class _HistoryExercise extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: Column(
@@ -241,28 +244,28 @@ class _HistoryExercise extends StatelessWidget {
               targetWeight: exercise.targetWeight,
               targetDurationSeconds: exercise.targetDurationSeconds,
             ),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: AppColors.textSecondary,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
           if (exercise.removedFromTemplate) ...[
             const SizedBox(height: AppSpacing.xs),
-            const Text(
+            Text(
               '已从当前模板移除',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textTertiary,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
           const SizedBox(height: AppSpacing.sm),
           if (exercise.setDetails.isEmpty)
-            const Text(
+            Text(
               '未完成训练组',
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textTertiary,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             )
           else
@@ -286,6 +289,7 @@ class _SetDetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final values = <String>[
       if (itemType == TrainingItemType.strength) ...[
         if (detail.weight != null) '${_weight(detail.weight!)} kg',
@@ -301,7 +305,7 @@ class _SetDetailRow extends StatelessWidget {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppRadius.md),
       ),
       child: Row(
@@ -325,9 +329,9 @@ class _SetDetailRow extends StatelessWidget {
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     detail.remark!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],

@@ -16,6 +16,7 @@ class LoginPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState is AuthLoading;
     final errorMessage = authState is AuthUnauthenticated
@@ -32,18 +33,21 @@ class LoginPage extends ConsumerWidget {
               const Spacer(flex: 3),
               _Logo(),
               const SizedBox(height: AppSpacing.lg),
-              const Text(
+              Text(
                 'BiteSync',
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              const Text(
+              Text(
                 '轻松记录每一餐，掌握每日营养',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               const Spacer(flex: 4),
               if (errorMessage != null) ...[
@@ -51,14 +55,16 @@ class LoginPage extends ConsumerWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: AppColors.warningLight,
+                    color: theme.brightness == Brightness.dark
+                      ? AppColors.darkSurface
+                      : AppColors.warningLight,
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   child: Text(
                     errorMessage,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.warning,
+                    style: TextStyle(
+                      color: theme.colorScheme.error,
                       fontSize: 13,
                     ),
                   ),
@@ -102,7 +108,9 @@ class _Logo extends StatelessWidget {
       width: 88,
       height: 88,
       decoration: BoxDecoration(
-        color: AppColors.primaryLight,
+        color: Theme.of(context).brightness == Brightness.dark
+          ? AppColors.darkSurface
+          : AppColors.primaryLight,
         borderRadius: BorderRadius.circular(AppRadius.lg + 8),
       ),
       alignment: Alignment.center,
