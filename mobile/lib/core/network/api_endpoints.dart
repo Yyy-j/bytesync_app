@@ -33,6 +33,9 @@ class ApiEndpoints {
 
   // ── Training ──────────────────────────────────────────
   static const String trainingCustomExercises = '/training/exercises/custom';
+  static const String trainingExerciseVideos = '/training/exercises/videos';
+  static String trainingExerciseVideo(String exerciseId) =>
+      '/training/exercises/${Uri.encodeComponent(exerciseId)}/video';
   static String trainingCustomExerciseById(String id) =>
       '$trainingCustomExercises/${Uri.encodeComponent(id)}';
   static const String trainingTemplate = '/training/template';

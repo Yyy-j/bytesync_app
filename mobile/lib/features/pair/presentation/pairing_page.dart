@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../domain/pair_state.dart';
+import '../../auth/presentation/auth_controller.dart';
 import 'pair_controller.dart';
 
 class PairingPage extends ConsumerStatefulWidget {
@@ -28,7 +30,16 @@ class _PairingPageState extends ConsumerState<PairingPage> {
     final connected = pairState is PairConnected ? pairState : null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('与搭档配对')),
+      appBar: AppBar(
+        title: const Text('与搭档配对'),
+        actions: [
+          IconButton(
+            tooltip: '退出登录',
+            onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -54,8 +65,6 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                   children: [
                     const Text('配对详情'),
                     const SizedBox(height: 12),
-                    Text('pair_id：${connected.pair.pairId}'),
-                    const SizedBox(height: 8),
                     const Text('邀请码'),
                     Row(
                       children: [
@@ -96,14 +105,17 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                           member.isSelf ? Icons.person : Icons.people_outline,
                         ),
                         title: Text(member.displayName),
-                        subtitle: Text(
-                          member.isSelf ? '当前用户 · ${member.userId}' : '搭档 · ${member.userId}',
-                        ),
+                        subtitle: Text(member.isSelf ? '我的信息' : '搭档信息'),
                       ),
                     ),
                     const SizedBox(height: 16),
                     FilledButton(
-                      onPressed: () => ref.read(pairControllerProvider.notifier).continueToHome(),
+                      onPressed: () {
+                        ref
+                            .read(pairControllerProvider.notifier)
+                            .continueToHome();
+                        context.go('/');
+                      },
                       child: const Text('进入主页'),
                     ),
                   ],

@@ -12,6 +12,9 @@ import '../domain/training_day.dart';
 import '../domain/training_duration.dart';
 import '../domain/training_exercise_item.dart';
 import '../domain/training_set_detail.dart';
+import '../videos/domain/training_exercise_video.dart';
+import '../videos/presentation/training_exercise_video_controller.dart';
+import '../videos/presentation/training_exercise_video_editor.dart';
 import 'training_controller.dart';
 
 class TrainingPage extends ConsumerWidget {
@@ -47,10 +50,19 @@ class _TrainingBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final week = state.week;
     final selectedDay = _findDay(week.days, state.selectedDayIndex);
+    final videoState = ref.watch(trainingExerciseVideoControllerProvider);
+    final videos = videoState is TrainingExerciseVideoReady
+        ? videoState.videos
+        : const <String, TrainingExerciseVideo>{};
 
     return RefreshIndicator(
       color: AppColors.primary,
-      onRefresh: () => ref.read(trainingControllerProvider.notifier).refresh(),
+      onRefresh: () async {
+        await Future.wait([
+          ref.read(trainingControllerProvider.notifier).refresh(),
+          ref.read(trainingExerciseVideoControllerProvider.notifier).refresh(),
+        ]);
+      },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.pagePadding),
@@ -106,7 +118,12 @@ class _TrainingBody extends ConsumerWidget {
             ...selectedDay.exercises.map(
               (exercise) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _ExerciseCard(exercise: exercise),
+                child: _ExerciseCard(
+                  exercise: exercise,
+                  videoUrl: exercise.exerciseId == null
+                      ? null
+                      : videos[exercise.exerciseId]?.videoUrl,
+                ),
               ),
             ),
         ],
@@ -193,9 +210,10 @@ class _WeekSelector extends StatelessWidget {
 }
 
 class _ExerciseCard extends StatelessWidget {
-  const _ExerciseCard({required this.exercise});
+  const _ExerciseCard({required this.exercise, required this.videoUrl});
 
   final TrainingExerciseItem exercise;
+  final Uri? videoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -237,6 +255,14 @@ class _ExerciseCard extends StatelessWidget {
               ),
               style: const TextStyle(color: AppColors.textSecondary),
             ),
+            if (videoUrl != null) ...[
+              const SizedBox(height: AppSpacing.xs),
+              TextButton.icon(
+                onPressed: () => openTrainingVideoUrl(context, videoUrl!),
+                icon: const Icon(Icons.play_circle_outline, size: 20),
+                label: const Text('查看教学视频'),
+              ),
+            ],
             const SizedBox(height: AppSpacing.xs),
             Text(
               '进度：${exercise.completedSets} / ${exercise.targetSets} 组',

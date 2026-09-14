@@ -93,3 +93,18 @@ class UpdateNutritionGoalsRequestDto {
     },
   };
 }
+
+class UpdateUserProfileRequestDto {
+  const UpdateUserProfileRequestDto({
+    required this.displayName,
+    required this.avatarUrl,
+  });
+
+  final String? displayName;
+  final String? avatarUrl;
+
+  Map<String, dynamic> toJson() => {
+    'display_name': displayName,
+    'avatar_url': avatarUrl,
+  };
+}

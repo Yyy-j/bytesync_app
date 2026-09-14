@@ -7,6 +7,8 @@ import '../../../../shared/widgets/state_views.dart';
 import '../../domain/training_duration.dart';
 import '../../domain/training_exercise_item.dart';
 import '../../exercises/presentation/training_exercise_picker.dart';
+import '../../videos/presentation/training_exercise_video_controller.dart';
+import '../../videos/presentation/training_exercise_video_editor.dart';
 import '../training_controller.dart';
 import 'training_template_controller.dart';
 
@@ -41,6 +43,7 @@ class _TemplateBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(trainingExerciseVideoControllerProvider);
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
       children: [
@@ -83,6 +86,14 @@ class _TemplateBody extends ConsumerWidget {
                       (exercise) => _ExerciseRow(
                         exercise: exercise,
                         enabled: !state.busy,
+                        onVideo: exercise.exerciseId == null
+                            ? null
+                            : () => showTrainingVideoEditor(
+                                context,
+                                ref,
+                                exerciseId: exercise.exerciseId!,
+                                exerciseName: exercise.exerciseName,
+                              ),
                         onEdit: () => _openEditor(
                           context,
                           ref,
@@ -259,12 +270,14 @@ class _ExerciseRow extends StatelessWidget {
   const _ExerciseRow({
     required this.exercise,
     required this.enabled,
+    required this.onVideo,
     required this.onEdit,
     required this.onDelete,
   });
 
   final TrainingExerciseItem exercise;
   final bool enabled;
+  final VoidCallback? onVideo;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -303,6 +316,12 @@ class _ExerciseRow extends StatelessWidget {
               ],
             ),
           ),
+          if (onVideo != null)
+            IconButton(
+              tooltip: '管理教学视频',
+              onPressed: enabled ? onVideo : null,
+              icon: const Icon(Icons.video_library_outlined, size: 20),
+            ),
           IconButton(
             tooltip: '编辑动作',
             onPressed: enabled ? onEdit : null,

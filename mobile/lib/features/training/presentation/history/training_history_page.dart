@@ -10,6 +10,9 @@ import '../../domain/training_duration.dart';
 import '../../domain/training_exercise_item.dart';
 import '../../domain/training_set_detail.dart';
 import '../../domain/training_week.dart';
+import '../../videos/domain/training_exercise_video.dart';
+import '../../videos/presentation/training_exercise_video_controller.dart';
+import '../../videos/presentation/training_exercise_video_editor.dart';
 import '../training_controller.dart';
 import 'training_history_controller.dart';
 
@@ -141,13 +144,17 @@ class TrainingHistoryDetailPage extends ConsumerWidget {
   }
 }
 
-class _WeekDetail extends StatelessWidget {
+class _WeekDetail extends ConsumerWidget {
   const _WeekDetail({required this.week});
 
   final TrainingWeek week;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final videoState = ref.watch(trainingExerciseVideoControllerProvider);
+    final videos = videoState is TrainingExerciseVideoReady
+        ? videoState.videos
+        : const <String, TrainingExerciseVideo>{};
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
       children: [
@@ -185,7 +192,12 @@ class _WeekDetail extends StatelessWidget {
                     )
                   else
                     ...day.exercises.map(
-                      (exercise) => _HistoryExercise(exercise: exercise),
+                      (exercise) => _HistoryExercise(
+                        exercise: exercise,
+                        videoUrl: exercise.exerciseId == null
+                            ? null
+                            : videos[exercise.exerciseId]?.videoUrl,
+                      ),
                     ),
                 ],
               ),
@@ -198,9 +210,10 @@ class _WeekDetail extends StatelessWidget {
 }
 
 class _HistoryExercise extends StatelessWidget {
-  const _HistoryExercise({required this.exercise});
+  const _HistoryExercise({required this.exercise, required this.videoUrl});
 
   final TrainingExerciseItem exercise;
+  final Uri? videoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -213,6 +226,12 @@ class _HistoryExercise extends StatelessWidget {
             exercise.exerciseName,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
+          if (videoUrl != null)
+            TextButton.icon(
+              onPressed: () => openTrainingVideoUrl(context, videoUrl!),
+              icon: const Icon(Icons.play_circle_outline, size: 18),
+              label: const Text('查看教学视频'),
+            ),
           const SizedBox(height: AppSpacing.xs),
           Text(
             trainingTargetText(

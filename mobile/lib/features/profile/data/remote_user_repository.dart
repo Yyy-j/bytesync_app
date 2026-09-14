@@ -36,4 +36,23 @@ class RemoteUserRepository implements UserRepository {
       throw _errorMapper.map(error);
     }
   }
+
+  @override
+  Future<UserProfile> updateProfile({
+    required String? displayName,
+    required String? avatarUrl,
+  }) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.usersMe,
+        data: UpdateUserProfileRequestDto(
+          displayName: displayName,
+          avatarUrl: avatarUrl,
+        ).toJson(),
+      );
+      return UserProfileDto.fromJson(response.data!).toDomain();
+    } catch (error) {
+      throw _errorMapper.map(error);
+    }
+  }
 }

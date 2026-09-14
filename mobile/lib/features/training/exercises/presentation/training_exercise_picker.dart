@@ -7,6 +7,8 @@ import '../../domain/training_exercise_item.dart';
 import '../data/fixed_training_exercises.dart';
 import '../domain/fixed_training_exercise.dart';
 import '../domain/training_custom_exercise.dart';
+import '../../videos/presentation/training_exercise_video_controller.dart';
+import '../../videos/presentation/training_exercise_video_editor.dart';
 import 'training_custom_exercise_controller.dart';
 
 sealed class TrainingExercisePickerResult {
@@ -54,6 +56,7 @@ class _TrainingExercisePickerState
   @override
   Widget build(BuildContext context) {
     final customState = ref.watch(trainingCustomExerciseControllerProvider);
+    ref.watch(trainingExerciseVideoControllerProvider);
     final customExercises = customState is TrainingCustomExerciseReady
         ? customState.exercises
         : const <TrainingCustomExercise>[];
@@ -216,6 +219,16 @@ class _TrainingExercisePickerState
             ).replaceFirst('目标：', '')}',
           ),
           isThreeLine: true,
+          trailing: IconButton(
+            tooltip: '管理教学视频',
+            onPressed: () => showTrainingVideoEditor(
+              context,
+              ref,
+              exerciseId: exercise.id,
+              exerciseName: exercise.name,
+            ),
+            icon: const Icon(Icons.video_library_outlined, size: 20),
+          ),
           onTap: () => Navigator.pop(
             context,
             FixedTrainingExerciseSelection(exercise),
@@ -297,6 +310,18 @@ class _TrainingExercisePickerState
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  IconButton(
+                    tooltip: '管理教学视频',
+                    onPressed: mutating
+                        ? null
+                        : () => showTrainingVideoEditor(
+                            context,
+                            ref,
+                            exerciseId: exercise.id,
+                            exerciseName: exercise.name,
+                          ),
+                    icon: const Icon(Icons.video_library_outlined, size: 20),
+                  ),
                   IconButton(
                     tooltip: '编辑动作',
                     onPressed: mutating

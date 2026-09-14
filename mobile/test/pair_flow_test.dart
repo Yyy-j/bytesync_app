@@ -156,6 +156,10 @@ void main() {
     await _settle(tester);
     expect(find.byType(PairingPage), findsOneWidget);
     expect(find.text('ABC123'), findsOneWidget);
+
+    await tester.tap(find.text('进入主页'));
+    await _settle(tester);
+    expect(find.byType(HomeShell), findsOneWidget);
   });
 
   test('create and join update pair state', () async {
@@ -231,9 +235,11 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.textContaining('pair-1'), findsOneWidget);
+    expect(find.textContaining('pair-1'), findsNothing);
     expect(find.text('ABC123'), findsOneWidget);
     expect(find.text('等待搭档加入'), findsOneWidget);
+    expect(find.text('我的信息'), findsOneWidget);
+    expect(find.byTooltip('退出登录'), findsOneWidget);
     expect(find.text('创建配对'), findsNothing);
     expect(find.text('加入配对'), findsNothing);
   });

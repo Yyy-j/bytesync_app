@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../features/meals/presentation/add_meal_page.dart';
 import '../features/summary/presentation/summary_page.dart';
 import '../features/training/presentation/training_page.dart';
+import '../features/profile/presentation/profile_page.dart';
 
 /// Currently selected bottom-nav tab (今日 / 记录 / 训练).
 final homeTabIndexProvider = StateProvider<int>((ref) => 0);
@@ -21,7 +22,12 @@ class HomeShell extends ConsumerWidget {
     return Scaffold(
       body: IndexedStack(
         index: index,
-        children: const [SummaryPage(), AddMealPage(), TrainingPage()],
+        children: const [
+          SummaryPage(),
+          AddMealPage(),
+          TrainingPage(),
+          ProfilePage(),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: index,
@@ -41,6 +47,11 @@ class HomeShell extends ConsumerWidget {
             icon: Icon(Icons.fitness_center_outlined),
             activeIcon: Icon(Icons.fitness_center),
             label: '训练',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: '我的',
           ),
         ],
       ),
