@@ -29,4 +29,21 @@ class ApiEndpoints {
 
   // ── Summary ───────────────────────────────────────────
   static const String summaryDaily = '/summary/daily';
+
+  // ── Training ──────────────────────────────────────────
+  static const String trainingTemplate = '/training/template';
+  static const String trainingWeeks = '/training/weeks';
+  static const String trainingWeeksCurrent = '/training/weeks/current';
+  static const String trainingWeeksCurrentSync =
+      '/training/weeks/current/sync';
+  static String trainingWeekById(String weekId) =>
+      '/training/weeks/${Uri.encodeComponent(weekId)}';
+  static String trainingItemSets(String weekId, String itemId) =>
+      '${trainingWeekById(weekId)}/items/${Uri.encodeComponent(itemId)}/sets';
+  static String trainingSetDetail(
+    String weekId,
+    String itemId,
+    String requestId,
+  ) =>
+      '${trainingItemSets(weekId, itemId)}/${Uri.encodeComponent(requestId)}';
 }
