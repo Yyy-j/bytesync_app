@@ -1,8 +1,9 @@
+import 'meal_ai_result.dart';
 import 'meal_share_mode.dart';
 import 'meal_source.dart';
 
-/// Input to `MealsRepository.addMeal`. Everything the UI collects on the
-/// record page.
+/// Input to `MealsRepository.addMeal`. Includes optional AI metadata but
+/// deliberately excludes local-only image paths.
 ///
 /// `pairId` / `userId` / `mealDate` are set server-side (`API_CONTRACT.md`
 /// §2.2) — the client never fills them.
@@ -17,6 +18,9 @@ class NewMealInput {
     required this.portionRatio,
     required this.shareMode,
     required this.mealTime,
+    this.dishes = const [],
+    this.aiHint,
+    this.originalInput,
   });
 
   final String name;
@@ -28,6 +32,9 @@ class NewMealInput {
   final double portionRatio;
   final MealShareMode shareMode;
   final String mealTime; // "HH:mm"
+  final List<MealAiDish> dishes;
+  final String? aiHint;
+  final String? originalInput;
 }
 
 /// Input to `MealsRepository.updateMeal`. All fields optional. See

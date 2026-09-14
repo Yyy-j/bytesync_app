@@ -99,7 +99,7 @@ class _TrainingBody extends ConsumerWidget {
           if (selectedDay == null || selectedDay.exercises.isEmpty)
             const Padding(
               padding: EdgeInsets.only(top: AppSpacing.xxl),
-              child: EmptyView(message: '今天没有训练计划', icon: '🏋️'),
+              child: EmptyView(message: '这天没有训练计划', icon: '🏋️'),
             )
           else
             ...selectedDay.exercises.map(

@@ -8,6 +8,7 @@ import '../features/auth/presentation/login_page.dart';
 import '../features/pair/domain/pair_state.dart';
 import '../features/pair/presentation/pair_controller.dart';
 import '../features/pair/presentation/pairing_page.dart';
+import '../features/profile/presentation/nutrition_goals_page.dart';
 import '../features/training/presentation/history/training_history_page.dart';
 import '../features/training/presentation/template/training_template_page.dart';
 import 'home_shell.dart';
@@ -67,6 +68,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(path: '/pairing', builder: (context, state) => const PairingPage()),
       GoRoute(path: '/', builder: (context, state) => const HomeShell()),
+      GoRoute(
+        path: '/nutrition-goals',
+        builder: (context, state) => const NutritionGoalsPage(),
+      ),
       GoRoute(
         path: '/training/template',
         builder: (context, state) => const TrainingTemplatePage(),

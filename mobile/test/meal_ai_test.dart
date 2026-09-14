@@ -72,6 +72,7 @@ void main() {
       ProviderScope(
         overrides: [
           mealAiRepositoryProvider.overrideWithValue(repository),
+          yesterdayMealsProvider.overrideWith((ref) async => []),
         ],
         child: const MaterialApp(home: AddMealPage()),
       ),
@@ -91,6 +92,7 @@ void main() {
       ProviderScope(
         overrides: [
           mealAiRepositoryProvider.overrideWithValue(_FakeMealAiRepository()),
+          yesterdayMealsProvider.overrideWith((ref) async => []),
         ],
         child: const MaterialApp(home: AddMealPage()),
       ),

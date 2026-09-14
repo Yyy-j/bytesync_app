@@ -1,5 +1,6 @@
 import '../../../../core/network/api_exception.dart';
 import '../../domain/meal.dart';
+import '../../domain/meal_ai_result.dart';
 import '../../domain/meal_share_mode.dart';
 import '../../domain/meal_source.dart';
 import '../dto/meal_dto.dart';
@@ -16,6 +17,16 @@ class MealMapper {
         sharedMealId: dto.sharedMealId,
         name: dto.name,
         source: MealSource.fromWire(dto.source),
+        dishes: dto.dishes
+            .map(
+              (dish) => MealAiDish(
+                name: dish.name,
+                calories: dish.calories,
+              ),
+            )
+            .toList(growable: false),
+        aiHint: dto.aiHint,
+        originalInput: dto.originalInput,
         baseCalories: dto.baseCalories,
         baseProtein: dto.baseProtein,
         baseCarbs: dto.baseCarbs,

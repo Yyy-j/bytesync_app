@@ -29,9 +29,16 @@ class MealDto {
     required this.mealTime,
     required this.createdAt,
     required this.updatedAt,
+    this.dishes = const [],
+    this.aiHint,
+    this.originalInput,
   });
 
   factory MealDto.fromJson(Map<String, dynamic> json) {
+    final rawDishes = json['dishes'] ?? const <dynamic>[];
+    if (rawDishes is! List) {
+      throw const MalformedResponseException('Meal dishes 格式异常');
+    }
     try {
       return MealDto(
         id: json['id'] as String,
@@ -40,6 +47,11 @@ class MealDto {
         sharedMealId: json['shared_meal_id'] as String?,
         name: json['name'] as String,
         source: json['source'] as String,
+        dishes: rawDishes
+            .map((value) => MealDishDto.fromJson(value as Map<String, dynamic>))
+            .toList(growable: false),
+        aiHint: json['ai_hint'] as String?,
+        originalInput: json['original_input'] as String?,
         baseCalories: (json['base_calories'] as num),
         baseProtein: (json['base_protein'] as num),
         baseCarbs: (json['base_carbs'] as num),
@@ -67,6 +79,9 @@ class MealDto {
   final String? sharedMealId;
   final String name;
   final String source;
+  final List<MealDishDto> dishes;
+  final String? aiHint;
+  final String? originalInput;
 
   final num baseCalories;
   final num baseProtein;
@@ -88,7 +103,25 @@ class MealDto {
   final String updatedAt;
 }
 
-/// Wire shape of `GET /meals` / `GET /meals/recent` responses.
+class MealDishDto {
+  const MealDishDto({required this.name, required this.calories});
+
+  factory MealDishDto.fromJson(Map<String, dynamic> json) {
+    try {
+      return MealDishDto(
+        name: json['name'] as String,
+        calories: json['calories'] as num,
+      );
+    } on TypeError catch (error) {
+      throw MalformedResponseException('Meal dish 数据解析失败: $error');
+    }
+  }
+
+  final String name;
+  final num calories;
+}
+
+/// Wire shape of Meal list responses, including `/meals/reuse`.
 class MealListResponseDto {
   const MealListResponseDto({required this.meals});
 

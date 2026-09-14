@@ -5,6 +5,7 @@ import '../../../summary/presentation/summary_controller.dart';
 import '../../data/meal_ai_repository.dart';
 import '../../data/meals_providers.dart';
 import '../../data/meals_repository.dart';
+import '../../domain/meal.dart';
 import '../../domain/meal_ai_result.dart';
 import '../../domain/meal_patch.dart';
 import '../../domain/meal_share_mode.dart';
@@ -14,6 +15,17 @@ import '../domain/record_state.dart';
 
 final recordControllerProvider =
     NotifierProvider.autoDispose<RecordController, RecordState>(RecordController.new);
+
+final yesterdayMealsProvider = FutureProvider.autoDispose<List<Meal>>((ref) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  return ref
+      .watch(mealsRepositoryProvider)
+      .getMealsForReuse(
+        date: today.subtract(const Duration(days: 1)),
+        limit: 3,
+      );
+});
 
 class RecordController extends AutoDisposeNotifier<RecordState> {
   late final MealAiRepository _aiRepository;
@@ -98,6 +110,23 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
     if (current != null) state = RecordResult(current.copyWith(portionRatio: ratio));
   }
 
+  void loadFromMeal(Meal meal) {
+    state = RecordResult(
+      RecordDraft(
+        name: meal.name,
+        baseCalories: meal.baseCalories,
+        baseProtein: meal.baseProtein,
+        baseCarbs: meal.baseCarbs,
+        baseFat: meal.baseFat,
+        dishes: meal.dishes,
+        source: meal.source,
+        originalText: meal.originalInput,
+        hint: meal.aiHint,
+        portionRatio: meal.portionRatio,
+      ),
+    );
+  }
+
   void applyEdit({required String name, required num calories, required num protein, required num carbs, required num fat}) {
     final current = _draft;
     if (current == null) return;
@@ -125,6 +154,9 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
         portionRatio: current.portionRatio,
         shareMode: MealShareMode.solo,
         mealTime: _mealTime,
+        dishes: current.dishes,
+        aiHint: current.hint,
+        originalInput: current.originalText,
       ));
       await ref.read(summaryControllerProvider.notifier).refresh();
       clear();

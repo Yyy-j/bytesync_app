@@ -13,6 +13,9 @@ class CreateMealRequestDto {
     required this.portionRatio,
     required this.shareMode,
     required this.mealTime,
+    this.dishes = const [],
+    this.aiHint,
+    this.originalInput,
   });
 
   factory CreateMealRequestDto.fromInput(NewMealInput input) {
@@ -26,6 +29,17 @@ class CreateMealRequestDto {
       portionRatio: input.portionRatio,
       shareMode: input.shareMode.toWire(),
       mealTime: input.mealTime,
+      dishes: input.dishes
+          .where((dish) => dish.calories != null)
+          .map(
+            (dish) => <String, dynamic>{
+              'name': dish.name,
+              'calories': dish.calories!,
+            },
+          )
+          .toList(growable: false),
+      aiHint: input.aiHint,
+      originalInput: input.originalInput,
     );
   }
 
@@ -38,6 +52,9 @@ class CreateMealRequestDto {
   final double portionRatio;
   final String shareMode;
   final String mealTime;
+  final List<Map<String, dynamic>> dishes;
+  final String? aiHint;
+  final String? originalInput;
 
   Map<String, dynamic> toJson() => {
     'name': name,
@@ -49,6 +66,9 @@ class CreateMealRequestDto {
     'portion_ratio': portionRatio,
     'share_mode': shareMode,
     'meal_time': mealTime,
+    'dishes': dishes,
+    'ai_hint': aiHint,
+    'original_input': originalInput,
   };
 }
 

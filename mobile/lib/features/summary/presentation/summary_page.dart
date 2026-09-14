@@ -17,8 +17,6 @@ import 'summary_controller.dart';
 class SummaryPage extends ConsumerWidget {
   const SummaryPage({super.key});
 
-  static const _goals = DailyGoals();
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(summaryControllerProvider);
@@ -27,6 +25,11 @@ class SummaryPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('今日'),
         actions: [
+          IconButton(
+            tooltip: '营养目标',
+            icon: const Icon(Icons.track_changes_outlined),
+            onPressed: () => context.push('/nutrition-goals'),
+          ),
           IconButton(
             tooltip: '配对详情',
             icon: const Icon(Icons.people_outline),
@@ -48,12 +51,12 @@ class SummaryPage extends ConsumerWidget {
             ),
             SummaryEmpty(:final summary) => _SummaryBody(
               summary: summary,
-              goals: _goals,
+              goals: summary.selfGoals,
               emptyState: true,
             ),
             SummaryLoaded(:final summary) => _SummaryBody(
               summary: summary,
-              goals: _goals,
+              goals: summary.selfGoals,
               emptyState: false,
             ),
           },

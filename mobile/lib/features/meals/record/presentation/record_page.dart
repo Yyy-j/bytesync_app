@@ -7,7 +7,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../app/home_shell.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/app_card.dart';
 import '../../../summary/presentation/summary_controller.dart';
+import '../../domain/meal.dart';
 import '../../domain/meal_patch.dart';
 import '../../domain/meal_share_mode.dart';
 import '../../domain/meal_source.dart';
@@ -121,6 +123,11 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     }
   }
 
+  void _loadFromMeal(Meal meal) {
+    setState(() => _selectedImagePath = null);
+    ref.read(recordControllerProvider.notifier).loadFromMeal(meal);
+  }
+
   void _clearManual() {
     for (final controller in [
       _nameController,
@@ -139,6 +146,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(recordControllerProvider);
+    final yesterdayMeals = ref.watch(yesterdayMealsProvider);
     final draft = switch (state) {
       RecordResult(:final draft) => draft,
       RecordError(:final draft) => draft,
@@ -205,6 +213,12 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                 const SizedBox(height: AppSpacing.sm),
                 Text(error, style: const TextStyle(color: AppColors.warning)),
               ],
+              const SizedBox(height: AppSpacing.lg),
+              _YesterdayReuseSection(
+                meals: yesterdayMeals,
+                enabled: !busy,
+                onSelected: _loadFromMeal,
+              ),
               if (draft != null) ...[
                 const SizedBox(height: AppSpacing.lg),
                 _ResultPanel(
@@ -213,7 +227,10 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                   busy: busy,
                   onPortion: (ratio) => ref.read(recordControllerProvider.notifier).setPortion(ratio),
                   onEdit: () => _showEditDialog(draft),
-                  onRefine: () => _showRefineDialog(),
+                  onRefine: draft.source == MealSource.text ||
+                          draft.localImagePath != null
+                      ? () => _showRefineDialog()
+                      : null,
                   onSave: _saveAi,
                   onRetake: () => _pickImage(ImageSource.camera),
                   onReselect: () => _pickImage(ImageSource.gallery),
@@ -305,6 +322,80 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       );
 }
 
+class _YesterdayReuseSection extends StatelessWidget {
+  const _YesterdayReuseSection({
+    required this.meals,
+    required this.enabled,
+    required this.onSelected,
+  });
+
+  final AsyncValue<List<Meal>> meals;
+  final bool enabled;
+  final ValueChanged<Meal> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '昨天也吃了？',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        meals.when(
+          loading: () => const LinearProgressIndicator(minHeight: 2),
+          error: (_, _) => const Text(
+            '昨天的记录暂时无法加载',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textTertiary,
+            ),
+          ),
+          data: (values) {
+            final visible = values.take(3).toList(growable: false);
+            if (visible.isEmpty) {
+              return const Text(
+                '昨天没有可复用的记录',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textTertiary,
+                ),
+              );
+            }
+            return AppCard(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              child: Column(
+                children: [
+                  for (var index = 0; index < visible.length; index++) ...[
+                    ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(visible[index].name),
+                      trailing: Text(
+                        '${visible[index].calories.round()} kcal',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      onTap: enabled ? () => onSelected(visible[index]) : null,
+                    ),
+                    if (index != visible.length - 1)
+                      const Divider(height: 1, color: AppColors.border),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
 class _ResultPanel extends StatelessWidget {
   const _ResultPanel({required this.draft, required this.imagePath, required this.busy, required this.onPortion, required this.onEdit, required this.onRefine, required this.onSave, required this.onRetake, required this.onReselect});
 
@@ -313,7 +404,7 @@ class _ResultPanel extends StatelessWidget {
   final bool busy;
   final ValueChanged<double> onPortion;
   final VoidCallback onEdit;
-  final VoidCallback onRefine;
+  final VoidCallback? onRefine;
   final VoidCallback onSave;
   final VoidCallback onRetake;
   final VoidCallback onReselect;
@@ -349,7 +440,8 @@ class _ResultPanel extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Wrap(spacing: 8, runSpacing: 8, children: [
             OutlinedButton(onPressed: busy ? null : onEdit, child: const Text('直接修改')),
-            OutlinedButton(onPressed: busy ? null : onRefine, child: const Text('补充说明重新估算')),
+            if (onRefine != null)
+              OutlinedButton(onPressed: busy ? null : onRefine, child: const Text('补充说明重新估算')),
             FilledButton(onPressed: busy ? null : onSave, child: const Text('记录这一餐')),
           ]),
         ]),

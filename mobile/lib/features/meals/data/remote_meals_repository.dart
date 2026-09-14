@@ -90,6 +90,25 @@ class RemoteMealsRepository implements MealsRepository {
     }
   }
 
+  @override
+  Future<List<Meal>> getMealsForReuse({
+    required DateTime date,
+    int limit = 3,
+  }) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.mealsReuse,
+        queryParameters: {
+          'date': _dateOnly(date),
+          'limit': limit.clamp(1, 10),
+        },
+      );
+      return _mapList(response.data!);
+    } catch (e) {
+      throw _errorMapper.map(e);
+    }
+  }
+
   List<Meal> _mapList(Map<String, dynamic> json) {
     return MealListResponseDto.fromJson(json).meals
         .map(MealMapper.fromDto)

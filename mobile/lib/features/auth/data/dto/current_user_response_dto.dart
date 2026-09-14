@@ -2,9 +2,9 @@ import '../../../../core/network/api_exception.dart';
 
 /// Wire shape of `GET /users/me` response body.
 ///
-/// See `API_CONTRACT.md` §1.3. Note that [email] is nullable per the
-/// current backend, and neither `display_name` nor `avatar_url` is
-/// currently returned.
+/// This auth-specific parser intentionally ignores the `goals` object.
+/// Profile and nutrition-goal screens use their own DTO because the goal
+/// keys differ from `GET /summary/daily`.
 class CurrentUserResponseDto {
   const CurrentUserResponseDto({
     required this.id,
@@ -27,7 +27,6 @@ class CurrentUserResponseDto {
       id: id,
       provider: provider,
       email: json['email'] as String?,
-      // Not part of the current backend schema, but tolerated if added.
       displayName: json['display_name'] as String?,
       avatarUrl: json['avatar_url'] as String?,
     );

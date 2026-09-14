@@ -1,3 +1,4 @@
+import 'meal_ai_result.dart';
 import 'meal_share_mode.dart';
 import 'meal_source.dart';
 
@@ -40,6 +41,9 @@ class Meal {
 
     required this.createdAt,
     required this.updatedAt,
+    this.dishes = const [],
+    this.aiHint,
+    this.originalInput,
   });
 
   // ── identity ──
@@ -51,6 +55,9 @@ class Meal {
   // ── content ──
   final String name;
   final MealSource source;
+  final List<MealAiDish> dishes;
+  final String? aiHint;
+  final String? originalInput;
 
   // ── baseline (one portion, one person) ──
   final num baseCalories;

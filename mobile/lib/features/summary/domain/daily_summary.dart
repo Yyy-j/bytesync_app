@@ -132,9 +132,9 @@ class UserDailySlice {
   final num fat;
 }
 
-/// Daily nutrition goals. Hardcoded defaults for MVP (mirroring the
-/// mini-program's `config.goals`); a per-user goals setting can replace
-/// this later without changing how the summary page reads goals.
+/// Daily nutrition goals returned under `self_goals` / `partner_goals` by
+/// `GET /summary/daily`. These wire keys intentionally differ from the
+/// profile endpoint's `goals` object.
 class DailyGoals {
   const DailyGoals({
     this.calorieGoal = 2000,
