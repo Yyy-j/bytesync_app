@@ -10,16 +10,17 @@ class LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(color: AppColors.primary),
+          CircularProgressIndicator(color: theme.colorScheme.primary),
           if (message != null) ...[
             const SizedBox(height: AppSpacing.md),
             Text(
               message!,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
           ],
         ],
@@ -43,6 +44,7 @@ class EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -51,8 +53,8 @@ class EmptyView extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(
             message,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
               fontSize: 14,
             ),
           ),
@@ -75,18 +77,19 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline, color: AppColors.warning, size: 36),
+            Icon(Icons.error_outline, color: theme.colorScheme.error, size: 36),
             const SizedBox(height: AppSpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: AppSpacing.lg),

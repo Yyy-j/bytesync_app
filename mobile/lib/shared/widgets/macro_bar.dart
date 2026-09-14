@@ -29,6 +29,7 @@ class MacroBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final secondaryText = Theme.of(context).colorScheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
@@ -37,9 +38,9 @@ class MacroBarRow extends StatelessWidget {
             width: 44,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondary,
+                color: secondaryText,
               ),
             ),
           ),
@@ -60,9 +61,9 @@ class MacroBarRow extends StatelessWidget {
             child: Text(
               '${grams.round()}g',
               textAlign: TextAlign.end,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textSecondary,
+                color: secondaryText,
               ),
             ),
           ),

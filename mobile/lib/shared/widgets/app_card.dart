@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
 
-/// A rounded white card matching the mini-program's `.card` utility class
+/// A rounded card matching the mini-program's `.card` utility class
 /// (`background: card-bg; border-radius: lg; padding: lg; shadow: soft`).
 class AppCard extends StatelessWidget {
   const AppCard({
@@ -19,11 +19,16 @@ class AppCard extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(AppRadius.lg),
-        boxShadow: const [
+        border: Theme.of(context).brightness == Brightness.dark
+            ? Border.all(color: Colors.white.withValues(alpha: 0.10))
+            : null,
+        boxShadow: [
           BoxShadow(
-            color: Color(0x0D000000),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.transparent
+                : const Color(0x0D000000),
             blurRadius: 20,
             offset: Offset(0, 4),
           ),

@@ -151,6 +151,7 @@ class _WeekSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final now = DateTime.now();
     return Row(
       children: List.generate(7, (index) {
@@ -170,13 +171,13 @@ class _WeekSelector extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: selected
-                      ? AppColors.primary
-                      : AppColors.cardBackground,
+                      ? theme.colorScheme.primary
+                      : theme.cardColor,
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   border: Border.all(
                     color: isToday && !selected
-                        ? AppColors.primary
-                        : AppColors.border,
+                      ? theme.colorScheme.primary
+                      : theme.dividerColor,
                   ),
                 ),
                 child: Column(
@@ -186,8 +187,8 @@ class _WeekSelector extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         color: selected
-                            ? Colors.white
-                            : AppColors.textSecondary,
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -195,7 +196,9 @@ class _WeekSelector extends StatelessWidget {
                       '${date.day}',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: selected ? Colors.white : AppColors.textPrimary,
+                        color: selected
+                          ? theme.colorScheme.onPrimary
+                          : theme.colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -353,6 +356,7 @@ class _CompletedSetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final performance = <String>[
       if (itemType == TrainingItemType.strength) ...[
         if (detail.weight != null && detail.reps != null)
@@ -377,7 +381,7 @@ class _CompletedSetRow extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Row(
@@ -396,19 +400,19 @@ class _CompletedSetRow extends StatelessWidget {
                       const SizedBox(height: AppSpacing.xs),
                       Text(
                         detail.remark!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.edit_outlined,
                 size: 18,
-                color: AppColors.textTertiary,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ],
           ),

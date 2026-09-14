@@ -33,6 +33,12 @@ class AppColors {
   static const proteinBg = Color(0xFFEDF7F1);
   static const carbsBg = Color(0xFFFEF8EC);
   static const fatBg = Color(0xFFFDF0F0);
+
+  static const darkPrimary = Color(0xFF00AEFF);
+  static const darkBackground = Color(0xFF000000);
+  static const darkCard = Color(0xFF0D0D0D);
+  static const darkSurface = Color(0xFF121212);
+  static const darkInput = Color(0xFF101010);
 }
 
 /// Spacing scale, ported 1:1 (rpx / 2 == logical px at the mini-program's
@@ -58,7 +64,7 @@ class AppRadius {
   static const full = 999.0;
 }
 
-ThemeData buildAppTheme() {
+ThemeData buildLightTheme() {
   final base = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
@@ -126,3 +132,166 @@ ThemeData buildAppTheme() {
     ),
   );
 }
+
+ThemeData buildDarkTheme() {
+  const primary = AppColors.darkPrimary;
+  final colorScheme = ColorScheme.fromSeed(
+    seedColor: primary,
+    brightness: Brightness.dark,
+    primary: primary,
+    onPrimary: Colors.black,
+    surface: AppColors.darkBackground,
+    onSurface: Colors.white,
+  );
+  final base = ThemeData(
+    useMaterial3: true,
+    colorScheme: colorScheme,
+    scaffoldBackgroundColor: AppColors.darkBackground,
+    canvasColor: AppColors.darkBackground,
+    fontFamily: 'PingFang SC',
+  );
+  final darkSecondary = Colors.white.withValues(alpha: 0.70);
+  final darkTertiary = Colors.white.withValues(alpha: 0.45);
+
+  return base.copyWith(
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.darkBackground,
+      foregroundColor: Colors.white,
+      elevation: 0,
+      centerTitle: false,
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 24,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+    textTheme: base.textTheme.copyWith(
+      bodyLarge: base.textTheme.bodyLarge?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+      ),
+      bodyMedium: base.textTheme.bodyMedium?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+      ),
+      bodySmall: base.textTheme.bodySmall?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w600,
+      ),
+      titleLarge: base.textTheme.titleLarge?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      titleMedium: base.textTheme.titleMedium?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      titleSmall: base.textTheme.titleSmall?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      headlineLarge: base.textTheme.headlineLarge?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      headlineMedium: base.textTheme.headlineMedium?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
+      headlineSmall: base.textTheme.headlineSmall?.copyWith(
+        color: Colors.white,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+    dialogTheme: const DialogThemeData(backgroundColor: AppColors.darkCard),
+    cardTheme: CardThemeData(
+      color: AppColors.darkCard,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.black,
+        minimumSize: const Size.fromHeight(48),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.full),
+        ),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.black,
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primary,
+        side: const BorderSide(color: primary),
+        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: AppColors.darkInput,
+      labelStyle: TextStyle(color: darkSecondary, fontWeight: FontWeight.w600),
+      hintStyle: TextStyle(color: darkTertiary),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        borderSide: const BorderSide(color: primary, width: 2),
+      ),
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: AppColors.darkBackground,
+      selectedItemColor: primary,
+      unselectedItemColor: darkTertiary,
+      type: BottomNavigationBarType.fixed,
+      showUnselectedLabels: true,
+    ),
+    dividerColor: Colors.white.withValues(alpha: 0.10),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(color: primary),
+    chipTheme: base.chipTheme.copyWith(
+      selectedColor: primary,
+      secondarySelectedColor: primary,
+      labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+      side: BorderSide(color: Colors.white.withValues(alpha: 0.10)),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStatePropertyAll(primary),
+      trackColor: WidgetStatePropertyAll(primary.withValues(alpha: 0.35)),
+    ),
+    checkboxTheme: CheckboxThemeData(
+      fillColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected) ? primary : null,
+      ),
+      checkColor: const WidgetStatePropertyAll(Colors.black),
+    ),
+    radioTheme: RadioThemeData(fillColor: const WidgetStatePropertyAll(primary)),
+    sliderTheme: base.sliderTheme.copyWith(
+      activeTrackColor: primary,
+      thumbColor: primary,
+      overlayColor: primary.withValues(alpha: 0.18),
+    ),
+  );
+}
+
+ThemeData buildAppTheme() => buildLightTheme();

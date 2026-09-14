@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/theme_controller.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/presentation/auth_controller.dart';
@@ -55,6 +56,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       _loadedProfileId = profile.id;
     }
     final pairState = ref.watch(pairControllerProvider);
+    final themeController = ref.watch(themeModeControllerProvider);
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
@@ -113,6 +115,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   onPressed: state.saving ? null : _saveProfile,
                   child: Text(state.saving ? '保存中…' : '保存资料'),
                 ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.palette_outlined),
+                  SizedBox(width: AppSpacing.md),
+                  Text(
+                    '主题模式',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              SegmentedButton<ThemeMode>(
+                expandedInsets: EdgeInsets.zero,
+                segments: const [
+                  ButtonSegment(value: ThemeMode.light, label: Text('浅色')),
+                  ButtonSegment(value: ThemeMode.dark, label: Text('深色')),
+                ],
+                selected: {themeController.mode},
+                onSelectionChanged: (selection) {
+                  ref.read(themeModeControllerProvider).setMode(selection.first);
+                },
               ),
             ],
           ),
