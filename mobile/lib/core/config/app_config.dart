@@ -3,7 +3,7 @@
 /// Every environment-dependent value here comes from a `--dart-define` at
 /// build/run time. Example:
 ///   flutter run \
-///     --dart-define=API_BASE_URL=http://192.168.3.2:8000 \
+///     --dart-define=API_BASE_URL=https://api.example.com \
 ///     --dart-define=GOOGLE_CLIENT_ID=xxx \
 ///     --dart-define=GOOGLE_SERVER_CLIENT_ID=yyy
 ///
@@ -21,7 +21,7 @@ class AppConfig {
   /// Base URL of the FastAPI backend.
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://192.168.3.2:8000',
+    defaultValue: 'https://fish-kingdom-cas-activities.trycloudflare.com',
   );
 
   /// Network timeouts, in milliseconds.

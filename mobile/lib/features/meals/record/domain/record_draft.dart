@@ -1,4 +1,5 @@
 import '../../domain/meal_ai_result.dart';
+import '../../domain/meal_share_mode.dart';
 import '../../domain/meal_source.dart';
 
 class RecordDraft {
@@ -14,6 +15,7 @@ class RecordDraft {
     this.hint,
     this.localImagePath,
     this.portionRatio = 1,
+    this.shareMode = MealShareMode.solo,
   });
 
   factory RecordDraft.fromAi({
@@ -51,6 +53,7 @@ class RecordDraft {
   final String? hint;
   final String? localImagePath;
   final double portionRatio;
+  final MealShareMode shareMode;
 
   num get calories => baseCalories * portionRatio;
   num get protein => baseProtein * portionRatio;
@@ -78,6 +81,7 @@ class RecordDraft {
     String? hint,
     String? localImagePath,
     double? portionRatio,
+    MealShareMode? shareMode,
   }) {
     return RecordDraft(
       name: name ?? this.name,
@@ -91,6 +95,7 @@ class RecordDraft {
       hint: hint ?? this.hint,
       localImagePath: localImagePath ?? this.localImagePath,
       portionRatio: portionRatio ?? this.portionRatio,
+      shareMode: shareMode ?? this.shareMode,
     );
   }
 }

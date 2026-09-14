@@ -91,13 +91,15 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
       final result = current.source == MealSource.text
           ? await _aiRepository.analyzeText(_combine(current.originalText ?? current.name, trimmed))
           : await (_aiRepository as MealImageAiRepository).analyzeImage(current.localImagePath!, hint: _combine(current.hint, trimmed));
-      state = RecordResult(RecordDraft.fromAi(
-        result: result,
-        source: current.source,
-        originalText: current.originalText,
-        hint: _combine(current.hint, trimmed),
-        localImagePath: current.localImagePath,
-      ));
+      state = RecordResult(
+        RecordDraft.fromAi(
+          result: result,
+          source: current.source,
+          originalText: current.originalText,
+          hint: _combine(current.hint, trimmed),
+          localImagePath: current.localImagePath,
+        ).copyWith(shareMode: current.shareMode),
+      );
       return true;
     } catch (error) {
       state = RecordError(_messageFor(error), draft: current);
@@ -108,6 +110,33 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
   void setPortion(double ratio) {
     final current = _draft;
     if (current != null) state = RecordResult(current.copyWith(portionRatio: ratio));
+  }
+
+  void setShareMode(MealShareMode shareMode) {
+    final current = _draft;
+    if (current != null) {
+      state = RecordResult(current.copyWith(shareMode: shareMode));
+    }
+  }
+
+  void loadManual({
+    required String name,
+    required num calories,
+    required num protein,
+    required num carbs,
+    required num fat,
+  }) {
+    state = RecordResult(
+      RecordDraft(
+        name: name,
+        baseCalories: calories,
+        baseProtein: protein,
+        baseCarbs: carbs,
+        baseFat: fat,
+        dishes: const [],
+        source: MealSource.manual,
+      ),
+    );
   }
 
   void loadFromMeal(Meal meal) {
@@ -123,6 +152,7 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
         originalText: meal.originalInput,
         hint: meal.aiHint,
         portionRatio: meal.portionRatio,
+        shareMode: meal.shareMode,
       ),
     );
   }
@@ -152,7 +182,7 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
         baseCarbs: current.baseCarbs,
         baseFat: current.baseFat,
         portionRatio: current.portionRatio,
-        shareMode: MealShareMode.solo,
+        shareMode: current.shareMode,
         mealTime: _mealTime,
         dishes: current.dishes,
         aiHint: current.hint,

@@ -3,17 +3,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../app/home_shell.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_card.dart';
-import '../../../summary/presentation/summary_controller.dart';
+import '../../../pair/domain/pair_state.dart';
+import '../../../pair/presentation/pair_controller.dart';
 import '../../domain/meal.dart';
-import '../../domain/meal_patch.dart';
 import '../../domain/meal_share_mode.dart';
 import '../../domain/meal_source.dart';
-import '../../presentation/add_meal_controller.dart';
 import '../domain/record_draft.dart';
 import '../domain/record_state.dart';
 import 'record_controller.dart';
@@ -80,35 +78,35 @@ class _RecordPageState extends ConsumerState<RecordPage> {
         );
   }
 
-  Future<void> _saveManual() async {
+  void _createManualDraft() {
     final name = _nameController.text.trim();
     final calories = num.tryParse(_caloriesController.text.trim());
     if (name.isEmpty || calories == null || calories <= 0) {
       _snack('请填写食物名称和大于 0 的卡路里');
       return;
     }
-    final ok = await ref.read(addMealControllerProvider.notifier).submit(NewMealInput(
+    ref.read(recordControllerProvider.notifier).loadManual(
           name: name,
-          source: MealSource.manual,
-          baseCalories: calories,
-          baseProtein: _number(_proteinController.text),
-          baseCarbs: _number(_carbsController.text),
-          baseFat: _number(_fatController.text),
-          portionRatio: 1,
-          shareMode: MealShareMode.solo,
-          mealTime: DateFormat('HH:mm').format(DateTime.now()),
-        ));
-    if (ok && mounted) {
-      await ref.read(summaryControllerProvider.notifier).refresh();
-      _clearManual();
-      _snack('已记录');
-      ref.read(homeTabIndexProvider.notifier).state = 0;
-    }
+          calories: calories,
+          protein: _number(_proteinController.text),
+          carbs: _number(_carbsController.text),
+          fat: _number(_fatController.text),
+        );
+    _clearManual();
+    _snack('已生成草稿，请确认份量和用餐人');
   }
 
   num _number(String value) => num.tryParse(value.trim()) ?? 0;
 
-  Future<void> _saveAi() async {
+  Future<void> _saveDraft() async {
+    final pairState = ref.read(pairControllerProvider);
+    final hasPartner = pairState is PairConnected &&
+        pairState.pair.partner != null;
+    if (!hasPartner) {
+      ref
+          .read(recordControllerProvider.notifier)
+          .setShareMode(MealShareMode.solo);
+    }
     final ok = await ref.read(recordControllerProvider.notifier).save();
     if (!mounted) return;
     if (ok) {
@@ -147,6 +145,8 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(recordControllerProvider);
     final yesterdayMeals = ref.watch(yesterdayMealsProvider);
+    final pairState = ref.watch(pairControllerProvider);
+    final partner = pairState is PairConnected ? pairState.pair.partner : null;
     final draft = switch (state) {
       RecordResult(:final draft) => draft,
       RecordError(:final draft) => draft,
@@ -226,12 +226,14 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                   imagePath: _selectedImagePath ?? draft.localImagePath,
                   busy: busy,
                   onPortion: (ratio) => ref.read(recordControllerProvider.notifier).setPortion(ratio),
+                  onShareMode: (mode) => ref.read(recordControllerProvider.notifier).setShareMode(mode),
+                  partnerName: partner?.displayName,
                   onEdit: () => _showEditDialog(draft),
                   onRefine: draft.source == MealSource.text ||
                           draft.localImagePath != null
                       ? () => _showRefineDialog()
                       : null,
-                  onSave: _saveAi,
+                  onSave: _saveDraft,
                   onRetake: () => _pickImage(ImageSource.camera),
                   onReselect: () => _pickImage(ImageSource.gallery),
                 ),
@@ -246,7 +248,13 @@ class _RecordPageState extends ConsumerState<RecordPage> {
               _field('蛋白质 (Protein)', _proteinController, '克', numeric: true),
               _field('碳水 (Carbs)', _carbsController, '克', numeric: true),
               _field('脂肪 (Fat)', _fatController, '克', numeric: true),
-              SizedBox(width: double.infinity, child: ElevatedButton(onPressed: _saveManual, child: const Text('保存手动记录'))),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: busy ? null : _createManualDraft,
+                  child: const Text('生成记录预览'),
+                ),
+              ),
             ],
           ),
         ),
@@ -397,12 +405,26 @@ class _YesterdayReuseSection extends StatelessWidget {
 }
 
 class _ResultPanel extends StatelessWidget {
-  const _ResultPanel({required this.draft, required this.imagePath, required this.busy, required this.onPortion, required this.onEdit, required this.onRefine, required this.onSave, required this.onRetake, required this.onReselect});
+  const _ResultPanel({
+    required this.draft,
+    required this.imagePath,
+    required this.busy,
+    required this.onPortion,
+    required this.onShareMode,
+    required this.partnerName,
+    required this.onEdit,
+    required this.onRefine,
+    required this.onSave,
+    required this.onRetake,
+    required this.onReselect,
+  });
 
   final RecordDraft draft;
   final String? imagePath;
   final bool busy;
   final ValueChanged<double> onPortion;
+  final ValueChanged<MealShareMode> onShareMode;
+  final String? partnerName;
   final VoidCallback onEdit;
   final VoidCallback? onRefine;
   final VoidCallback onSave;
@@ -411,15 +433,18 @@ class _ResultPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    final effectiveShareMode =
+        partnerName == null ? MealShareMode.solo : draft.shareMode;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           if (imagePath != null) ...[
             ClipRRect(borderRadius: BorderRadius.circular(8), child: Image.file(File(imagePath!), height: 180, width: double.infinity, fit: BoxFit.cover)),
             Row(children: [TextButton.icon(onPressed: busy ? null : onRetake, icon: const Icon(Icons.camera_alt_outlined), label: const Text('重新拍摄')), TextButton.icon(onPressed: busy ? null : onReselect, icon: const Icon(Icons.photo_library_outlined), label: const Text('重新选择'))]),
           ],
-          const Text('AI 估算结果', style: TextStyle(fontWeight: FontWeight.w700)),
+          Text(draft.source == MealSource.manual ? '手动记录草稿' : 'AI 估算结果', style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: AppSpacing.sm),
           Text(draft.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
           Text('${_value(draft.calories)} kcal'),
@@ -428,15 +453,86 @@ class _ResultPanel extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           const Text('份量'),
           Wrap(spacing: 6, children: <double>[0.5, 0.75, 1, 1.25, 1.5, 2].map((ratio) => ChoiceChip(label: Text('${ratio}x'), selected: draft.portionRatio == ratio, onSelected: (_) => onPortion(ratio))).toList()),
+          const SizedBox(height: AppSpacing.md),
+          const Text('这餐是谁吃的？', style: TextStyle(fontWeight: FontWeight.w600)),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              ChoiceChip(
+                label: const Text('我吃'),
+                selected: effectiveShareMode == MealShareMode.solo,
+                onSelected: busy ? null : (_) => onShareMode(MealShareMode.solo),
+              ),
+              if (partnerName != null) ...[
+                ChoiceChip(
+                  label: const Text('Ta 吃'),
+                  selected: draft.shareMode == MealShareMode.partnerOnly,
+                  onSelected: busy ? null : (_) => onShareMode(MealShareMode.partnerOnly),
+                ),
+                ChoiceChip(
+                  label: const Text('一起吃'),
+                  selected: draft.shareMode.isShared,
+                  onSelected: busy ? null : (_) => onShareMode(MealShareMode.sharedHalf),
+                ),
+              ],
+            ],
+          ),
+          if (partnerName != null && effectiveShareMode.isShared) ...[
+            const SizedBox(height: AppSpacing.sm),
+            const Text('怎么分？', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+            Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                ChoiceChip(
+                  label: const Text('1 : 1'),
+                  selected: draft.shareMode == MealShareMode.sharedHalf,
+                  onSelected: busy ? null : (_) => onShareMode(MealShareMode.sharedHalf),
+                ),
+                ChoiceChip(
+                  label: const Text('我 1 / Ta 2'),
+                  selected: draft.shareMode == MealShareMode.sharedMeOneThird,
+                  onSelected: busy ? null : (_) => onShareMode(MealShareMode.sharedMeOneThird),
+                ),
+                ChoiceChip(
+                  label: const Text('我 2 / Ta 1'),
+                  selected: draft.shareMode == MealShareMode.sharedMeTwoThirds,
+                  onSelected: busy ? null : (_) => onShareMode(MealShareMode.sharedMeTwoThirds),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(AppRadius.md),
+            ),
+            child: Text(
+              '分配预览：我 ${_value(draft.calories * effectiveShareMode.meRatio)} kcal'
+              '${partnerName == null ? '' : '  $partnerName ${_value(draft.calories * effectiveShareMode.partnerRatio)} kcal'}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
           if (draft.dishes.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
             const Text('明细', style: TextStyle(fontWeight: FontWeight.w600)),
             ...draft.scaledDishes.map((dish) => Text('${dish.name}${dish.calories == null ? '' : ' ${_value(dish.calories!)} kcal'}')),
             Text('菜品：${draft.dishes.map((dish) => dish.name).join('、')}'),
           ],
-          const SizedBox(height: AppSpacing.sm),
-          const Text('AI 估算，仅供参考', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-          const Text('AI 估算，仅供参考，保存前可以修改', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+          if (draft.source != MealSource.manual) ...[
+            const SizedBox(height: AppSpacing.sm),
+            const Text(
+              'AI 估算，仅供参考',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           Wrap(spacing: 8, runSpacing: 8, children: [
             OutlinedButton(onPressed: busy ? null : onEdit, child: const Text('直接修改')),
@@ -444,7 +540,7 @@ class _ResultPanel extends StatelessWidget {
               OutlinedButton(onPressed: busy ? null : onRefine, child: const Text('补充说明重新估算')),
             FilledButton(onPressed: busy ? null : onSave, child: const Text('记录这一餐')),
           ]),
-        ]),
+        ],
       ),
     );
   }

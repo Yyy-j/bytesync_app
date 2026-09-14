@@ -11,9 +11,7 @@ import '../../meals/domain/meal.dart';
 import '../domain/daily_summary.dart';
 import 'summary_controller.dart';
 
-/// Today's nutrition overview: date, total calories, PFC breakdown, and
-/// today's meal list — the MVP subset of the mini-program's `summary`
-/// page (no pairing / dual-user cards, no goal editing).
+/// Today's per-person nutrition overview and pair meal list.
 class SummaryPage extends ConsumerWidget {
   const SummaryPage({super.key});
 
@@ -51,12 +49,10 @@ class SummaryPage extends ConsumerWidget {
             ),
             SummaryEmpty(:final summary) => _SummaryBody(
               summary: summary,
-              goals: summary.selfGoals,
               emptyState: true,
             ),
             SummaryLoaded(:final summary) => _SummaryBody(
               summary: summary,
-              goals: summary.selfGoals,
               emptyState: false,
             ),
           },
@@ -69,12 +65,10 @@ class SummaryPage extends ConsumerWidget {
 class _SummaryBody extends StatelessWidget {
   const _SummaryBody({
     required this.summary,
-    required this.goals,
     required this.emptyState,
   });
 
   final DailySummary summary;
-  final DailyGoals goals;
   final bool emptyState;
 
   @override
@@ -90,54 +84,21 @@ class _SummaryBody extends StatelessWidget {
           style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
         ),
         const SizedBox(height: AppSpacing.md),
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    '${summary.calories.round()}',
-                    style: const TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'kcal',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '/ ${goals.calorieGoal.round()} 目标',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textTertiary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              const Divider(height: 1, color: AppColors.border),
-              const SizedBox(height: AppSpacing.md),
-              MacroBar(
-                protein: summary.protein,
-                proteinGoal: goals.proteinGoal,
-                carbs: summary.carbs,
-                carbsGoal: goals.carbsGoal,
-                fat: summary.fat,
-                fatGoal: goals.fatGoal,
-              ),
-            ],
-          ),
+        _NutritionCard(
+          title: '我的今日摄入',
+          name: '我',
+          slice: summary.selfSlice,
+          goals: summary.selfGoals,
         ),
+        if (summary.partnerSlice != null && summary.partnerGoals != null) ...[
+          const SizedBox(height: AppSpacing.md),
+          _NutritionCard(
+            title: '搭档今日摄入',
+            name: summary.partnerSlice!.displayName,
+            slice: summary.partnerSlice!,
+            goals: summary.partnerGoals!,
+          ),
+        ],
         const SizedBox(height: AppSpacing.xl),
         const Text(
           '今日记录',
@@ -157,18 +118,102 @@ class _SummaryBody extends StatelessWidget {
           ...summary.meals.map(
             (meal) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: _MealListItem(meal: meal),
+              child: _MealListItem(
+                meal: meal,
+                ownerName: _ownerName(meal),
+              ),
             ),
           ),
       ],
     );
   }
+
+  String _ownerName(Meal meal) {
+    if (meal.userId == summary.selfSlice.userId) return '我';
+    final partner = summary.partnerSlice;
+    if (partner != null && meal.userId == partner.userId) {
+      return partner.displayName;
+    }
+    return '成员';
+  }
+}
+
+class _NutritionCard extends StatelessWidget {
+  const _NutritionCard({
+    required this.title,
+    required this.name,
+    required this.slice,
+    required this.goals,
+  });
+
+  final String title;
+  final String name;
+  final UserDailySlice slice;
+  final DailyGoals goals;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Flexible(
+                child: Text(
+                  '$name ${slice.calories.round()}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '/ ${goals.calorieGoal.round()} kcal',
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.textTertiary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: AppSpacing.md),
+          MacroBar(
+            protein: slice.protein,
+            proteinGoal: goals.proteinGoal,
+            carbs: slice.carbs,
+            carbsGoal: goals.carbsGoal,
+            fat: slice.fat,
+            fatGoal: goals.fatGoal,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _MealListItem extends StatelessWidget {
-  const _MealListItem({required this.meal});
+  const _MealListItem({required this.meal, required this.ownerName});
 
   final Meal meal;
+  final String ownerName;
 
   @override
   Widget build(BuildContext context) {
@@ -185,12 +230,25 @@ class _MealListItem extends StatelessWidget {
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
-              Text(
-                meal.mealTime,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textTertiary,
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    meal.mealTime,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                  Text(
+                    ownerName,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

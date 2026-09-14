@@ -5,8 +5,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bytesync/features/meals/data/meal_ai_repository.dart';
 import 'package:bytesync/features/meals/data/meals_providers.dart';
 import 'package:bytesync/features/meals/domain/meal_ai_result.dart';
+import 'package:bytesync/features/meals/domain/meal_share_mode.dart';
+import 'package:bytesync/features/meals/domain/meal_source.dart';
 import 'package:bytesync/features/meals/presentation/add_meal_page.dart';
 import 'package:bytesync/features/meals/presentation/record_controller.dart';
+import 'package:bytesync/features/pair/domain/pair.dart';
+import 'package:bytesync/features/pair/domain/pair_state.dart';
+import 'package:bytesync/features/pair/presentation/pair_controller.dart';
 
 const _result = MealAiResult(
   name: '牛肉面套餐',
@@ -29,6 +34,36 @@ class _FakeMealAiRepository implements MealAiRepository {
     if (error != null) throw error!;
     return _result;
   }
+}
+
+class _FixedPairController extends PairController {
+  _FixedPairController({required this.withPartner});
+
+  final bool withPartner;
+
+  @override
+  PairState build() => PairConnected(
+        Pair(
+          pairId: 'pair-1',
+          inviteCode: 'ABC123',
+          members: [
+            const PairMember(
+              userId: 'self-1',
+              displayName: '我',
+              avatarUrl: null,
+              isSelf: true,
+            ),
+            if (withPartner)
+              const PairMember(
+                userId: 'partner-1',
+                displayName: 'Harper',
+                avatarUrl: null,
+                isSelf: false,
+              ),
+          ],
+          createdAt: DateTime(2026),
+        ),
+      );
 }
 
 void main() {
@@ -64,6 +99,30 @@ void main() {
     final state = container.read(recordControllerProvider);
     expect(state, isA<RecordResult>());
     expect((state as RecordResult).result.dishes, ['牛肉面', '煎蛋']);
+    expect(state.draft.shareMode, MealShareMode.solo);
+  });
+
+  test('manual input becomes an editable solo draft', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    container.read(recordControllerProvider.notifier).loadManual(
+          name: '鸡胸肉沙拉',
+          calories: 600,
+          protein: 50,
+          carbs: 30,
+          fat: 20,
+        );
+    container
+        .read(recordControllerProvider.notifier)
+        .setShareMode(MealShareMode.sharedMeOneThird);
+    container.read(recordControllerProvider.notifier).setPortion(1.5);
+
+    final state = container.read(recordControllerProvider) as RecordResult;
+    expect(state.draft.source, MealSource.manual);
+    expect(state.draft.baseCalories, 600);
+    expect(state.draft.calories, 900);
+    expect(state.draft.shareMode, MealShareMode.sharedMeOneThird);
   });
 
   testWidgets('error keeps the original input', (tester) async {
@@ -73,6 +132,9 @@ void main() {
         overrides: [
           mealAiRepositoryProvider.overrideWithValue(repository),
           yesterdayMealsProvider.overrideWith((ref) async => []),
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(withPartner: false),
+          ),
         ],
         child: const MaterialApp(home: AddMealPage()),
       ),
@@ -93,6 +155,9 @@ void main() {
         overrides: [
           mealAiRepositoryProvider.overrideWithValue(_FakeMealAiRepository()),
           yesterdayMealsProvider.overrideWith((ref) async => []),
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(withPartner: false),
+          ),
         ],
         child: const MaterialApp(home: AddMealPage()),
       ),
@@ -105,5 +170,34 @@ void main() {
 
     expect(find.text('菜品：牛肉面、煎蛋'), findsOneWidget);
     expect(find.text('AI 估算，仅供参考'), findsOneWidget);
+    expect(find.text('我吃'), findsOneWidget);
+    expect(find.text('Ta 吃'), findsNothing);
+  });
+
+  testWidgets('paired result offers partner and shared allocation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          mealAiRepositoryProvider.overrideWithValue(_FakeMealAiRepository()),
+          yesterdayMealsProvider.overrideWith((ref) async => []),
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(withPartner: true),
+          ),
+        ],
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField).first, '600 kcal 晚餐');
+    await tester.tap(find.text('AI 估算'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('一起吃'));
+    await tester.pump();
+
+    expect(find.text('Ta 吃'), findsOneWidget);
+    expect(find.text('1 : 1'), findsOneWidget);
+    expect(find.text('分配预览：我 325 kcal  Harper 325 kcal'), findsOneWidget);
   });
 }
