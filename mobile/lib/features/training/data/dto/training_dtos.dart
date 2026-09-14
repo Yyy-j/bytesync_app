@@ -11,6 +11,7 @@ class TrainingCustomExerciseDto {
     required this.defaultWeight,
     required this.createdAt,
     required this.updatedAt,
+    required this.defaultDurationSeconds,
   });
 
   factory TrainingCustomExerciseDto.fromJson(Map<String, dynamic> json) {
@@ -23,6 +24,7 @@ class TrainingCustomExerciseDto {
         defaultSets: json['default_sets'] as int,
         defaultReps: json['default_reps'] as int,
         defaultWeight: (json['default_weight'] as num).toDouble(),
+        defaultDurationSeconds: json['default_duration_seconds'] as int?,
         createdAt: json['created_at'] as String,
         updatedAt: json['updated_at'] as String,
       );
@@ -38,6 +40,7 @@ class TrainingCustomExerciseDto {
   final int defaultSets;
   final int defaultReps;
   final double defaultWeight;
+  final int? defaultDurationSeconds;
   final String createdAt;
   final String updatedAt;
 }
@@ -71,6 +74,7 @@ class TrainingSetDetailDto {
     required this.rpe,
     required this.remark,
     required this.completedAt,
+    required this.durationSeconds,
   });
 
   factory TrainingSetDetailDto.fromJson(Map<String, dynamic> json) {
@@ -80,6 +84,7 @@ class TrainingSetDetailDto {
         setIndex: json['set_index'] as int,
         weight: (json['weight'] as num?)?.toDouble(),
         reps: json['reps'] as int?,
+        durationSeconds: json['duration_seconds'] as int?,
         rpe: (json['rpe'] as num?)?.toDouble(),
         remark: json['remark'] as String?,
         completedAt: json['completed_at'] as String,
@@ -93,6 +98,7 @@ class TrainingSetDetailDto {
   final int setIndex;
   final double? weight;
   final int? reps;
+  final int? durationSeconds;
   final double? rpe;
   final String? remark;
   final String completedAt;
@@ -112,6 +118,7 @@ class TrainingExerciseItemDto {
     required this.completedSets,
     required this.setDetails,
     required this.removedFromTemplate,
+    required this.targetDurationSeconds,
   });
 
   factory TrainingExerciseItemDto.fromJson(Map<String, dynamic> json) {
@@ -129,6 +136,7 @@ class TrainingExerciseItemDto {
         targetSets: json['target_sets'] as int,
         targetReps: json['target_reps'] as int,
         targetWeight: (json['target_weight'] as num).toDouble(),
+        targetDurationSeconds: json['target_duration_seconds'] as int?,
         order: json['order'] as int,
         completedSets: (json['completed_sets'] as int?) ?? 0,
         setDetails: rawSetDetails
@@ -150,6 +158,7 @@ class TrainingExerciseItemDto {
   final int targetSets;
   final int targetReps;
   final double targetWeight;
+  final int? targetDurationSeconds;
   final int order;
   final int completedSets;
   final List<TrainingSetDetailDto> setDetails;

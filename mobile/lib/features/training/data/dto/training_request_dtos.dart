@@ -28,6 +28,7 @@ Map<String, dynamic> _trainingCustomExerciseJson(
   'default_sets': input.defaultSets,
   'default_reps': input.defaultReps,
   'default_weight': input.defaultWeight,
+  'default_duration_seconds': input.defaultDurationSeconds,
 };
 
 class SaveTrainingTemplateRequestDto {
@@ -59,6 +60,7 @@ class SaveTrainingTemplateRequestDto {
     'target_sets': exercise.targetSets,
     'target_reps': exercise.targetReps,
     'target_weight': exercise.targetWeight,
+    'target_duration_seconds': exercise.targetDurationSeconds,
     'order': exercise.order,
   };
 }
@@ -72,6 +74,8 @@ class CheckInTrainingSetRequestDto {
     'request_id': input.requestId,
     if (input.weight != null) 'weight': input.weight,
     if (input.reps != null) 'reps': input.reps,
+    if (input.durationSeconds != null)
+      'duration_seconds': input.durationSeconds,
     if (input.rpe != null) 'rpe': input.rpe,
     if (input.remark != null) 'remark': input.remark,
   };
@@ -85,6 +89,8 @@ class UpdateTrainingSetRequestDto {
   Map<String, dynamic> toJson() => {
     if (patch.weight.isPresent) 'weight': patch.weight.value,
     if (patch.reps.isPresent) 'reps': patch.reps.value,
+    if (patch.durationSeconds.isPresent)
+      'duration_seconds': patch.durationSeconds.value,
     if (patch.rpe.isPresent) 'rpe': patch.rpe.value,
     if (patch.remark.isPresent) 'remark': patch.remark.value,
   };

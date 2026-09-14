@@ -26,6 +26,7 @@ TrainingCustomExercise _exercise({
   int defaultSets = 3,
   int defaultReps = 10,
   double defaultWeight = 10,
+  int? defaultDurationSeconds,
 }) {
   return TrainingCustomExercise(
     id: id,
@@ -35,6 +36,7 @@ TrainingCustomExercise _exercise({
     defaultSets: defaultSets,
     defaultReps: defaultReps,
     defaultWeight: defaultWeight,
+    defaultDurationSeconds: defaultDurationSeconds,
     createdAt: DateTime.utc(2026, 9, 14),
     updatedAt: DateTime.utc(2026, 9, 14),
   );
@@ -47,6 +49,7 @@ const _input = TrainingCustomExerciseInput(
   defaultSets: 4,
   defaultReps: 20,
   defaultWeight: 12.5,
+  defaultDurationSeconds: 1200,
 );
 
 class _FakeTrainingRepository implements TrainingRepository {
@@ -104,6 +107,7 @@ class _FakeTrainingRepository implements TrainingRepository {
       defaultSets: input.defaultSets,
       defaultReps: input.defaultReps,
       defaultWeight: input.defaultWeight,
+      defaultDurationSeconds: input.defaultDurationSeconds,
     );
   }
 
@@ -159,6 +163,7 @@ void main() {
           'default_sets': 3,
           'default_reps': 10,
           'default_weight': 12.5,
+          'default_duration_seconds': 90,
           'created_at': '2026-09-14T01:02:03Z',
           'updated_at': '2026-09-14T04:05:06Z',
         },
@@ -175,8 +180,28 @@ void main() {
     expect(exercise.defaultSets, 3);
     expect(exercise.defaultReps, 10);
     expect(exercise.defaultWeight, 12.5);
+    expect(exercise.defaultDurationSeconds, 90);
     expect(exercise.createdAt, DateTime.utc(2026, 9, 14, 1, 2, 3));
     expect(exercise.updatedAt, DateTime.utc(2026, 9, 14, 4, 5, 6));
+  });
+
+  test('old custom exercise DTO without duration maps it to null', () {
+    final dto = TrainingCustomExerciseDto.fromJson({
+      'id': _uuid,
+      'name': '旧动作',
+      'category': '核心',
+      'item_type': 'duration',
+      'default_sets': 3,
+      'default_reps': 0,
+      'default_weight': 0,
+      'created_at': '2026-09-14T01:02:03Z',
+      'updated_at': '2026-09-14T04:05:06Z',
+    });
+
+    expect(
+      TrainingMapper.customExerciseFromDto(dto).defaultDurationSeconds,
+      isNull,
+    );
   });
 
   test('create and update requests use backend wire names', () {
@@ -187,6 +212,7 @@ void main() {
       'default_sets': 4,
       'default_reps': 20,
       'default_weight': 12.5,
+      'default_duration_seconds': 1200,
     };
 
     expect(CreateTrainingCustomExerciseRequestDto(_input).toJson(), expected);
@@ -201,6 +227,7 @@ void main() {
         defaultSets: 2,
         defaultReps: 30,
         defaultWeight: 5,
+        defaultDurationSeconds: 600,
       );
       final item = catalogExercise.toTemplateItem(
         itemId: 'item-new',
@@ -216,6 +243,7 @@ void main() {
       expect(item.targetSets, 2);
       expect(item.targetReps, 30);
       expect(item.targetWeight, 5);
+      expect(item.targetDurationSeconds, 600);
       expect(item.order, 4);
     },
   );
@@ -330,6 +358,7 @@ void main() {
       expect(existingItem.targetSets, 3);
       expect(existingItem.targetReps, 10);
       expect(existingItem.targetWeight, 10);
+      expect(existingItem.targetDurationSeconds, isNull);
       expect(saved['item_id'], 'item-existing');
       expect(saved['exercise_id'], _uuid);
       expect(saved['exercise_name'], '保加利亚分腿蹲');
@@ -337,6 +366,7 @@ void main() {
       expect(saved['target_sets'], 3);
       expect(saved['target_reps'], 10);
       expect(saved['target_weight'], 10);
+      expect(saved['target_duration_seconds'], isNull);
     },
   );
 }

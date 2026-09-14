@@ -9,6 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../domain/training_day.dart';
+import '../domain/training_duration.dart';
 import '../domain/training_exercise_item.dart';
 import '../domain/training_set_detail.dart';
 import 'training_controller.dart';
@@ -227,8 +228,13 @@ class _ExerciseCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              '目标：${exercise.targetSets} × ${exercise.targetReps}  '
-              '${_weight(exercise.targetWeight)} kg',
+              trainingTargetText(
+                itemType: exercise.itemType,
+                targetSets: exercise.targetSets,
+                targetReps: exercise.targetReps,
+                targetWeight: exercise.targetWeight,
+                targetDurationSeconds: exercise.targetDurationSeconds,
+              ),
               style: const TextStyle(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -243,6 +249,7 @@ class _ExerciseCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               ...exercise.setDetails.map(
                 (detail) => _CompletedSetRow(
+                  itemType: exercise.itemType,
                   detail: detail,
                   onTap: () => _openSetEditSheet(context, detail),
                 ),
@@ -308,20 +315,28 @@ class _ExerciseCard extends StatelessWidget {
 }
 
 class _CompletedSetRow extends StatelessWidget {
-  const _CompletedSetRow({required this.detail, required this.onTap});
+  const _CompletedSetRow({
+    required this.itemType,
+    required this.detail,
+    required this.onTap,
+  });
 
+  final TrainingItemType itemType;
   final TrainingSetDetail detail;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final performance = <String>[
-      if (detail.weight != null && detail.reps != null)
-        '${_weight(detail.weight!)} kg × ${detail.reps}'
-      else ...[
-        if (detail.weight != null) '${_weight(detail.weight!)} kg',
-        if (detail.reps != null) '${detail.reps} reps',
-      ],
+      if (itemType == TrainingItemType.strength) ...[
+        if (detail.weight != null && detail.reps != null)
+          '${_weight(detail.weight!)} kg × ${detail.reps}'
+        else ...[
+          if (detail.weight != null) '${_weight(detail.weight!)} kg',
+          if (detail.reps != null) '${detail.reps} reps',
+        ],
+      ] else if (detail.durationSeconds != null)
+        formatTrainingDuration(detail.durationSeconds!),
       if (detail.rpe != null) 'RPE ${_weight(detail.rpe!)}',
     ];
     return Padding(
@@ -390,6 +405,8 @@ class _SetEditSheet extends ConsumerStatefulWidget {
 class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
   late final TextEditingController _weightController;
   late final TextEditingController _repsController;
+  late final TextEditingController _durationMinutesController;
+  late final TextEditingController _durationSecondsController;
   late final TextEditingController _rpeController;
   late final TextEditingController _remarkController;
   bool _submitting = false;
@@ -405,6 +422,16 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
     _repsController = TextEditingController(
       text: detail.reps?.toString() ?? '',
     );
+    _durationMinutesController = TextEditingController(
+      text: detail.durationSeconds == null
+          ? ''
+          : '${detail.durationSeconds! ~/ 60}',
+    );
+    _durationSecondsController = TextEditingController(
+      text: detail.durationSeconds == null
+          ? ''
+          : '${detail.durationSeconds! % 60}',
+    );
     _rpeController = TextEditingController(
       text: detail.rpe == null ? '' : _weight(detail.rpe!),
     );
@@ -415,6 +442,8 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
   void dispose() {
     _weightController.dispose();
     _repsController.dispose();
+    _durationMinutesController.dispose();
+    _durationSecondsController.dispose();
     _rpeController.dispose();
     _remarkController.dispose();
     super.dispose();
@@ -425,19 +454,25 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
     final weightText = _weightController.text.trim();
     final repsText = _repsController.text.trim();
     final rpeText = _rpeController.text.trim();
+    final isStrength = widget.exercise.itemType == TrainingItemType.strength;
     final weight = weightText.isEmpty ? null : double.tryParse(weightText);
     final reps = repsText.isEmpty ? null : int.tryParse(repsText);
     final rpe = rpeText.isEmpty ? null : double.tryParse(rpeText);
 
-    if (weightText.isNotEmpty &&
+    if (isStrength &&
+        weightText.isNotEmpty &&
         (weight == null || !weight.isFinite || weight < 0 || weight > 10000)) {
       setState(() => _error = '重量请输入 0 到 10000，或留空');
       return;
     }
-    if (repsText.isNotEmpty && (reps == null || reps < 0 || reps > 9999)) {
+    if (isStrength &&
+        repsText.isNotEmpty &&
+        (reps == null || reps < 0 || reps > 9999)) {
       setState(() => _error = '次数请输入 0 到 9999，或留空');
       return;
     }
+    final duration = isStrength ? null : _readDuration();
+    if (!isStrength && duration == -1) return;
     if (rpeText.isNotEmpty &&
         (rpe == null || !rpe.isFinite || rpe < 1 || rpe > 10)) {
       setState(() => _error = 'RPE 请输入 1 到 10，或留空');
@@ -455,8 +490,15 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
           itemId: widget.exercise.itemId,
           requestId: widget.detail.requestId,
           patch: TrainingSetDetailPatch(
-            weight: TrainingPatchField<double>.value(weight),
-            reps: TrainingPatchField<int>.value(reps),
+            weight: isStrength
+                ? TrainingPatchField<double>.value(weight)
+                : const TrainingPatchField<double>.absent(),
+            reps: isStrength
+                ? TrainingPatchField<int>.value(reps)
+                : const TrainingPatchField<int>.absent(),
+            durationSeconds: isStrength
+                ? const TrainingPatchField<int>.absent()
+                : TrainingPatchField<int>.value(duration),
             rpe: TrainingPatchField<double>.value(rpe),
             remark: TrainingPatchField<String>.value(
               remark.isEmpty ? null : remark,
@@ -472,6 +514,28 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
         _error = outcome.errorMessage;
       });
     }
+  }
+
+  int? _readDuration() {
+    final minutesText = _durationMinutesController.text.trim();
+    final secondsText = _durationSecondsController.text.trim();
+    if (minutesText.isEmpty && secondsText.isEmpty) return null;
+    final minutes = minutesText.isEmpty ? 0 : int.tryParse(minutesText);
+    final seconds = secondsText.isEmpty ? 0 : int.tryParse(secondsText);
+    if (minutes == null ||
+        seconds == null ||
+        minutes < 0 ||
+        seconds < 0 ||
+        seconds > 59) {
+      setState(() => _error = '时长请输入有效的分钟和 0 到 59 秒');
+      return -1;
+    }
+    final total = minutes * 60 + seconds;
+    if (total < 1 || total > maxTrainingDurationSeconds) {
+      setState(() => _error = '时长需为 1 秒到 1440 分钟，或全部清空');
+      return -1;
+    }
+    return total;
   }
 
   @override
@@ -498,24 +562,43 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
               style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                Expanded(
-                  child: _editField(
-                    controller: _weightController,
-                    label: '重量 kg',
-                    decimal: true,
+            if (widget.exercise.itemType == TrainingItemType.strength)
+              Row(
+                children: [
+                  Expanded(
+                    child: _editField(
+                      controller: _weightController,
+                      label: '重量 kg',
+                      decimal: true,
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: _editField(
-                    controller: _repsController,
-                    label: '次数 reps',
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _editField(
+                      controller: _repsController,
+                      label: '次数 reps',
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: _editField(
+                      controller: _durationMinutesController,
+                      label: '时长（分钟）',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _editField(
+                      controller: _durationSecondsController,
+                      label: '秒',
+                    ),
+                  ),
+                ],
+              ),
             const SizedBox(height: AppSpacing.md),
             _editField(
               controller: _rpeController,
@@ -575,6 +658,8 @@ class _CheckInSheet extends ConsumerStatefulWidget {
 class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
   late final TextEditingController _weightController;
   late final TextEditingController _repsController;
+  late final TextEditingController _durationMinutesController;
+  late final TextEditingController _durationSecondsController;
   final _rpeController = TextEditingController();
   final _remarkController = TextEditingController();
   final _requestId = _newClientId('set');
@@ -590,12 +675,21 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
     _repsController = TextEditingController(
       text: '${widget.exercise.targetReps}',
     );
+    final duration = widget.exercise.targetDurationSeconds;
+    _durationMinutesController = TextEditingController(
+      text: duration == null ? '' : '${duration ~/ 60}',
+    );
+    _durationSecondsController = TextEditingController(
+      text: duration == null ? '' : '${duration % 60}',
+    );
   }
 
   @override
   void dispose() {
     _weightController.dispose();
     _repsController.dispose();
+    _durationMinutesController.dispose();
+    _durationSecondsController.dispose();
     _rpeController.dispose();
     _remarkController.dispose();
     super.dispose();
@@ -603,18 +697,22 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
+    final isStrength = widget.exercise.itemType == TrainingItemType.strength;
     final weight = double.tryParse(_weightController.text.trim());
     final reps = int.tryParse(_repsController.text.trim());
     final rpeText = _rpeController.text.trim();
     final rpe = rpeText.isEmpty ? null : double.tryParse(rpeText);
-    if (weight == null || !weight.isFinite || weight < 0 || weight > 10000) {
+    if (isStrength &&
+        (weight == null || !weight.isFinite || weight < 0 || weight > 10000)) {
       setState(() => _error = '请输入 0 到 10000 之间的重量');
       return;
     }
-    if (reps == null || reps < 0 || reps > 9999) {
+    if (isStrength && (reps == null || reps < 0 || reps > 9999)) {
       setState(() => _error = '请输入 0 到 9999 之间的次数');
       return;
     }
+    final duration = isStrength ? null : _readDuration();
+    if (!isStrength && duration == -1) return;
     if (rpeText.isNotEmpty &&
         (rpe == null || !rpe.isFinite || rpe < 1 || rpe > 10)) {
       setState(() => _error = 'RPE 请输入 1 到 10 之间的数值');
@@ -632,8 +730,9 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
           itemId: widget.exercise.itemId,
           input: TrainingSetInput(
             requestId: _requestId,
-            weight: weight,
-            reps: reps,
+            weight: isStrength ? weight : null,
+            reps: isStrength ? reps : null,
+            durationSeconds: duration,
             rpe: rpe,
             remark: remark.isEmpty ? null : remark,
           ),
@@ -647,6 +746,28 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
         _error = outcome.errorMessage;
       });
     }
+  }
+
+  int? _readDuration() {
+    final minutesText = _durationMinutesController.text.trim();
+    final secondsText = _durationSecondsController.text.trim();
+    if (minutesText.isEmpty && secondsText.isEmpty) return null;
+    final minutes = minutesText.isEmpty ? 0 : int.tryParse(minutesText);
+    final seconds = secondsText.isEmpty ? 0 : int.tryParse(secondsText);
+    if (minutes == null ||
+        seconds == null ||
+        minutes < 0 ||
+        seconds < 0 ||
+        seconds > 59) {
+      setState(() => _error = '时长请输入有效的分钟和 0 到 59 秒');
+      return -1;
+    }
+    final total = minutes * 60 + seconds;
+    if (total < 1 || total > maxTrainingDurationSeconds) {
+      setState(() => _error = '时长需为 1 秒到 1440 分钟，或全部留空');
+      return -1;
+    }
+    return total;
   }
 
   @override
@@ -667,29 +788,56 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _weightController,
-                    enabled: !_submitting,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+            if (widget.exercise.itemType == TrainingItemType.strength)
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _weightController,
+                      enabled: !_submitting,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(labelText: '重量 kg'),
                     ),
-                    decoration: const InputDecoration(labelText: '重量 kg'),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: TextField(
-                    controller: _repsController,
-                    enabled: !_submitting,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: '次数 reps'),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: TextField(
+                      controller: _repsController,
+                      enabled: !_submitting,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: '次数 reps',
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _durationMinutesController,
+                      enabled: !_submitting,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: '时长（分钟）',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: TextField(
+                      controller: _durationSecondsController,
+                      enabled: !_submitting,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: '秒'),
+                    ),
+                  ),
+                ],
+              ),
             const SizedBox(height: AppSpacing.md),
             TextField(
               controller: _rpeController,

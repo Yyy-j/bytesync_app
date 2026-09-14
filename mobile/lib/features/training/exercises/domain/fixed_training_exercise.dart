@@ -36,6 +36,7 @@ class FixedTrainingExercise {
       targetSets: defaultSets,
       targetReps: defaultReps,
       targetWeight: defaultWeight,
+      targetDurationSeconds: defaultDuration == 0 ? null : defaultDuration,
       order: order,
     );
   }

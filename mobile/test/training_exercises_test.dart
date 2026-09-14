@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bytesync/features/training/data/dto/training_request_dtos.dart';
+import 'package:bytesync/features/training/data/dto/training_dtos.dart';
+import 'package:bytesync/features/training/data/mappers/training_mapper.dart';
 import 'package:bytesync/features/training/domain/training_day.dart';
 import 'package:bytesync/features/training/domain/training_exercise_item.dart';
 import 'package:bytesync/features/training/exercises/data/fixed_training_exercises.dart';
@@ -52,7 +54,109 @@ void main() {
     expect(item.targetSets, 4);
     expect(item.targetReps, 12);
     expect(item.targetWeight, 20);
+    expect(item.targetDurationSeconds, isNull);
     expect(item.order, 3);
+  });
+
+  test('fixed Side Plank snapshots its duration into the template item', () {
+    final exercise = fixedTrainingExercises.firstWhere(
+      (value) => value.id == 'side_plank',
+    );
+
+    final item = exercise.toTemplateItem(itemId: 'side-plank', order: 0);
+
+    expect(item.itemType, TrainingItemType.cardio);
+    expect(item.targetDurationSeconds, 30);
+  });
+
+  test('old exercise and set DTOs without duration map duration to null', () {
+    final dto = TrainingExerciseItemDto.fromJson({
+      'item_id': 'legacy-item',
+      'exercise_id': null,
+      'exercise_name': '旧动作',
+      'item_type': 'duration',
+      'category': '',
+      'target_sets': 2,
+      'target_reps': 0,
+      'target_weight': 0,
+      'order': 0,
+      'set_details': [
+        {
+          'request_id': 'legacy-set',
+          'set_index': 1,
+          'weight': null,
+          'reps': null,
+          'rpe': 7,
+          'remark': null,
+          'completed_at': '2026-09-14T01:02:03Z',
+        },
+      ],
+    });
+
+    final item = TrainingMapper.exerciseFromDto(dto);
+
+    expect(item.targetDurationSeconds, isNull);
+    expect(item.setDetails.single.durationSeconds, isNull);
+  });
+
+  test('exercise and set DTOs map duration fields', () {
+    final dto = TrainingExerciseItemDto.fromJson({
+      'item_id': 'duration-item',
+      'exercise_id': null,
+      'exercise_name': '平板支撑',
+      'item_type': 'duration',
+      'category': '核心',
+      'target_sets': 3,
+      'target_reps': 0,
+      'target_weight': 0,
+      'target_duration_seconds': 90,
+      'order': 0,
+      'set_details': [
+        {
+          'request_id': 'duration-set',
+          'set_index': 1,
+          'weight': null,
+          'reps': null,
+          'duration_seconds': 75,
+          'rpe': 7,
+          'remark': null,
+          'completed_at': '2026-09-14T01:02:03Z',
+        },
+      ],
+    });
+
+    final item = TrainingMapper.exerciseFromDto(dto);
+
+    expect(item.targetDurationSeconds, 90);
+    expect(item.setDetails.single.durationSeconds, 75);
+  });
+
+  test('duration and cardio template items use duration wire field', () {
+    for (final type in [TrainingItemType.duration, TrainingItemType.cardio]) {
+      final item = TrainingExerciseItem(
+        itemId: 'item-${type.name}',
+        exerciseId: null,
+        exerciseName: type.name,
+        itemType: type,
+        category: '',
+        targetSets: 3,
+        targetReps: 0,
+        targetWeight: 0,
+        targetDurationSeconds: 90,
+        order: 0,
+      );
+      final json = SaveTrainingTemplateRequestDto.fromDomain([
+        TrainingDay(dayIndex: 0, exercises: [item]),
+      ]).toJson();
+      final days = json['days'] as List<dynamic>;
+      final day = days.single as Map<String, dynamic>;
+      final exercises = day['exercises'] as List<dynamic>;
+
+      expect(
+        (exercises.single as Map<String, dynamic>)['target_duration_seconds'],
+        90,
+      );
+    }
   });
 
   test('new template item ids are unique', () {

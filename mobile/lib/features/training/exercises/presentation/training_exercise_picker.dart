@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../domain/training_duration.dart';
 import '../../domain/training_exercise_item.dart';
 import '../data/fixed_training_exercises.dart';
 import '../domain/fixed_training_exercise.dart';
@@ -204,8 +205,15 @@ class _TrainingExercisePickerState
           title: Text(exercise.name),
           subtitle: Text(
             '${exercise.englishName} · ${exercise.category}\n'
-            '${exercise.defaultSets} × ${exercise.defaultReps}  '
-            '${_weight(exercise.defaultWeight)} kg',
+            '${trainingTargetText(
+              itemType: exercise.itemType,
+              targetSets: exercise.defaultSets,
+              targetReps: exercise.defaultReps,
+              targetWeight: exercise.defaultWeight,
+              targetDurationSeconds: exercise.defaultDuration == 0
+                  ? null
+                  : exercise.defaultDuration,
+            ).replaceFirst('目标：', '')}',
           ),
           isThreeLine: true,
           onTap: () => Navigator.pop(
@@ -277,8 +285,13 @@ class _TrainingExercisePickerState
               subtitle: Text(
                 '${exercise.category.isEmpty ? '未分类' : exercise.category} · '
                 '${_typeLabel(exercise.itemType)}\n'
-                '${exercise.defaultSets} × ${exercise.defaultReps}  '
-                '${_weight(exercise.defaultWeight)} kg',
+                '${trainingTargetText(
+                  itemType: exercise.itemType,
+                  targetSets: exercise.defaultSets,
+                  targetReps: exercise.defaultReps,
+                  targetWeight: exercise.defaultWeight,
+                  targetDurationSeconds: exercise.defaultDurationSeconds,
+                ).replaceFirst('目标：', '')}',
               ),
               isThreeLine: true,
               trailing: Row(
@@ -422,6 +435,8 @@ class _CustomExerciseEditorSheetState
   late final TextEditingController _setsController;
   late final TextEditingController _repsController;
   late final TextEditingController _weightController;
+  late final TextEditingController _durationMinutesController;
+  late final TextEditingController _durationSecondsController;
   late TrainingItemType _itemType;
   String? _error;
 
@@ -438,6 +453,13 @@ class _CustomExerciseEditorSheetState
     _weightController = TextEditingController(
       text: _weight(value?.defaultWeight ?? 0),
     );
+    final duration = value?.defaultDurationSeconds;
+    _durationMinutesController = TextEditingController(
+      text: duration == null ? '' : '${duration ~/ 60}',
+    );
+    _durationSecondsController = TextEditingController(
+      text: duration == null ? '' : '${duration % 60}',
+    );
     _itemType = value?.itemType ?? TrainingItemType.strength;
   }
 
@@ -448,6 +470,8 @@ class _CustomExerciseEditorSheetState
     _setsController.dispose();
     _repsController.dispose();
     _weightController.dispose();
+    _durationMinutesController.dispose();
+    _durationSecondsController.dispose();
     super.dispose();
   }
 
@@ -469,14 +493,18 @@ class _CustomExerciseEditorSheetState
       setState(() => _error = '默认组数请输入 1 到 50');
       return;
     }
-    if (reps == null || reps < 0 || reps > 999) {
+    final isStrength = _itemType == TrainingItemType.strength;
+    if (isStrength && (reps == null || reps < 0 || reps > 999)) {
       setState(() => _error = '默认次数请输入 0 到 999');
       return;
     }
-    if (weight == null || !weight.isFinite || weight < 0 || weight > 10000) {
+    if (isStrength &&
+        (weight == null || !weight.isFinite || weight < 0 || weight > 10000)) {
       setState(() => _error = '默认重量请输入 0 到 10000');
       return;
     }
+    final duration = isStrength ? null : _readDuration();
+    if (!isStrength && duration == -1) return;
     Navigator.pop(
       context,
       TrainingCustomExerciseInput(
@@ -484,10 +512,33 @@ class _CustomExerciseEditorSheetState
         category: category,
         itemType: _itemType,
         defaultSets: sets,
-        defaultReps: reps,
-        defaultWeight: weight,
+        defaultReps: reps ?? widget.initial?.defaultReps ?? 0,
+        defaultWeight: weight ?? widget.initial?.defaultWeight ?? 0,
+        defaultDurationSeconds: duration,
       ),
     );
+  }
+
+  int? _readDuration() {
+    final minutesText = _durationMinutesController.text.trim();
+    final secondsText = _durationSecondsController.text.trim();
+    if (minutesText.isEmpty && secondsText.isEmpty) return null;
+    final minutes = minutesText.isEmpty ? 0 : int.tryParse(minutesText);
+    final seconds = secondsText.isEmpty ? 0 : int.tryParse(secondsText);
+    if (minutes == null ||
+        seconds == null ||
+        minutes < 0 ||
+        seconds < 0 ||
+        seconds > 59) {
+      setState(() => _error = '时长请输入有效的分钟和 0 到 59 秒');
+      return -1;
+    }
+    final total = minutes * 60 + seconds;
+    if (total < 1 || total > maxTrainingDurationSeconds) {
+      setState(() => _error = '默认时长需为 1 秒到 1440 分钟');
+      return -1;
+    }
+    return total;
   }
 
   @override
@@ -528,7 +579,7 @@ class _CustomExerciseEditorSheetState
                   .map(
                     (type) => DropdownMenuItem(
                       value: type,
-                      child: Text(type.name),
+                      child: Text(_typeLabel(type)),
                     ),
                   )
                   .toList(growable: false),
@@ -540,18 +591,36 @@ class _CustomExerciseEditorSheetState
             Row(
               children: [
                 Expanded(child: _numberField('默认组数', _setsController)),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(child: _numberField('默认次数', _repsController)),
+                if (_itemType == TrainingItemType.strength) ...[
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: _numberField('默认次数', _repsController)),
+                ],
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _weightController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+            if (_itemType == TrainingItemType.strength)
+              TextField(
+                controller: _weightController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(labelText: '默认重量 kg'),
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: _numberField(
+                      '默认时长（分钟）',
+                      _durationMinutesController,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _numberField('秒', _durationSecondsController),
+                  ),
+                ],
               ),
-              decoration: const InputDecoration(labelText: '默认重量 kg'),
-            ),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(_error!, style: const TextStyle(color: AppColors.warning)),
@@ -600,9 +669,9 @@ bool _mutationDisabled(TrainingCustomExerciseState state) {
 }
 
 String _typeLabel(TrainingItemType type) => switch (type) {
-  TrainingItemType.strength => 'strength',
-  TrainingItemType.duration => 'duration',
-  TrainingItemType.cardio => 'cardio',
+  TrainingItemType.strength => '力量',
+  TrainingItemType.duration => '时长',
+  TrainingItemType.cardio => '有氧',
 };
 
 String _weight(double value) {

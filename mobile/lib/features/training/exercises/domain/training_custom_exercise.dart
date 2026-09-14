@@ -11,6 +11,7 @@ class TrainingCustomExercise {
     required this.defaultWeight,
     required this.createdAt,
     required this.updatedAt,
+    this.defaultDurationSeconds,
   });
 
   final String id;
@@ -20,6 +21,7 @@ class TrainingCustomExercise {
   final int defaultSets;
   final int defaultReps;
   final double defaultWeight;
+  final int? defaultDurationSeconds;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -36,6 +38,7 @@ class TrainingCustomExercise {
       targetSets: defaultSets,
       targetReps: defaultReps,
       targetWeight: defaultWeight,
+      targetDurationSeconds: defaultDurationSeconds,
       order: order,
     );
   }
@@ -49,6 +52,7 @@ class TrainingCustomExerciseInput {
     required this.defaultSets,
     required this.defaultReps,
     required this.defaultWeight,
+    this.defaultDurationSeconds,
   });
 
   final String name;
@@ -57,6 +61,7 @@ class TrainingCustomExerciseInput {
   final int defaultSets;
   final int defaultReps;
   final double defaultWeight;
+  final int? defaultDurationSeconds;
 }
 
 List<TrainingCustomExercise> filterTrainingCustomExercises(

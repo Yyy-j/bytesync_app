@@ -93,6 +93,7 @@ TrainingSetDetail _detail() => TrainingSetDetail(
   setIndex: 1,
   weight: 60,
   reps: 10,
+  durationSeconds: null,
   rpe: 8,
   remark: '状态不错',
   completedAt: DateTime.utc(2026, 9, 14, 3),
@@ -116,6 +117,7 @@ void main() {
     const patch = TrainingSetDetailPatch(
       weight: TrainingPatchField<double>.value(null),
       reps: TrainingPatchField<int>.value(null),
+      durationSeconds: TrainingPatchField<int>.value(null),
       rpe: TrainingPatchField<double>.value(null),
       remark: TrainingPatchField<String>.value(null),
     );
@@ -123,8 +125,57 @@ void main() {
     expect(UpdateTrainingSetRequestDto(patch).toJson(), {
       'weight': null,
       'reps': null,
+      'duration_seconds': null,
       'rpe': null,
       'remark': null,
+    });
+  });
+
+  test('set check-in sends duration without putting it in reps', () {
+    const input = TrainingSetInput(
+      requestId: 'request-duration',
+      durationSeconds: 630,
+      rpe: 7,
+    );
+
+    expect(CheckInTrainingSetRequestDto(input).toJson(), {
+      'request_id': 'request-duration',
+      'duration_seconds': 630,
+      'rpe': 7,
+    });
+  });
+
+  test('strength set check-in keeps weight and reps wire behavior', () {
+    const input = TrainingSetInput(
+      requestId: 'request-strength',
+      weight: 60,
+      reps: 10,
+      rpe: 8,
+      remark: '状态不错',
+    );
+
+    expect(CheckInTrainingSetRequestDto(input).toJson(), {
+      'request_id': 'request-strength',
+      'weight': 60,
+      'reps': 10,
+      'rpe': 8,
+      'remark': '状态不错',
+    });
+  });
+
+  test('set PATCH sends duration and supports explicit null', () {
+    const valuePatch = TrainingSetDetailPatch(
+      durationSeconds: TrainingPatchField<int>.value(90),
+    );
+    const nullPatch = TrainingSetDetailPatch(
+      durationSeconds: TrainingPatchField<int>.value(null),
+    );
+
+    expect(UpdateTrainingSetRequestDto(valuePatch).toJson(), {
+      'duration_seconds': 90,
+    });
+    expect(UpdateTrainingSetRequestDto(nullPatch).toJson(), {
+      'duration_seconds': null,
     });
   });
 

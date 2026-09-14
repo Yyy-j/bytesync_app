@@ -7,12 +7,14 @@ class TrainingSetDetail {
     required this.rpe,
     required this.remark,
     required this.completedAt,
+    this.durationSeconds,
   });
 
   final String requestId;
   final int setIndex;
   final double? weight;
   final int? reps;
+  final int? durationSeconds;
   final double? rpe;
   final String? remark;
   final DateTime completedAt;
@@ -23,6 +25,7 @@ class TrainingSetInput {
     required this.requestId,
     this.weight,
     this.reps,
+    this.durationSeconds,
     this.rpe,
     this.remark,
   });
@@ -30,6 +33,7 @@ class TrainingSetInput {
   final String requestId;
   final double? weight;
   final int? reps;
+  final int? durationSeconds;
   final double? rpe;
   final String? remark;
 }
@@ -46,12 +50,14 @@ class TrainingSetDetailPatch {
   const TrainingSetDetailPatch({
     this.weight = const TrainingPatchField<double>.absent(),
     this.reps = const TrainingPatchField<int>.absent(),
+    this.durationSeconds = const TrainingPatchField<int>.absent(),
     this.rpe = const TrainingPatchField<double>.absent(),
     this.remark = const TrainingPatchField<String>.absent(),
   });
 
   final TrainingPatchField<double> weight;
   final TrainingPatchField<int> reps;
+  final TrainingPatchField<int> durationSeconds;
   final TrainingPatchField<double> rpe;
   final TrainingPatchField<String> remark;
 }

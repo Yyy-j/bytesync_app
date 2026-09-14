@@ -22,6 +22,7 @@ class TrainingMapper {
         defaultSets: dto.defaultSets,
         defaultReps: dto.defaultReps,
         defaultWeight: dto.defaultWeight,
+        defaultDurationSeconds: dto.defaultDurationSeconds,
         createdAt: DateTime.parse(dto.createdAt),
         updatedAt: DateTime.parse(dto.updatedAt),
       );
@@ -82,6 +83,7 @@ class TrainingMapper {
         targetSets: dto.targetSets,
         targetReps: dto.targetReps,
         targetWeight: dto.targetWeight,
+        targetDurationSeconds: dto.targetDurationSeconds,
         order: dto.order,
         completedSets: dto.completedSets,
         setDetails: dto.setDetails.map(setDetailFromDto).toList(growable: false),
@@ -99,6 +101,7 @@ class TrainingMapper {
         setIndex: dto.setIndex,
         weight: dto.weight,
         reps: dto.reps,
+        durationSeconds: dto.durationSeconds,
         rpe: dto.rpe,
         remark: dto.remark,
         completedAt: DateTime.parse(dto.completedAt),

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../domain/training_duration.dart';
 import '../../domain/training_exercise_item.dart';
 import '../../domain/training_set_detail.dart';
 import '../../domain/training_week.dart';
@@ -214,8 +215,13 @@ class _HistoryExercise extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '目标：${exercise.targetSets} × ${exercise.targetReps} · '
-            '${_weight(exercise.targetWeight)} kg',
+            trainingTargetText(
+              itemType: exercise.itemType,
+              targetSets: exercise.targetSets,
+              targetReps: exercise.targetReps,
+              targetWeight: exercise.targetWeight,
+              targetDurationSeconds: exercise.targetDurationSeconds,
+            ),
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.textSecondary,
@@ -241,7 +247,12 @@ class _HistoryExercise extends StatelessWidget {
               ),
             )
           else
-            ...exercise.setDetails.map(_SetDetailRow.new),
+            ...exercise.setDetails.map(
+              (detail) => _SetDetailRow(
+                detail: detail,
+                itemType: exercise.itemType,
+              ),
+            ),
         ],
       ),
     );
@@ -249,15 +260,19 @@ class _HistoryExercise extends StatelessWidget {
 }
 
 class _SetDetailRow extends StatelessWidget {
-  const _SetDetailRow(this.detail);
+  const _SetDetailRow({required this.detail, required this.itemType});
 
   final TrainingSetDetail detail;
+  final TrainingItemType itemType;
 
   @override
   Widget build(BuildContext context) {
     final values = <String>[
-      if (detail.weight != null) '${_weight(detail.weight!)} kg',
-      if (detail.reps != null) '${detail.reps} reps',
+      if (itemType == TrainingItemType.strength) ...[
+        if (detail.weight != null) '${_weight(detail.weight!)} kg',
+        if (detail.reps != null) '${detail.reps} reps',
+      ] else if (detail.durationSeconds != null)
+        formatTrainingDuration(detail.durationSeconds!),
       if (detail.rpe != null) 'RPE ${_weight(detail.rpe!)}',
     ];
     return Container(

@@ -28,6 +28,7 @@ class TrainingExerciseItem {
     required this.targetReps,
     required this.targetWeight,
     required this.order,
+    this.targetDurationSeconds,
     this.completedSets = 0,
     this.setDetails = const [],
     this.removedFromTemplate = false,
@@ -41,6 +42,7 @@ class TrainingExerciseItem {
   final int targetSets;
   final int targetReps;
   final double targetWeight;
+  final int? targetDurationSeconds;
   final int order;
   final int completedSets;
   final List<TrainingSetDetail> setDetails;

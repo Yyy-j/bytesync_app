@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/state_views.dart';
+import '../../domain/training_duration.dart';
 import '../../domain/training_exercise_item.dart';
 import '../../exercises/presentation/training_exercise_picker.dart';
 import '../training_controller.dart';
@@ -286,8 +287,13 @@ class _ExerciseRow extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  '${exercise.targetSets} × ${exercise.targetReps} · '
-                  '${_weight(exercise.targetWeight)} kg'
+                  '${trainingTargetText(
+                    itemType: exercise.itemType,
+                    targetSets: exercise.targetSets,
+                    targetReps: exercise.targetReps,
+                    targetWeight: exercise.targetWeight,
+                    targetDurationSeconds: exercise.targetDurationSeconds,
+                  ).replaceFirst('目标：', '')}'
                   '${exercise.category.isEmpty ? '' : ' · ${exercise.category}'}',
                   style: const TextStyle(
                     fontSize: 12,
@@ -329,6 +335,9 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
   late final TextEditingController _setsController;
   late final TextEditingController _repsController;
   late final TextEditingController _weightController;
+  late final TextEditingController _durationMinutesController;
+  late final TextEditingController _durationSecondsController;
+  late TrainingItemType _itemType;
   String? _error;
 
   bool get _isFixed => widget.initial?.exerciseId != null;
@@ -344,6 +353,14 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
     _weightController = TextEditingController(
       text: _weight(value?.targetWeight ?? 0),
     );
+    final duration = value?.targetDurationSeconds;
+    _durationMinutesController = TextEditingController(
+      text: duration == null ? '' : '${duration ~/ 60}',
+    );
+    _durationSecondsController = TextEditingController(
+      text: duration == null ? '' : '${duration % 60}',
+    );
+    _itemType = value?.itemType ?? TrainingItemType.strength;
   }
 
   @override
@@ -353,6 +370,8 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
     _setsController.dispose();
     _repsController.dispose();
     _weightController.dispose();
+    _durationMinutesController.dispose();
+    _durationSecondsController.dispose();
     super.dispose();
   }
 
@@ -360,6 +379,7 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
     final name = _nameController.text.trim();
     final category = _categoryController.text.trim();
     final sets = int.tryParse(_setsController.text.trim());
+    final isStrength = _itemType == TrainingItemType.strength;
     final reps = int.tryParse(_repsController.text.trim());
     final weight = double.tryParse(_weightController.text.trim());
     if (name.isEmpty || name.length > 100) {
@@ -374,14 +394,18 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
       setState(() => _error = '目标组数请输入 1 到 50');
       return;
     }
-    if (reps == null || reps < 0 || reps > 999) {
+    if (isStrength && (reps == null || reps < 0 || reps > 999)) {
       setState(() => _error = '目标次数请输入 0 到 999');
       return;
     }
-    if (weight == null || !weight.isFinite || weight < 0 || weight > 10000) {
+    if (isStrength &&
+        (weight == null || !weight.isFinite || weight < 0 || weight > 10000)) {
       setState(() => _error = '目标重量请输入 0 到 10000');
       return;
     }
+
+    final duration = isStrength ? null : _readDuration();
+    if (!isStrength && duration == -1) return;
 
     final initial = widget.initial;
     Navigator.pop(
@@ -390,14 +414,37 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
         itemId: initial?.itemId ?? widget.newItemId,
         exerciseId: initial?.exerciseId,
         exerciseName: name,
-        itemType: initial?.itemType ?? TrainingItemType.strength,
+        itemType: _itemType,
         category: category,
         targetSets: sets,
-        targetReps: reps,
-        targetWeight: weight,
+        targetReps: reps ?? initial?.targetReps ?? 0,
+        targetWeight: weight ?? initial?.targetWeight ?? 0,
+        targetDurationSeconds: duration,
         order: initial?.order ?? 0,
       ),
     );
+  }
+
+  int? _readDuration() {
+    final minutesText = _durationMinutesController.text.trim();
+    final secondsText = _durationSecondsController.text.trim();
+    if (minutesText.isEmpty && secondsText.isEmpty) return null;
+    final minutes = minutesText.isEmpty ? 0 : int.tryParse(minutesText);
+    final seconds = secondsText.isEmpty ? 0 : int.tryParse(secondsText);
+    if (minutes == null ||
+        seconds == null ||
+        minutes < 0 ||
+        seconds < 0 ||
+        seconds > 59) {
+      setState(() => _error = '时长请输入有效的分钟和 0 到 59 秒');
+      return -1;
+    }
+    final total = minutes * 60 + seconds;
+    if (total < 1 || total > maxTrainingDurationSeconds) {
+      setState(() => _error = '目标时长需为 1 秒到 1440 分钟');
+      return -1;
+    }
+    return total;
   }
 
   @override
@@ -444,27 +491,63 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
                 maxLength: 50,
                 decoration: const InputDecoration(labelText: '分类'),
               ),
+              const SizedBox(height: AppSpacing.md),
+              DropdownButtonFormField<TrainingItemType>(
+                initialValue: _itemType,
+                decoration: const InputDecoration(labelText: '类型'),
+                items: TrainingItemType.values
+                    .map(
+                      (type) => DropdownMenuItem(
+                        value: type,
+                        child: Text(_typeLabel(type)),
+                      ),
+                    )
+                    .toList(growable: false),
+                onChanged: (value) {
+                  if (value != null) setState(() => _itemType = value);
+                },
+              ),
             ],
             const SizedBox(height: AppSpacing.md),
+            if (_isFixed)
+              Text(
+                '类型：${_typeLabel(_itemType)}',
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            if (_isFixed) const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                Expanded(
-                  child: _numberField('目标组数', _setsController),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: _numberField('目标次数', _repsController),
-                ),
+                Expanded(child: _numberField('目标组数', _setsController)),
+                if (_itemType == TrainingItemType.strength) ...[
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(child: _numberField('目标次数', _repsController)),
+                ],
               ],
             ),
             const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _weightController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+            if (_itemType == TrainingItemType.strength)
+              TextField(
+                controller: _weightController,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(labelText: '目标重量 kg'),
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: _numberField(
+                      '目标时长（分钟）',
+                      _durationMinutesController,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _numberField('秒', _durationSecondsController),
+                  ),
+                ],
               ),
-              decoration: const InputDecoration(labelText: '目标重量 kg'),
-            ),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(_error!, style: const TextStyle(color: AppColors.warning)),
@@ -491,6 +574,12 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
     );
   }
 }
+
+String _typeLabel(TrainingItemType type) => switch (type) {
+  TrainingItemType.strength => '力量',
+  TrainingItemType.duration => '时长',
+  TrainingItemType.cardio => '有氧',
+};
 
 const _weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 

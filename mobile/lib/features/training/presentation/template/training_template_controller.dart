@@ -220,6 +220,7 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
       targetSets: item.targetSets,
       targetReps: item.targetReps,
       targetWeight: item.targetWeight,
+      targetDurationSeconds: item.targetDurationSeconds,
       order: order,
       completedSets: item.completedSets,
       setDetails: item.setDetails,
