@@ -16,6 +16,9 @@ import '../domain/record_draft.dart';
 import '../domain/record_state.dart';
 import 'record_controller.dart';
 
+final selectedRecordImagePathProvider =
+    StateProvider.autoDispose<String?>((ref) => null);
+
 class RecordPage extends ConsumerStatefulWidget {
   const RecordPage({super.key});
 
@@ -32,7 +35,6 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   final _carbsController = TextEditingController();
   final _fatController = TextEditingController();
   final _imagePicker = ImagePicker();
-  String? _selectedImagePath;
 
   @override
   void dispose() {
@@ -63,7 +65,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       ref.read(recordControllerProvider.notifier).showError('图片太大，请重新选择');
       return;
     }
-    setState(() => _selectedImagePath = image.path);
+    ref.read(selectedRecordImagePathProvider.notifier).state = image.path;
     await ref.read(recordControllerProvider.notifier).analyzeImage(
           image.path,
           hint: _hintController.text,
@@ -72,6 +74,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
 
   Future<void> _analyzeText() async {
     FocusScope.of(context).unfocus();
+    ref.read(selectedRecordImagePathProvider.notifier).state = null;
     await ref.read(recordControllerProvider.notifier).analyzeText(
           _textController.text,
           hint: _hintController.text,
@@ -85,6 +88,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       _snack('请填写食物名称和大于 0 的卡路里');
       return;
     }
+    ref.read(selectedRecordImagePathProvider.notifier).state = null;
     ref.read(recordControllerProvider.notifier).loadManual(
           name: name,
           calories: calories,
@@ -110,19 +114,14 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     final ok = await ref.read(recordControllerProvider.notifier).save();
     if (!mounted) return;
     if (ok) {
-      final imagePath = _selectedImagePath;
-      if (imagePath != null) {
-        final imageFile = File(imagePath);
-        if (await imageFile.exists()) await imageFile.delete();
-      }
-      setState(() => _selectedImagePath = null);
+      ref.read(selectedRecordImagePathProvider.notifier).state = null;
       _snack('已记录');
       ref.read(homeTabIndexProvider.notifier).state = 0;
     }
   }
 
   void _loadFromMeal(Meal meal) {
-    setState(() => _selectedImagePath = null);
+    ref.read(selectedRecordImagePathProvider.notifier).state = null;
     ref.read(recordControllerProvider.notifier).loadFromMeal(meal);
   }
 
@@ -145,6 +144,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(recordControllerProvider);
     final yesterdayMeals = ref.watch(yesterdayMealsProvider);
+    final selectedImagePath = ref.watch(selectedRecordImagePathProvider);
     final pairState = ref.watch(pairControllerProvider);
     final partner = pairState is PairConnected ? pairState.pair.partner : null;
     final draft = switch (state) {
@@ -223,7 +223,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                 const SizedBox(height: AppSpacing.lg),
                 _ResultPanel(
                   draft: draft,
-                  imagePath: _selectedImagePath ?? draft.localImagePath,
+                  imagePath: selectedImagePath ?? draft.localImagePath,
                   busy: busy,
                   onPortion: (ratio) => ref.read(recordControllerProvider.notifier).setPortion(ratio),
                   onShareMode: (mode) => ref.read(recordControllerProvider.notifier).setShareMode(mode),

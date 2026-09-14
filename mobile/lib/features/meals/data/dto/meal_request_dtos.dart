@@ -84,6 +84,9 @@ class UpdateMealRequestDto {
     this.portionRatio,
     this.shareMode,
     this.mealTime,
+    this.dishes,
+    this.aiHint,
+    this.originalInput,
     this.expectedUpdatedAt,
   });
 
@@ -97,6 +100,17 @@ class UpdateMealRequestDto {
       portionRatio: patch.portionRatio,
       shareMode: patch.shareMode?.toWire(),
       mealTime: patch.mealTime,
+      dishes: patch.dishes
+          ?.where((dish) => dish.calories != null)
+          .map(
+            (dish) => <String, dynamic>{
+              'name': dish.name,
+              'calories': dish.calories!,
+            },
+          )
+          .toList(growable: false),
+      aiHint: patch.aiHint,
+      originalInput: patch.originalInput,
       expectedUpdatedAt: patch.expectedUpdatedAt?.toIso8601String(),
     );
   }
@@ -109,6 +123,9 @@ class UpdateMealRequestDto {
   final double? portionRatio;
   final String? shareMode;
   final String? mealTime;
+  final List<Map<String, dynamic>>? dishes;
+  final String? aiHint;
+  final String? originalInput;
   final String? expectedUpdatedAt;
 
   Map<String, dynamic> toJson() {
@@ -121,6 +138,9 @@ class UpdateMealRequestDto {
     if (portionRatio != null) json['portion_ratio'] = portionRatio;
     if (shareMode != null) json['share_mode'] = shareMode;
     if (mealTime != null) json['meal_time'] = mealTime;
+    if (dishes != null) json['dishes'] = dishes;
+    if (aiHint != null) json['ai_hint'] = aiHint;
+    if (originalInput != null) json['original_input'] = originalInput;
     if (expectedUpdatedAt != null) {
       json['expected_updated_at'] = expectedUpdatedAt;
     }

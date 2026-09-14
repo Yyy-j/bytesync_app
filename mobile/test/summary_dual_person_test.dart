@@ -25,6 +25,7 @@ Meal _meal({
   required String name,
   required num calories,
   required String mealTime,
+  num? baseCalories,
 }) {
   final timestamp = DateTime(2026, 9, 14, 12);
   return Meal(
@@ -34,7 +35,7 @@ Meal _meal({
     sharedMealId: null,
     name: name,
     source: MealSource.manual,
-    baseCalories: calories,
+    baseCalories: baseCalories ?? calories,
     baseProtein: 30,
     baseCarbs: 40,
     baseFat: 10,
@@ -73,6 +74,7 @@ void main() {
           userId: 'self-1',
           name: '鸡胸肉沙拉',
           calories: 420,
+          baseCalories: 840,
           mealTime: '12:30',
         ),
         _meal(
@@ -122,5 +124,22 @@ void main() {
     expect(find.text('2230'), findsNothing);
     expect(find.text('我'), findsOneWidget);
     expect(find.text('Harper'), findsOneWidget);
+    expect(find.byTooltip('管理鸡胸肉沙拉'), findsOneWidget);
+    expect(find.byTooltip('管理意大利面'), findsNothing);
+
+    await tester.tap(find.byTooltip('管理鸡胸肉沙拉'));
+    await tester.pumpAndSettle();
+    expect(find.text('补充说明再估算'), findsNothing);
+
+    await tester.tap(find.text('直接编辑'));
+    await tester.pumpAndSettle();
+    final baseCaloriesField = tester.widget<TextField>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField &&
+            widget.decoration?.labelText == '基础卡路里',
+      ),
+    );
+    expect(baseCaloriesField.controller?.text, '840');
   });
 }

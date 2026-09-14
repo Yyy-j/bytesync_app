@@ -46,7 +46,7 @@ class SummaryController extends Notifier<SummaryState> {
   @override
   SummaryState build() {
     _repository = ref.watch(summaryRepositoryProvider);
-    _load();
+    _load(showLoading: true);
     return const SummaryLoading();
   }
 
@@ -55,8 +55,8 @@ class SummaryController extends Notifier<SummaryState> {
     return DateTime(now.year, now.month, now.day);
   }
 
-  Future<void> _load() async {
-    state = const SummaryLoading();
+  Future<void> _load({required bool showLoading}) async {
+    if (showLoading) state = const SummaryLoading();
     try {
       final summary = await _repository.getDailySummary(_today);
       state = summary.mealCount == 0
@@ -67,5 +67,7 @@ class SummaryController extends Notifier<SummaryState> {
     }
   }
 
-  Future<void> refresh() => _load();
+  /// Refreshes in place so a meal mutation only disables its own card while
+  /// the server remains the source of truth for the replacement summary.
+  Future<void> refresh() => _load(showLoading: false);
 }

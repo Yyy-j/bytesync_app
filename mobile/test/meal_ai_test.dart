@@ -200,4 +200,70 @@ void main() {
     expect(find.text('1 : 1'), findsOneWidget);
     expect(find.text('分配预览：我 325 kcal  Harper 325 kcal'), findsOneWidget);
   });
+
+  testWidgets('new text draft clears a stale selected image path', (
+    tester,
+  ) async {
+    final container = ProviderContainer(
+      overrides: [
+        mealAiRepositoryProvider.overrideWithValue(_FakeMealAiRepository()),
+        yesterdayMealsProvider.overrideWith((ref) async => []),
+        pairControllerProvider.overrideWith(
+          () => _FixedPairController(withPartner: false),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+    container.read(selectedRecordImagePathProvider.notifier).state =
+        '/tmp/stale-meal.jpg';
+
+    await tester.enterText(find.byType(TextField).first, '一碗牛肉面');
+    await tester.tap(find.text('AI 估算'));
+    await tester.pumpAndSettle();
+
+    expect(container.read(selectedRecordImagePathProvider), isNull);
+  });
+
+  testWidgets('new manual draft clears a stale selected image path', (
+    tester,
+  ) async {
+    final container = ProviderContainer(
+      overrides: [
+        yesterdayMealsProvider.overrideWith((ref) async => []),
+        pairControllerProvider.overrideWith(
+          () => _FixedPairController(withPartner: false),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+    container.read(selectedRecordImagePathProvider.notifier).state =
+        '/tmp/stale-meal.jpg';
+
+    final nameField = find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField && widget.decoration?.labelText == '食物名称',
+    );
+    final caloriesField = find.byWidgetPredicate(
+      (widget) =>
+          widget is TextField && widget.decoration?.labelText == '卡路里',
+    );
+    await tester.enterText(nameField, '鸡胸肉沙拉');
+    await tester.enterText(caloriesField, '600');
+    await tester.tap(find.text('生成记录预览'));
+    await tester.pump();
+
+    expect(container.read(selectedRecordImagePathProvider), isNull);
+  });
 }

@@ -8,6 +8,8 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/macro_bar.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../meals/domain/meal.dart';
+import '../../meals/domain/meal_source.dart';
+import '../../meals/presentation/meal_management_controller.dart';
 import '../domain/daily_summary.dart';
 import 'summary_controller.dart';
 
@@ -62,7 +64,7 @@ class SummaryPage extends ConsumerWidget {
   }
 }
 
-class _SummaryBody extends StatelessWidget {
+class _SummaryBody extends ConsumerWidget {
   const _SummaryBody({
     required this.summary,
     required this.emptyState,
@@ -72,7 +74,8 @@ class _SummaryBody extends StatelessWidget {
   final bool emptyState;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final managementState = ref.watch(mealManagementControllerProvider);
     return ListView(
       // Ensures pull-to-refresh works even when content is short (empty
       // state) by always allowing scroll.
@@ -121,6 +124,10 @@ class _SummaryBody extends StatelessWidget {
               child: _MealListItem(
                 meal: meal,
                 ownerName: _ownerName(meal),
+                busy: managementState.isBusy(meal.id),
+                onManage: meal.userId == summary.selfSlice.userId
+                    ? () => _showMealActions(context, ref, meal)
+                    : null,
               ),
             ),
           ),
@@ -135,6 +142,374 @@ class _SummaryBody extends StatelessWidget {
       return partner.displayName;
     }
     return '成员';
+  }
+}
+
+enum _MealAction { portion, edit, refine, delete }
+
+Future<void> _showMealActions(
+  BuildContext context,
+  WidgetRef ref,
+  Meal meal,
+) async {
+  final action = await showModalBottomSheet<_MealAction>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) => SafeArea(
+      child: Wrap(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.pie_chart_outline),
+            title: const Text('调整份量'),
+            onTap: () => Navigator.pop(sheetContext, _MealAction.portion),
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit_outlined),
+            title: const Text('直接编辑'),
+            onTap: () => Navigator.pop(sheetContext, _MealAction.edit),
+          ),
+          if (meal.source == MealSource.text)
+            ListTile(
+              leading: const Icon(Icons.auto_awesome_outlined),
+              title: const Text('补充说明再估算'),
+              onTap: () => Navigator.pop(sheetContext, _MealAction.refine),
+            ),
+          ListTile(
+            leading: const Icon(
+              Icons.delete_outline,
+              color: AppColors.warning,
+            ),
+            title: const Text(
+              '删除',
+              style: TextStyle(color: AppColors.warning),
+            ),
+            onTap: () => Navigator.pop(sheetContext, _MealAction.delete),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (!context.mounted || action == null) return;
+
+  final controller = ref.read(mealManagementControllerProvider.notifier);
+  MealManagementResult? result;
+  String successMessage = '记录已更新';
+  switch (action) {
+    case _MealAction.portion:
+      final ratio = await _showPortionPicker(context, meal);
+      if (ratio == null || !context.mounted) return;
+      result = await controller.updatePortion(meal, ratio);
+      successMessage = '份量已更新';
+      break;
+    case _MealAction.edit:
+      final values = await _showMealEditSheet(context, meal);
+      if (values == null || !context.mounted) return;
+      result = await controller.updateDetails(
+        meal,
+        name: values.name,
+        baseCalories: values.baseCalories,
+        baseProtein: values.baseProtein,
+        baseCarbs: values.baseCarbs,
+        baseFat: values.baseFat,
+      );
+      break;
+    case _MealAction.refine:
+      final hint = await _showRefineSheet(context);
+      if (hint == null || !context.mounted) return;
+      result = await controller.refineMeal(meal, hint);
+      successMessage = '已重新估算并更新';
+      break;
+    case _MealAction.delete:
+      final confirmed = await _showDeleteConfirmation(context);
+      if (!confirmed || !context.mounted) return;
+      result = await controller.deleteMeal(meal);
+      successMessage = '记录已删除';
+      break;
+  }
+
+  if (!context.mounted || result == null) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        result.isSuccess ? successMessage : result.message ?? '操作失败，请稍后重试',
+      ),
+    ),
+  );
+}
+
+Future<double?> _showPortionPicker(BuildContext context, Meal meal) {
+  return showModalBottomSheet<double>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.pagePadding,
+          0,
+          AppSpacing.pagePadding,
+          AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '调整份量',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: <double>[0.5, 0.75, 1, 1.25, 1.5, 2]
+                  .map(
+                    (ratio) => ChoiceChip(
+                      label: Text('${ratio}x'),
+                      selected: meal.portionRatio == ratio,
+                      onSelected: (_) => Navigator.pop(sheetContext, ratio),
+                    ),
+                  )
+                  .toList(growable: false),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Future<_MealEditValues?> _showMealEditSheet(
+  BuildContext context,
+  Meal meal,
+) async {
+  final name = TextEditingController(text: meal.name);
+  final calories = TextEditingController(text: '${meal.baseCalories}');
+  final protein = TextEditingController(text: '${meal.baseProtein}');
+  final carbs = TextEditingController(text: '${meal.baseCarbs}');
+  final fat = TextEditingController(text: '${meal.baseFat}');
+  String? error;
+
+  final values = await showModalBottomSheet<_MealEditValues>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (sheetContext) => StatefulBuilder(
+      builder: (sheetContext, setModalState) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.pagePadding,
+          0,
+          AppSpacing.pagePadding,
+          MediaQuery.viewInsetsOf(sheetContext).bottom + AppSpacing.xl,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '直接编辑',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _MealEditField(label: '名称', controller: name),
+              _MealEditField(
+                label: '基础卡路里',
+                controller: calories,
+                numeric: true,
+              ),
+              _MealEditField(
+                label: '基础蛋白质',
+                controller: protein,
+                numeric: true,
+              ),
+              _MealEditField(
+                label: '基础碳水',
+                controller: carbs,
+                numeric: true,
+              ),
+              _MealEditField(
+                label: '基础脂肪',
+                controller: fat,
+                numeric: true,
+              ),
+              if (error != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: Text(
+                    error!,
+                    style: const TextStyle(color: AppColors.warning),
+                  ),
+                ),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () {
+                    final parsed = [
+                      num.tryParse(calories.text.trim()),
+                      num.tryParse(protein.text.trim()),
+                      num.tryParse(carbs.text.trim()),
+                      num.tryParse(fat.text.trim()),
+                    ];
+                    if (name.text.trim().isEmpty ||
+                        parsed.any(
+                          (value) =>
+                              value == null || !value.isFinite || value < 0,
+                        )) {
+                      setModalState(() {
+                        error = '请填写名称和大于等于 0 的有效营养数值';
+                      });
+                      return;
+                    }
+                    Navigator.pop(
+                      sheetContext,
+                      _MealEditValues(
+                        name: name.text.trim(),
+                        baseCalories: parsed[0]!,
+                        baseProtein: parsed[1]!,
+                        baseCarbs: parsed[2]!,
+                        baseFat: parsed[3]!,
+                      ),
+                    );
+                  },
+                  child: const Text('保存修改'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  name.dispose();
+  calories.dispose();
+  protein.dispose();
+  carbs.dispose();
+  fat.dispose();
+  return values;
+}
+
+Future<String?> _showRefineSheet(BuildContext context) async {
+  final hint = TextEditingController();
+  String? error;
+  final value = await showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (sheetContext) => StatefulBuilder(
+      builder: (sheetContext, setModalState) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.pagePadding,
+          0,
+          AppSpacing.pagePadding,
+          MediaQuery.viewInsetsOf(sheetContext).bottom + AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '补充说明再估算',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: hint,
+              autofocus: true,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                hintText: '例如：米饭其实只有半碗',
+              ),
+            ),
+            if (error != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(error!, style: const TextStyle(color: AppColors.warning)),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  if (hint.text.trim().isEmpty) {
+                    setModalState(() => error = '请输入补充说明');
+                    return;
+                  }
+                  Navigator.pop(sheetContext, hint.text.trim());
+                },
+                child: const Text('重新估算'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  hint.dispose();
+  return value;
+}
+
+Future<bool> _showDeleteConfirmation(BuildContext context) async {
+  return await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('删除这条记录？'),
+          content: const Text('删除后无法恢复。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('确认删除'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+}
+
+class _MealEditValues {
+  const _MealEditValues({
+    required this.name,
+    required this.baseCalories,
+    required this.baseProtein,
+    required this.baseCarbs,
+    required this.baseFat,
+  });
+
+  final String name;
+  final num baseCalories;
+  final num baseProtein;
+  final num baseCarbs;
+  final num baseFat;
+}
+
+class _MealEditField extends StatelessWidget {
+  const _MealEditField({
+    required this.label,
+    required this.controller,
+    this.numeric = false,
+  });
+
+  final String label;
+  final TextEditingController controller;
+  final bool numeric;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: TextField(
+        controller: controller,
+        keyboardType: numeric
+            ? const TextInputType.numberWithOptions(decimal: true)
+            : null,
+        decoration: InputDecoration(labelText: label),
+      ),
+    );
   }
 }
 
@@ -210,10 +585,17 @@ class _NutritionCard extends StatelessWidget {
 }
 
 class _MealListItem extends StatelessWidget {
-  const _MealListItem({required this.meal, required this.ownerName});
+  const _MealListItem({
+    required this.meal,
+    required this.ownerName,
+    required this.busy,
+    required this.onManage,
+  });
 
   final Meal meal;
   final String ownerName;
+  final bool busy;
+  final VoidCallback? onManage;
 
   @override
   Widget build(BuildContext context) {
@@ -250,6 +632,22 @@ class _MealListItem extends StatelessWidget {
                   ),
                 ],
               ),
+              if (onManage != null) ...[
+                const SizedBox(width: AppSpacing.xs),
+                if (busy)
+                  const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  IconButton(
+                    tooltip: '管理${meal.name}',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: onManage,
+                    icon: const Icon(Icons.more_vert),
+                  ),
+              ],
             ],
           ),
           const SizedBox(height: AppSpacing.xs),

@@ -53,6 +53,9 @@ class MealPatch {
     this.portionRatio,
     this.shareMode,
     this.mealTime,
+    this.dishes,
+    this.aiHint,
+    this.originalInput,
     this.expectedUpdatedAt,
   });
 
@@ -64,5 +67,8 @@ class MealPatch {
   final double? portionRatio;
   final MealShareMode? shareMode;
   final String? mealTime;
+  final List<MealAiDish>? dishes;
+  final String? aiHint;
+  final String? originalInput;
   final DateTime? expectedUpdatedAt;
 }
