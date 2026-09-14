@@ -122,6 +122,7 @@ void main() {
     expect(find.text('Harper 980'), findsOneWidget);
     expect(find.text('/ 1800 kcal'), findsOneWidget);
     expect(find.text('2230'), findsNothing);
+    await tester.scrollUntilVisible(find.text('鸡胸肉沙拉'), 300);
     expect(find.text('我'), findsOneWidget);
     expect(find.text('Harper'), findsOneWidget);
     expect(find.byTooltip('管理鸡胸肉沙拉'), findsOneWidget);

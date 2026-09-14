@@ -193,6 +193,7 @@ void main() {
     await tester.enterText(find.byType(TextField).first, '600 kcal 晚餐');
     await tester.tap(find.text('AI 估算'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('一起吃'));
     await tester.tap(find.text('一起吃'));
     await tester.pump();
 
@@ -261,6 +262,7 @@ void main() {
     );
     await tester.enterText(nameField, '鸡胸肉沙拉');
     await tester.enterText(caloriesField, '600');
+    await tester.ensureVisible(find.text('生成记录预览'));
     await tester.tap(find.text('生成记录预览'));
     await tester.pump();
 

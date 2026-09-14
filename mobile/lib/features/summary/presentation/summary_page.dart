@@ -227,7 +227,7 @@ Future<void> _showMealActions(
       break;
   }
 
-  if (!context.mounted || result == null) return;
+  if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(

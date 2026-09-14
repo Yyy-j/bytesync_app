@@ -54,7 +54,7 @@ class _HistoryList extends ConsumerWidget {
         color: AppColors.primary,
         onRefresh: () =>
             ref.read(trainingHistoryControllerProvider.notifier).refresh(),
-        child: const ListView(
+        child: ListView(
           physics: AlwaysScrollableScrollPhysics(),
           children: [
             SizedBox(height: 180),
