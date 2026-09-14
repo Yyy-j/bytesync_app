@@ -44,6 +44,14 @@ class TrainingCheckInOutcome {
   bool get isSuccess => errorMessage == null;
 }
 
+class TrainingSetEditOutcome {
+  const TrainingSetEditOutcome.success() : errorMessage = null;
+  const TrainingSetEditOutcome.failure(this.errorMessage);
+
+  final String? errorMessage;
+  bool get isSuccess => errorMessage == null;
+}
+
 final trainingControllerProvider =
     NotifierProvider<TrainingController, TrainingState>(TrainingController.new);
 
@@ -118,6 +126,37 @@ class TrainingController extends Notifier<TrainingState> {
         error is ConflictException
             ? '目标组数已完成，请刷新后查看最新进度'
             : _message(error, fallback: '打卡失败，请检查网络后重试'),
+      );
+    }
+  }
+
+  Future<TrainingSetEditOutcome> updateSetDetail({
+    required String itemId,
+    required String requestId,
+    required TrainingSetDetailPatch patch,
+  }) async {
+    final current = state;
+    if (current is! TrainingReady) {
+      return const TrainingSetEditOutcome.failure('训练数据尚未加载，请稍后重试');
+    }
+
+    try {
+      await _repository.updateSetDetail(
+        weekId: current.week.weekId,
+        itemId: itemId,
+        requestId: requestId,
+        patch: patch,
+      );
+      final refreshed = await _load(preserveSelection: true);
+      if (!refreshed) {
+        return const TrainingSetEditOutcome.failure(
+          '该组已更新，但刷新失败。请保持当前内容并重试',
+        );
+      }
+      return const TrainingSetEditOutcome.success();
+    } catch (error) {
+      return TrainingSetEditOutcome.failure(
+        _message(error, fallback: '修改失败，请检查网络后重试'),
       );
     }
   }

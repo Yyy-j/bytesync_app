@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../domain/training_exercise_item.dart';
+import '../../exercises/presentation/training_exercise_picker.dart';
 import '../training_controller.dart';
 import 'training_template_controller.dart';
 
@@ -98,11 +99,11 @@ class _TemplateBody extends ConsumerWidget {
                     child: OutlinedButton.icon(
                       onPressed: state.busy
                           ? null
-                          : () => _openEditor(
+                          : () => _openNewExercise(
                               context,
                               ref,
                               day.dayIndex,
-                              null,
+                              day.exercises.length,
                             ),
                       icon: const Icon(Icons.add),
                       label: const Text('新增动作'),
@@ -140,6 +141,40 @@ class _TemplateBody extends ConsumerWidget {
         const SizedBox(height: AppSpacing.xl),
       ],
     );
+  }
+
+  Future<void> _openNewExercise(
+    BuildContext context,
+    WidgetRef ref,
+    int dayIndex,
+    int order,
+  ) async {
+    final selection = await showModalBottomSheet<TrainingExercisePickerResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) => SizedBox(
+        height: MediaQuery.sizeOf(sheetContext).height * 0.88,
+        child: const TrainingExercisePicker(),
+      ),
+    );
+    if (selection == null || !context.mounted) return;
+
+    final controller = ref.read(trainingTemplateControllerProvider.notifier);
+    switch (selection) {
+      case FixedTrainingExerciseSelection(:final exercise):
+        controller.addExercise(
+          dayIndex,
+          exercise.toTemplateItem(
+            itemId: controller.newItemId(),
+            order: order,
+          ),
+        );
+        break;
+      case ManualTrainingExerciseSelection():
+        await _openEditor(context, ref, dayIndex, null);
+        break;
+    }
   }
 
   Future<void> _openEditor(
@@ -287,6 +322,8 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
   late final TextEditingController _weightController;
   String? _error;
 
+  bool get _isFixed => widget.initial?.exerciseId != null;
+
   @override
   void initState() {
     super.initState();
@@ -372,18 +409,33 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.lg),
-            TextField(
-              controller: _nameController,
-              autofocus: widget.initial == null,
-              maxLength: 100,
-              decoration: const InputDecoration(labelText: '动作名称'),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextField(
-              controller: _categoryController,
-              maxLength: 50,
-              decoration: const InputDecoration(labelText: '分类'),
-            ),
+            if (_isFixed) ...[
+              Text(
+                _nameController.text,
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                _categoryController.text,
+                style: const TextStyle(color: AppColors.textSecondary),
+              ),
+            ] else ...[
+              TextField(
+                controller: _nameController,
+                autofocus: widget.initial == null,
+                maxLength: 100,
+                decoration: const InputDecoration(labelText: '动作名称'),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              TextField(
+                controller: _categoryController,
+                maxLength: 50,
+                decoration: const InputDecoration(labelText: '分类'),
+              ),
+            ],
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [

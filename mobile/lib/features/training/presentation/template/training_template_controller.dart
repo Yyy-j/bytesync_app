@@ -81,11 +81,7 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
 
   Future<void> refresh() => _load();
 
-  String newItemId() {
-    final random = Random.secure().nextInt(0x7fffffff).toRadixString(36);
-    final time = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
-    return 'item-$time-$random';
-  }
+  String newItemId() => newTrainingTemplateItemId();
 
   void addExercise(int dayIndex, TrainingExerciseItem exercise) {
     final current = state;
@@ -230,4 +226,10 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
       removedFromTemplate: item.removedFromTemplate,
     );
   }
+}
+
+String newTrainingTemplateItemId() {
+  final random = Random.secure().nextInt(0x7fffffff).toRadixString(36);
+  final time = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+  return 'item-$time-$random';
 }

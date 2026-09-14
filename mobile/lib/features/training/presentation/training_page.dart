@@ -239,6 +239,15 @@ class _ExerciseCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            if (exercise.setDetails.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.sm),
+              ...exercise.setDetails.map(
+                (detail) => _CompletedSetRow(
+                  detail: detail,
+                  onTap: () => _openSetEditSheet(context, detail),
+                ),
+              ),
+            ],
             if (exercise.removedFromTemplate) ...[
               const SizedBox(height: AppSpacing.sm),
               const Text(
@@ -278,6 +287,279 @@ class _ExerciseCard extends StatelessWidget {
         const SnackBar(content: Text('已完成一组')),
       );
     }
+  }
+
+  Future<void> _openSetEditSheet(
+    BuildContext context,
+    TrainingSetDetail detail,
+  ) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => _SetEditSheet(exercise: exercise, detail: detail),
+    );
+    if (saved == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('该组记录已更新')),
+      );
+    }
+  }
+}
+
+class _CompletedSetRow extends StatelessWidget {
+  const _CompletedSetRow({required this.detail, required this.onTap});
+
+  final TrainingSetDetail detail;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final performance = <String>[
+      if (detail.weight != null && detail.reps != null)
+        '${_weight(detail.weight!)} kg × ${detail.reps}'
+      else ...[
+        if (detail.weight != null) '${_weight(detail.weight!)} kg',
+        if (detail.reps != null) '${detail.reps} reps',
+      ],
+      if (detail.rpe != null) 'RPE ${_weight(detail.rpe!)}',
+    ];
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '第 ${detail.setIndex} 组  '
+                      '${performance.isEmpty ? '已完成' : performance.join('  ')}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    if (detail.remark?.isNotEmpty == true) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        detail.remark!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.edit_outlined,
+                size: 18,
+                color: AppColors.textTertiary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SetEditSheet extends ConsumerStatefulWidget {
+  const _SetEditSheet({required this.exercise, required this.detail});
+
+  final TrainingExerciseItem exercise;
+  final TrainingSetDetail detail;
+
+  @override
+  ConsumerState<_SetEditSheet> createState() => _SetEditSheetState();
+}
+
+class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
+  late final TextEditingController _weightController;
+  late final TextEditingController _repsController;
+  late final TextEditingController _rpeController;
+  late final TextEditingController _remarkController;
+  bool _submitting = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final detail = widget.detail;
+    _weightController = TextEditingController(
+      text: detail.weight == null ? '' : _weight(detail.weight!),
+    );
+    _repsController = TextEditingController(
+      text: detail.reps?.toString() ?? '',
+    );
+    _rpeController = TextEditingController(
+      text: detail.rpe == null ? '' : _weight(detail.rpe!),
+    );
+    _remarkController = TextEditingController(text: detail.remark ?? '');
+  }
+
+  @override
+  void dispose() {
+    _weightController.dispose();
+    _repsController.dispose();
+    _rpeController.dispose();
+    _remarkController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    FocusScope.of(context).unfocus();
+    final weightText = _weightController.text.trim();
+    final repsText = _repsController.text.trim();
+    final rpeText = _rpeController.text.trim();
+    final weight = weightText.isEmpty ? null : double.tryParse(weightText);
+    final reps = repsText.isEmpty ? null : int.tryParse(repsText);
+    final rpe = rpeText.isEmpty ? null : double.tryParse(rpeText);
+
+    if (weightText.isNotEmpty &&
+        (weight == null || !weight.isFinite || weight < 0 || weight > 10000)) {
+      setState(() => _error = '重量请输入 0 到 10000，或留空');
+      return;
+    }
+    if (repsText.isNotEmpty && (reps == null || reps < 0 || reps > 9999)) {
+      setState(() => _error = '次数请输入 0 到 9999，或留空');
+      return;
+    }
+    if (rpeText.isNotEmpty &&
+        (rpe == null || !rpe.isFinite || rpe < 1 || rpe > 10)) {
+      setState(() => _error = 'RPE 请输入 1 到 10，或留空');
+      return;
+    }
+
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    final remark = _remarkController.text.trim();
+    final outcome = await ref
+        .read(trainingControllerProvider.notifier)
+        .updateSetDetail(
+          itemId: widget.exercise.itemId,
+          requestId: widget.detail.requestId,
+          patch: TrainingSetDetailPatch(
+            weight: TrainingPatchField<double>.value(weight),
+            reps: TrainingPatchField<int>.value(reps),
+            rpe: TrainingPatchField<double>.value(rpe),
+            remark: TrainingPatchField<String>.value(
+              remark.isEmpty ? null : remark,
+            ),
+          ),
+        );
+    if (!mounted) return;
+    if (outcome.isSuccess) {
+      Navigator.pop(context, true);
+    } else {
+      setState(() {
+        _submitting = false;
+        _error = outcome.errorMessage;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 150),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '编辑第 ${widget.detail.setIndex} 组 · '
+              '${widget.exercise.exerciseName}',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            const Text(
+              '清空字段后保存，会删除该项记录值。',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                Expanded(
+                  child: _editField(
+                    controller: _weightController,
+                    label: '重量 kg',
+                    decimal: true,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: _editField(
+                    controller: _repsController,
+                    label: '次数 reps',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _editField(
+              controller: _rpeController,
+              label: 'RPE',
+              decimal: true,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _remarkController,
+              enabled: !_submitting,
+              maxLength: 500,
+              minLines: 2,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: '备注'),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(_error!, style: const TextStyle(color: AppColors.warning)),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _submitting ? null : _submit,
+                child: Text(_submitting ? '保存中…' : '保存修改'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _editField({
+    required TextEditingController controller,
+    required String label,
+    bool decimal = false,
+  }) {
+    return TextField(
+      controller: controller,
+      enabled: !_submitting,
+      keyboardType: TextInputType.numberWithOptions(decimal: decimal),
+      decoration: InputDecoration(labelText: label),
+    );
   }
 }
 
