@@ -1,6 +1,34 @@
 import '../../domain/training_day.dart';
 import '../../domain/training_exercise_item.dart';
 import '../../domain/training_set_detail.dart';
+import '../../exercises/domain/training_custom_exercise.dart';
+
+class CreateTrainingCustomExerciseRequestDto {
+  const CreateTrainingCustomExerciseRequestDto(this.input);
+
+  final TrainingCustomExerciseInput input;
+
+  Map<String, dynamic> toJson() => _trainingCustomExerciseJson(input);
+}
+
+class UpdateTrainingCustomExerciseRequestDto {
+  const UpdateTrainingCustomExerciseRequestDto(this.input);
+
+  final TrainingCustomExerciseInput input;
+
+  Map<String, dynamic> toJson() => _trainingCustomExerciseJson(input);
+}
+
+Map<String, dynamic> _trainingCustomExerciseJson(
+  TrainingCustomExerciseInput input,
+) => {
+  'name': input.name,
+  'category': input.category,
+  'item_type': input.itemType.toWire(),
+  'default_sets': input.defaultSets,
+  'default_reps': input.defaultReps,
+  'default_weight': input.defaultWeight,
+};
 
 class SaveTrainingTemplateRequestDto {
   const SaveTrainingTemplateRequestDto(this.days);

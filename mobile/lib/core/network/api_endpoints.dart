@@ -32,6 +32,9 @@ class ApiEndpoints {
   static const String summaryDaily = '/summary/daily';
 
   // ── Training ──────────────────────────────────────────
+  static const String trainingCustomExercises = '/training/exercises/custom';
+  static String trainingCustomExerciseById(String id) =>
+      '$trainingCustomExercises/${Uri.encodeComponent(id)}';
   static const String trainingTemplate = '/training/template';
   static const String trainingWeeks = '/training/weeks';
   static const String trainingWeeksCurrent = '/training/weeks/current';

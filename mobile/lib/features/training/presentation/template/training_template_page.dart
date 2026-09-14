@@ -171,6 +171,15 @@ class _TemplateBody extends ConsumerWidget {
           ),
         );
         break;
+      case CustomTrainingExerciseSelection(:final exercise):
+        controller.addExercise(
+          dayIndex,
+          exercise.toTemplateItem(
+            itemId: controller.newItemId(),
+            order: order,
+          ),
+        );
+        break;
       case ManualTrainingExerciseSelection():
         await _openEditor(context, ref, dayIndex, null);
         break;

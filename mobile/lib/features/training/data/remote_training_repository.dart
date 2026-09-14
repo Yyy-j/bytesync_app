@@ -6,6 +6,7 @@ import '../domain/training_day.dart';
 import '../domain/training_set_detail.dart';
 import '../domain/training_template.dart';
 import '../domain/training_week.dart';
+import '../exercises/domain/training_custom_exercise.dart';
 import 'dto/training_dtos.dart';
 import 'dto/training_request_dtos.dart';
 import 'mappers/training_mapper.dart';
@@ -16,6 +17,69 @@ class RemoteTrainingRepository implements TrainingRepository {
 
   final Dio _dio;
   final DioErrorMapper _errorMapper;
+
+  @override
+  Future<List<TrainingCustomExercise>> getCustomExercises() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.trainingCustomExercises,
+      );
+      final dto = TrainingCustomExerciseListResponseDto.fromJson(
+        response.data!,
+      );
+      return dto.exercises
+          .map(TrainingMapper.customExerciseFromDto)
+          .toList(growable: false);
+    } catch (error) {
+      throw _errorMapper.map(error);
+    }
+  }
+
+  @override
+  Future<TrainingCustomExercise> createCustomExercise(
+    TrainingCustomExerciseInput input,
+  ) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        ApiEndpoints.trainingCustomExercises,
+        data: CreateTrainingCustomExerciseRequestDto(input).toJson(),
+      );
+      return TrainingMapper.customExerciseFromDto(
+        TrainingCustomExerciseDto.fromJson(response.data!),
+      );
+    } catch (error) {
+      throw _errorMapper.map(error);
+    }
+  }
+
+  @override
+  Future<TrainingCustomExercise> updateCustomExercise(
+    String exerciseId,
+    TrainingCustomExerciseInput input,
+  ) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.trainingCustomExerciseById(exerciseId),
+        data: UpdateTrainingCustomExerciseRequestDto(input).toJson(),
+      );
+      return TrainingMapper.customExerciseFromDto(
+        TrainingCustomExerciseDto.fromJson(response.data!),
+      );
+    } catch (error) {
+      throw _errorMapper.map(error);
+    }
+  }
+
+  @override
+  Future<void> deleteCustomExercise(String exerciseId) async {
+    try {
+      await _dio.delete<void>(
+        ApiEndpoints.trainingCustomExerciseById(exerciseId),
+      );
+    } catch (error) {
+      throw _errorMapper.map(error);
+    }
+  }
 
   @override
   Future<TrainingTemplate?> getTemplate() async {

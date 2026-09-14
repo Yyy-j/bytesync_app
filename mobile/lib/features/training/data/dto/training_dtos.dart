@@ -1,5 +1,67 @@
 import '../../../../core/network/api_exception.dart';
 
+class TrainingCustomExerciseDto {
+  const TrainingCustomExerciseDto({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.itemType,
+    required this.defaultSets,
+    required this.defaultReps,
+    required this.defaultWeight,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory TrainingCustomExerciseDto.fromJson(Map<String, dynamic> json) {
+    try {
+      return TrainingCustomExerciseDto(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        category: json['category'] as String,
+        itemType: json['item_type'] as String,
+        defaultSets: json['default_sets'] as int,
+        defaultReps: json['default_reps'] as int,
+        defaultWeight: (json['default_weight'] as num).toDouble(),
+        createdAt: json['created_at'] as String,
+        updatedAt: json['updated_at'] as String,
+      );
+    } on TypeError catch (error) {
+      throw MalformedResponseException('Custom exercise 格式异常: $error');
+    }
+  }
+
+  final String id;
+  final String name;
+  final String category;
+  final String itemType;
+  final int defaultSets;
+  final int defaultReps;
+  final double defaultWeight;
+  final String createdAt;
+  final String updatedAt;
+}
+
+class TrainingCustomExerciseListResponseDto {
+  const TrainingCustomExerciseListResponseDto({required this.exercises});
+
+  factory TrainingCustomExerciseListResponseDto.fromJson(
+    Map<String, dynamic> json,
+  ) {
+    final rawExercises = json['exercises'];
+    if (rawExercises is! List) {
+      throw const MalformedResponseException('Custom exercises 格式异常');
+    }
+    return TrainingCustomExerciseListResponseDto(
+      exercises: rawExercises
+          .map((value) => TrainingCustomExerciseDto.fromJson(_jsonMap(value)))
+          .toList(growable: false),
+    );
+  }
+
+  final List<TrainingCustomExerciseDto> exercises;
+}
+
 class TrainingSetDetailDto {
   const TrainingSetDetailDto({
     required this.requestId,

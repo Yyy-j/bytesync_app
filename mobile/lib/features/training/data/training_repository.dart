@@ -2,8 +2,22 @@ import '../domain/training_day.dart';
 import '../domain/training_set_detail.dart';
 import '../domain/training_template.dart';
 import '../domain/training_week.dart';
+import '../exercises/domain/training_custom_exercise.dart';
 
 abstract interface class TrainingRepository {
+  Future<List<TrainingCustomExercise>> getCustomExercises();
+
+  Future<TrainingCustomExercise> createCustomExercise(
+    TrainingCustomExerciseInput input,
+  );
+
+  Future<TrainingCustomExercise> updateCustomExercise(
+    String exerciseId,
+    TrainingCustomExerciseInput input,
+  );
+
+  Future<void> deleteCustomExercise(String exerciseId);
+
   Future<TrainingTemplate?> getTemplate();
 
   Future<TrainingTemplate> saveTemplate(List<TrainingDay> days);

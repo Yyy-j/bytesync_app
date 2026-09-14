@@ -4,10 +4,31 @@ import '../../domain/training_exercise_item.dart';
 import '../../domain/training_set_detail.dart';
 import '../../domain/training_template.dart';
 import '../../domain/training_week.dart';
+import '../../exercises/domain/training_custom_exercise.dart';
 import '../dto/training_dtos.dart';
 
 class TrainingMapper {
   const TrainingMapper._();
+
+  static TrainingCustomExercise customExerciseFromDto(
+    TrainingCustomExerciseDto dto,
+  ) {
+    try {
+      return TrainingCustomExercise(
+        id: dto.id,
+        name: dto.name,
+        category: dto.category,
+        itemType: TrainingItemType.fromWire(dto.itemType),
+        defaultSets: dto.defaultSets,
+        defaultReps: dto.defaultReps,
+        defaultWeight: dto.defaultWeight,
+        createdAt: DateTime.parse(dto.createdAt),
+        updatedAt: DateTime.parse(dto.updatedAt),
+      );
+    } on FormatException catch (error) {
+      throw MalformedResponseException('Custom exercise 值格式异常: $error');
+    }
+  }
 
   static TrainingTemplate templateFromDto(TrainingTemplateDto dto) {
     try {

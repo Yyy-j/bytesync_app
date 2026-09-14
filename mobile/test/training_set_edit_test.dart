@@ -8,6 +8,7 @@ import 'package:bytesync/features/training/domain/training_day.dart';
 import 'package:bytesync/features/training/domain/training_set_detail.dart';
 import 'package:bytesync/features/training/domain/training_template.dart';
 import 'package:bytesync/features/training/domain/training_week.dart';
+import 'package:bytesync/features/training/exercises/domain/training_custom_exercise.dart';
 import 'package:bytesync/features/training/presentation/training_controller.dart';
 
 class _FakeTrainingRepository implements TrainingRepository {
@@ -16,6 +17,25 @@ class _FakeTrainingRepository implements TrainingRepository {
   String? updatedItemId;
   String? updatedRequestId;
   TrainingSetDetailPatch? updatedPatch;
+
+  @override
+  Future<List<TrainingCustomExercise>> getCustomExercises() =>
+      throw UnimplementedError();
+
+  @override
+  Future<TrainingCustomExercise> createCustomExercise(
+    TrainingCustomExerciseInput input,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<TrainingCustomExercise> updateCustomExercise(
+    String exerciseId,
+    TrainingCustomExerciseInput input,
+  ) => throw UnimplementedError();
+
+  @override
+  Future<void> deleteCustomExercise(String exerciseId) =>
+      throw UnimplementedError();
 
   @override
   Future<CurrentTrainingWeekResult> getCurrentWeek() async {
