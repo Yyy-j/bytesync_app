@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/app_theme.dart';
+import '../shared/widgets/dismiss_keyboard.dart';
 import 'router.dart';
 
 class BiteSyncApp extends ConsumerWidget {
@@ -16,6 +17,9 @@ class BiteSyncApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       routerConfig: router,
+      builder: (context, child) => DismissKeyboard(
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

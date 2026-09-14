@@ -168,10 +168,39 @@ void main() {
     await tester.tap(find.text('AI 估算'));
     await tester.pumpAndSettle();
 
+    expect(tester.widget<TextField>(input).controller?.text, isEmpty);
     expect(find.text('菜品：牛肉面、煎蛋'), findsOneWidget);
     expect(find.text('AI 估算，仅供参考'), findsOneWidget);
     expect(find.text('我吃'), findsOneWidget);
     expect(find.text('Ta 吃'), findsNothing);
+  });
+
+  testWidgets('tapping the record page dismisses the keyboard', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          mealAiRepositoryProvider.overrideWithValue(_FakeMealAiRepository()),
+          yesterdayMealsProvider.overrideWith((ref) async => []),
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(withPartner: false),
+          ),
+        ],
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+
+    final input = find.byType(TextField).first;
+    await tester.enterText(input, '一份沙拉');
+    await tester.showKeyboard(input);
+    await tester.pump();
+    expect(tester.binding.focusManager.primaryFocus, isNotNull);
+
+    await tester.tap(find.text('AI 识别'));
+    await tester.pump();
+    expect(
+      tester.binding.focusManager.primaryFocus,
+      isNot(isA<EditableTextState>()),
+    );
   });
 
   testWidgets('paired result offers partner and shared allocation', (

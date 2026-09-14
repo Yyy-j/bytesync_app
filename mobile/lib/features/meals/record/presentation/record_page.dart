@@ -75,10 +75,11 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   Future<void> _analyzeText() async {
     FocusScope.of(context).unfocus();
     ref.read(selectedRecordImagePathProvider.notifier).state = null;
-    await ref.read(recordControllerProvider.notifier).analyzeText(
+    final success = await ref.read(recordControllerProvider.notifier).analyzeText(
           _textController.text,
           hint: _hintController.text,
         );
+    if (success && mounted) _textController.clear();
   }
 
   void _createManualDraft() {
@@ -159,9 +160,12 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('记录饮食')),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.pagePadding),
-          child: Column(
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: FocusScope.of(context).unfocus,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.pagePadding),
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('AI 识别', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
@@ -259,6 +263,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -347,7 +352,7 @@ class _YesterdayReuseSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          '昨天也吃了？',
+          '今天也吃了？',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: AppSpacing.sm),
