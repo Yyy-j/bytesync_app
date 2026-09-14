@@ -21,7 +21,7 @@ class AppConfig {
   /// Base URL of the FastAPI backend.
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://fish-kingdom-cas-activities.trycloudflare.com',
+    defaultValue: 'https://tunes-seeing-sites-term.trycloudflare.com',
   );
 
   /// Network timeouts, in milliseconds.
