@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/api_exception.dart';
+import '../../../core/network/auth_session_manager.dart';
 import '../../../core/network/dio_error_mapper.dart';
 import '../../../core/storage/secure_storage_service.dart';
 import '../domain/auth_user.dart';
@@ -17,7 +18,7 @@ import 'mappers/auth_user_mapper.dart';
 /// Flow:
 /// ```
 /// GoogleAuthClient.signIn → id_token
-///   → POST /auth/google      → access_token
+///   → POST /auth/google      → access_token + refresh_token
 ///   → secureStorage.save
 ///   → GET  /users/me         → AuthUser
 /// ```
@@ -27,21 +28,26 @@ class RemoteAuthRepository implements AuthRepository {
     required this.storage,
     required this.googleAuthClient,
     required this.errorMapper,
+    required this.sessionManager,
   });
 
   final Dio dio;
   final SecureStorageService storage;
   final GoogleAuthClient googleAuthClient;
   final DioErrorMapper errorMapper;
+  final AuthSessionManager sessionManager;
 
   @override
   Future<AuthUser?> restoreSession() async {
-    final token = await storage.readAuthToken();
-    if (token == null || token.isEmpty) return null;
+    final accessToken = await storage.readAccessToken();
+    final refreshToken = await storage.readRefreshToken();
+    if ((accessToken == null || accessToken.isEmpty) &&
+        (refreshToken == null || refreshToken.isEmpty)) {
+      return null;
+    }
     try {
       return await getCurrentUser();
     } on UnauthorizedException {
-      await storage.clearAuthToken();
       return null;
     } on ApiException {
       // Network / server error on cold start: don't clear the token
@@ -59,8 +65,11 @@ class RemoteAuthRepository implements AuthRepository {
         ApiEndpoints.authGoogle,
         data: GoogleLoginRequestDto(idToken: googleResult.idToken).toJson(),
       );
-      final tokenDto = AccessTokenResponseDto.fromJson(response.data!);
-      await storage.saveAuthToken(tokenDto.accessToken);
+      final tokenDto = TokenPairResponseDto.fromJson(response.data!);
+      await sessionManager.saveTokenPair(
+        accessToken: tokenDto.accessToken,
+        refreshToken: tokenDto.refreshToken,
+      );
 
       final user = await getCurrentUser();
 
@@ -95,11 +104,11 @@ class RemoteAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    await sessionManager.logout();
     try {
       await googleAuthClient.signOut();
     } catch (_) {
       // Ignore — signing out of Google is best-effort.
     }
-    await storage.clearAuthToken();
   }
 }

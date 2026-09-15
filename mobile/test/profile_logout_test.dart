@@ -2,22 +2,44 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bytesync/core/network/dio_error_mapper.dart';
+import 'package:bytesync/core/network/auth_event_bus.dart';
+import 'package:bytesync/core/network/auth_session_manager.dart';
 import 'package:bytesync/core/storage/secure_storage_service.dart';
 import 'package:bytesync/features/auth/data/google_auth_client.dart';
 import 'package:bytesync/features/auth/data/remote_auth_repository.dart';
 import 'package:bytesync/features/profile/data/dto/user_profile_dto.dart';
 
 class _MemorySecureStorage extends SecureStorageService {
-  String? token;
+  String? accessToken;
+  String? refreshToken;
+  DateTime? refreshedAt;
 
   @override
-  Future<String?> readAuthToken() async => token;
+  Future<String?> readAccessToken() async => accessToken;
 
   @override
-  Future<void> saveAuthToken(String value) async => token = value;
+  Future<String?> readRefreshToken() async => refreshToken;
 
   @override
-  Future<void> clearAuthToken() async => token = null;
+  Future<DateTime?> readLastSuccessfulRefreshAt() async => refreshedAt;
+
+  @override
+  Future<void> saveTokenPair({
+    required String accessToken,
+    required String refreshToken,
+    required DateTime refreshedAt,
+  }) async {
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
+    this.refreshedAt = refreshedAt;
+  }
+
+  @override
+  Future<void> clearTokens() async {
+    accessToken = null;
+    refreshToken = null;
+    refreshedAt = null;
+  }
 }
 
 void main() {
@@ -43,16 +65,29 @@ void main() {
 
   test('logout clears the locally persisted JWT', () async {
     final storage = _MemorySecureStorage();
-    await storage.saveAuthToken('local-jwt');
+    await storage.saveTokenPair(
+      accessToken: 'local-jwt',
+      refreshToken: 'local-refresh',
+      refreshedAt: DateTime.now().toUtc(),
+    );
+    final bus = AuthEventBus();
+    final sessionManager = AuthSessionManager(
+      refreshDio: Dio(),
+      storage: storage,
+      eventBus: bus,
+    );
     final repository = RemoteAuthRepository(
       dio: Dio(),
       storage: storage,
       googleAuthClient: GoogleAuthClient(),
       errorMapper: const DioErrorMapper(),
+      sessionManager: sessionManager,
     );
 
     await repository.signOut();
 
-    expect(await storage.readAuthToken(), isNull);
+    expect(await storage.readAccessToken(), isNull);
+    expect(await storage.readRefreshToken(), isNull);
+    bus.dispose();
   });
 }

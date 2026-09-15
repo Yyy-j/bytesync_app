@@ -10,24 +10,31 @@ class GoogleLoginRequestDto {
 }
 
 /// Wire shape of `POST /auth/google` response body.
-class AccessTokenResponseDto {
-  const AccessTokenResponseDto({
+class TokenPairResponseDto {
+  const TokenPairResponseDto({
     required this.accessToken,
+    required this.refreshToken,
     required this.tokenType,
   });
 
-  factory AccessTokenResponseDto.fromJson(Map<String, dynamic> json) {
+  factory TokenPairResponseDto.fromJson(Map<String, dynamic> json) {
     final accessToken = json['access_token'];
     if (accessToken is! String || accessToken.isEmpty) {
       throw const MalformedResponseException('缺少 access_token');
     }
+    final refreshToken = json['refresh_token'];
+    if (refreshToken is! String || refreshToken.isEmpty) {
+      throw const MalformedResponseException('缺少 refresh_token');
+    }
     final tokenType = json['token_type'];
-    return AccessTokenResponseDto(
+    return TokenPairResponseDto(
       accessToken: accessToken,
+      refreshToken: refreshToken,
       tokenType: tokenType is String ? tokenType : 'bearer',
     );
   }
 
   final String accessToken;
+  final String refreshToken;
   final String tokenType;
 }

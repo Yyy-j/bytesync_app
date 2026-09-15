@@ -1,28 +1,29 @@
 import 'package:dio/dio.dart';
 
 import '../storage/secure_storage_service.dart';
-import 'auth_event_bus.dart';
+import 'api_endpoints.dart';
+import 'auth_session_manager.dart';
 
-/// Injects the stored Bearer token into every outgoing request and, on any
-/// 401 response, clears the stored token and notifies [AuthEventBus] so
-/// the auth controller can transition to `AuthUnauthenticated` and the
-/// router can redirect to `/login`.
-///
-/// Kept as a plain `Interceptor` (not `QueuedInterceptor`) — the auth
-/// state transition is fire-and-forget; the failing request itself still
-/// bubbles up as an `UnauthorizedException` for the caller to display.
+/// Injects the access token and refreshes/retries once after a 401.
 class AuthInterceptor extends Interceptor {
-  AuthInterceptor({required this.storage, required this.eventBus});
+  AuthInterceptor({
+    required this.dio,
+    required this.storage,
+    required this.sessionManager,
+  });
 
+  final Dio dio;
   final SecureStorageService storage;
-  final AuthEventBus eventBus;
+  final AuthSessionManager sessionManager;
+
+  static const _retriedKey = 'auth_refresh_retried';
 
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await storage.readAuthToken();
+    final token = await storage.readAccessToken();
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -34,10 +35,48 @@ class AuthInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (err.response?.statusCode == 401) {
-      await storage.clearAuthToken();
-      eventBus.emitUnauthorized();
+    final request = err.requestOptions;
+    if (err.response?.statusCode != 401 ||
+        request.extra[_retriedKey] == true ||
+        _isAuthSessionEndpoint(request.path)) {
+      handler.next(err);
+      return;
     }
-    handler.next(err);
+
+    final failedToken = _bearerToken(request.headers['Authorization']);
+    var accessToken = await storage.readAccessToken();
+    if (accessToken == null || accessToken == failedToken) {
+      final refreshed = await sessionManager.refresh();
+      if (!refreshed) {
+        handler.next(err);
+        return;
+      }
+      accessToken = await storage.readAccessToken();
+    }
+
+    if (accessToken == null || accessToken.isEmpty) {
+      handler.next(err);
+      return;
+    }
+    request.extra[_retriedKey] = true;
+    request.headers['Authorization'] = 'Bearer $accessToken';
+    try {
+      handler.resolve(await dio.fetch<dynamic>(request));
+    } on DioException catch (retryError) {
+      handler.next(retryError);
+    }
+  }
+
+  String? _bearerToken(Object? authorization) {
+    if (authorization is! String || !authorization.startsWith('Bearer ')) {
+      return null;
+    }
+    return authorization.substring(7);
+  }
+
+  bool _isAuthSessionEndpoint(String path) {
+    return path == ApiEndpoints.authRefresh ||
+        path == ApiEndpoints.authLogout ||
+        path == ApiEndpoints.authGoogle;
   }
 }

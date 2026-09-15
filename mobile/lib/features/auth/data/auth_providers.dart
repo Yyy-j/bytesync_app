@@ -20,5 +20,6 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
     storage: ref.watch(secureStorageServiceProvider),
     googleAuthClient: ref.watch(googleAuthClientProvider),
     errorMapper: ref.watch(dioErrorMapperProvider),
+    sessionManager: ref.watch(authSessionManagerProvider),
   );
 });

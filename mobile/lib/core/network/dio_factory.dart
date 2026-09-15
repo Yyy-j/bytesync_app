@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../config/app_config.dart';
 import '../storage/secure_storage_service.dart';
-import 'auth_event_bus.dart';
+import 'auth_session_manager.dart';
 import 'auth_interceptor.dart';
 
 /// Builds a configured [Dio] instance: base URL, timeouts, auth
@@ -13,21 +13,21 @@ import 'auth_interceptor.dart';
 /// swapped-in `httpClientAdapter`.
 Dio buildDio({
   required SecureStorageService storage,
-  required AuthEventBus authEventBus,
+  required AuthSessionManager sessionManager,
 }) {
-  final dio = Dio(
-    BaseOptions(
-      baseUrl: AppConfig.apiBaseUrl,
-      connectTimeout: const Duration(milliseconds: AppConfig.connectTimeoutMs),
-      receiveTimeout: const Duration(milliseconds: AppConfig.receiveTimeoutMs),
-      contentType: 'application/json',
-      responseType: ResponseType.json,
-    ),
-  );
+  final dio = Dio(buildBaseOptions());
 
   dio.interceptors.add(
-    AuthInterceptor(storage: storage, eventBus: authEventBus),
+    AuthInterceptor(dio: dio, storage: storage, sessionManager: sessionManager),
   );
 
   return dio;
 }
+
+BaseOptions buildBaseOptions() => BaseOptions(
+  baseUrl: AppConfig.apiBaseUrl,
+  connectTimeout: const Duration(milliseconds: AppConfig.connectTimeoutMs),
+  receiveTimeout: const Duration(milliseconds: AppConfig.receiveTimeoutMs),
+  contentType: 'application/json',
+  responseType: ResponseType.json,
+);

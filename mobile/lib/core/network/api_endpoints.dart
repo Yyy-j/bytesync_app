@@ -11,6 +11,8 @@ class ApiEndpoints {
 
   // ── Auth ──────────────────────────────────────────────
   static const String authGoogle = '/auth/google';
+  static const String authRefresh = '/auth/refresh';
+  static const String authLogout = '/auth/logout';
   static const String usersMe = '/users/me';
 
   // ── Pairs ─────────────────────────────────────────────

@@ -10,12 +10,12 @@ import '../domain/auth_user.dart';
 /// - never depend on any repository from another feature.
 abstract interface class AuthRepository {
   /// Restores a previous session from secure storage. Returns `null` if
-  /// there is no valid stored session. Never throws — network failures
-  /// clear the local token and return `null`.
+  /// there is no valid stored session. Never throws; transient failures
+  /// preserve both stored tokens.
   Future<AuthUser?> restoreSession();
 
   /// Runs the Google Sign-In flow, exchanges the id_token with the
-  /// backend, saves the returned access token, and fetches the current
+  /// backend, saves the returned access/refresh token pair, and fetches the current
   /// user.
   Future<AuthUser> signInWithGoogle();
 
@@ -24,6 +24,6 @@ abstract interface class AuthRepository {
   /// token is stale.
   Future<AuthUser> getCurrentUser();
 
-  /// Signs out of Google, clears the local access token. Idempotent.
+  /// Revokes the refresh session, signs out of Google, and clears local tokens.
   Future<void> signOut();
 }
