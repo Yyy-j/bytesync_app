@@ -18,7 +18,6 @@ class UserProfile {
     required this.email,
     required this.provider,
     required this.displayName,
-    required this.avatarUrl,
     required this.goals,
   });
 
@@ -26,6 +25,5 @@ class UserProfile {
   final String? email;
   final String provider;
   final String? displayName;
-  final String? avatarUrl;
   final NutritionGoals goals;
 }

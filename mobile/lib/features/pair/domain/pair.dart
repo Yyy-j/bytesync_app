@@ -30,12 +30,10 @@ class PairMember {
   const PairMember({
     required this.userId,
     required this.displayName,
-    required this.avatarUrl,
     required this.isSelf,
   });
 
   final String userId;
   final String displayName;
-  final String? avatarUrl;
   final bool isSelf;
 }

@@ -5,8 +5,5 @@ abstract interface class UserRepository {
 
   Future<UserProfile> updateNutritionGoals(NutritionGoals goals);
 
-  Future<UserProfile> updateProfile({
-    required String? displayName,
-    required String? avatarUrl,
-  });
+  Future<UserProfile> updateProfile({required String? displayName});
 }

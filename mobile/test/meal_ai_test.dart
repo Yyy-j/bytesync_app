@@ -147,17 +147,11 @@ class _FixedPairController extends PairController {
       pairId: 'pair-1',
       inviteCode: 'ABC123',
       members: [
-        const PairMember(
-          userId: 'self-1',
-          displayName: '我',
-          avatarUrl: null,
-          isSelf: true,
-        ),
+        const PairMember(userId: 'self-1', displayName: '我', isSelf: true),
         if (withPartner)
           const PairMember(
             userId: 'partner-1',
             displayName: 'Harper',
-            avatarUrl: null,
             isSelf: false,
           ),
       ],

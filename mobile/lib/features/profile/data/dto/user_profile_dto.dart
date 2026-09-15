@@ -41,7 +41,6 @@ class UserProfileDto {
     required this.email,
     required this.provider,
     required this.displayName,
-    required this.avatarUrl,
     required this.goals,
   });
 
@@ -52,7 +51,6 @@ class UserProfileDto {
         email: json['email'] as String?,
         provider: json['provider'] as String,
         displayName: json['display_name'] as String?,
-        avatarUrl: json['avatar_url'] as String?,
         goals: NutritionGoalsDto.fromJson(
           json['goals'] as Map<String, dynamic>,
         ),
@@ -66,7 +64,6 @@ class UserProfileDto {
   final String? email;
   final String provider;
   final String? displayName;
-  final String? avatarUrl;
   final NutritionGoalsDto goals;
 
   UserProfile toDomain() => UserProfile(
@@ -74,7 +71,6 @@ class UserProfileDto {
     email: email,
     provider: provider,
     displayName: displayName,
-    avatarUrl: avatarUrl,
     goals: goals.toDomain(),
   );
 }
@@ -95,16 +91,9 @@ class UpdateNutritionGoalsRequestDto {
 }
 
 class UpdateUserProfileRequestDto {
-  const UpdateUserProfileRequestDto({
-    required this.displayName,
-    required this.avatarUrl,
-  });
+  const UpdateUserProfileRequestDto({required this.displayName});
 
   final String? displayName;
-  final String? avatarUrl;
 
-  Map<String, dynamic> toJson() => {
-    'display_name': displayName,
-    'avatar_url': avatarUrl,
-  };
+  Map<String, dynamic> toJson() => {'display_name': displayName};
 }

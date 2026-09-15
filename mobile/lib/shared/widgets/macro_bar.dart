@@ -12,6 +12,7 @@ class MacroBarRow extends StatelessWidget {
     required this.goalGrams,
     required this.fillColor,
     required this.trackColor,
+    this.textColor,
     super.key,
   });
 
@@ -20,6 +21,7 @@ class MacroBarRow extends StatelessWidget {
   final num goalGrams;
   final Color fillColor;
   final Color trackColor;
+  final Color? textColor;
 
   double get _progress {
     if (goalGrams <= 0) return 0;
@@ -29,7 +31,8 @@ class MacroBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondaryText = Theme.of(context).colorScheme.onSurfaceVariant;
+    final secondaryText =
+        textColor ?? Theme.of(context).colorScheme.onSurfaceVariant;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
@@ -38,10 +41,7 @@ class MacroBarRow extends StatelessWidget {
             width: 44,
             child: Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: secondaryText,
-              ),
+              style: TextStyle(fontSize: 12, color: secondaryText),
             ),
           ),
           Expanded(
@@ -61,10 +61,7 @@ class MacroBarRow extends StatelessWidget {
             child: Text(
               '${grams.round()}g',
               textAlign: TextAlign.end,
-              style: TextStyle(
-                fontSize: 12,
-                color: secondaryText,
-              ),
+              style: TextStyle(fontSize: 12, color: secondaryText),
             ),
           ),
         ],
@@ -83,6 +80,13 @@ class MacroBar extends StatelessWidget {
     required this.carbsGoal,
     required this.fat,
     required this.fatGoal,
+    this.proteinFillColor = AppColors.protein,
+    this.carbsFillColor = AppColors.carbs,
+    this.fatFillColor = AppColors.fat,
+    this.proteinTrackColor = AppColors.proteinBg,
+    this.carbsTrackColor = AppColors.carbsBg,
+    this.fatTrackColor = AppColors.fatBg,
+    this.textColor,
     super.key,
   });
 
@@ -92,6 +96,13 @@ class MacroBar extends StatelessWidget {
   final num carbsGoal;
   final num fat;
   final num fatGoal;
+  final Color proteinFillColor;
+  final Color carbsFillColor;
+  final Color fatFillColor;
+  final Color proteinTrackColor;
+  final Color carbsTrackColor;
+  final Color fatTrackColor;
+  final Color? textColor;
 
   @override
   Widget build(BuildContext context) {
@@ -101,22 +112,25 @@ class MacroBar extends StatelessWidget {
           label: '蛋白质',
           grams: protein,
           goalGrams: proteinGoal,
-          fillColor: AppColors.protein,
-          trackColor: AppColors.proteinBg,
+          fillColor: proteinFillColor,
+          trackColor: proteinTrackColor,
+          textColor: textColor,
         ),
         MacroBarRow(
           label: '碳水',
           grams: carbs,
           goalGrams: carbsGoal,
-          fillColor: AppColors.carbs,
-          trackColor: AppColors.carbsBg,
+          fillColor: carbsFillColor,
+          trackColor: carbsTrackColor,
+          textColor: textColor,
         ),
         MacroBarRow(
           label: '脂肪',
           grams: fat,
           goalGrams: fatGoal,
-          fillColor: AppColors.fat,
-          trackColor: AppColors.fatBg,
+          fillColor: fatFillColor,
+          trackColor: fatTrackColor,
+          textColor: textColor,
         ),
       ],
     );

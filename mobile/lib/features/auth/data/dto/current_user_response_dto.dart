@@ -11,7 +11,6 @@ class CurrentUserResponseDto {
     required this.provider,
     this.email,
     this.displayName,
-    this.avatarUrl,
   });
 
   factory CurrentUserResponseDto.fromJson(Map<String, dynamic> json) {
@@ -28,7 +27,6 @@ class CurrentUserResponseDto {
       provider: provider,
       email: json['email'] as String?,
       displayName: json['display_name'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
     );
   }
 
@@ -36,5 +34,4 @@ class CurrentUserResponseDto {
   final String provider;
   final String? email;
   final String? displayName;
-  final String? avatarUrl;
 }

@@ -72,12 +72,11 @@ class RemoteAuthRepository implements AuthRepository {
 
       final user = await getCurrentUser();
 
-      // Best-effort: enrich with Google-side profile when the backend
-      // doesn't return display_name / avatar_url. This is UI-only and
-      // gets lost on cold restore (see `AuthUser` docstring).
+      // Best-effort: enrich the display name from the Google profile when
+      // the backend doesn't return one. This is UI-only and gets lost on
+      // cold restore (see `AuthUser` docstring).
       return user.copyWith(
         displayName: user.displayName ?? googleResult.displayName,
-        avatarUrl: user.avatarUrl ?? googleResult.photoUrl,
       );
     } on ApiException {
       rethrow;

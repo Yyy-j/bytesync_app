@@ -20,13 +20,11 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   final _displayNameController = TextEditingController();
-  final _avatarUrlController = TextEditingController();
   String? _loadedProfileId;
 
   @override
   void dispose() {
     _displayNameController.dispose();
-    _avatarUrlController.dispose();
     super.dispose();
   }
 
@@ -40,7 +38,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ProfileLoading() => const LoadingView(message: '正在加载用户资料'),
           ProfileFailure(:final message) => ErrorView(
             message: message,
-            onRetry: () => ref.read(profileControllerProvider.notifier).refresh(),
+            onRetry: () =>
+                ref.read(profileControllerProvider.notifier).refresh(),
           ),
           ProfileReady() => _body(state),
         },
@@ -52,7 +51,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final profile = state.profile;
     if (_loadedProfileId != profile.id) {
       _displayNameController.text = profile.displayName ?? '';
-      _avatarUrlController.text = profile.avatarUrl ?? '';
       _loadedProfileId = profile.id;
     }
     final pairState = ref.watch(pairControllerProvider);
@@ -67,14 +65,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 28,
-                    backgroundImage: profile.avatarUrl == null
-                        ? null
-                        : NetworkImage(profile.avatarUrl!),
-                    child: profile.avatarUrl == null
-                        ? const Icon(Icons.person_outline)
-                        : null,
+                    child: Icon(Icons.person_outline),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -100,14 +93,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 maxLength: 100,
                 decoration: const InputDecoration(labelText: '用户显示名'),
               ),
-              TextField(
-                controller: _avatarUrlController,
-                keyboardType: TextInputType.url,
-                decoration: const InputDecoration(
-                  labelText: '头像 URL',
-                  hintText: 'https://...',
-                ),
-              ),
               const SizedBox(height: AppSpacing.md),
               SizedBox(
                 width: double.infinity,
@@ -128,10 +113,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 children: [
                   Icon(Icons.palette_outlined),
                   SizedBox(width: AppSpacing.md),
-                  Text(
-                    '主题模式',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
+                  Text('主题模式', style: TextStyle(fontWeight: FontWeight.w600)),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
@@ -143,7 +125,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ],
                 selected: {themeController.mode},
                 onSelectionChanged: (selection) {
-                  ref.read(themeModeControllerProvider).setMode(selection.first);
+                  ref
+                      .read(themeModeControllerProvider)
+                      .setMode(selection.first);
                 },
               ),
             ],
@@ -210,20 +194,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   Future<void> _saveProfile() async {
     final displayName = _displayNameController.text.trim();
-    final avatarUrl = _avatarUrlController.text.trim();
-    if (avatarUrl.isNotEmpty) {
-      final uri = Uri.tryParse(avatarUrl);
-      if (uri == null ||
-          !uri.hasAuthority ||
-          (uri.scheme != 'http' && uri.scheme != 'https')) {
-        _snack('请输入有效的 http / https 头像链接');
-        return;
-      }
-    }
-    final result = await ref.read(profileControllerProvider.notifier).save(
-      displayName: displayName.isEmpty ? null : displayName,
-      avatarUrl: avatarUrl.isEmpty ? null : avatarUrl,
-    );
+    final result = await ref
+        .read(profileControllerProvider.notifier)
+        .save(displayName: displayName.isEmpty ? null : displayName);
     if (result.isSuccess) {
       await ref.read(pairControllerProvider.notifier).refresh();
     }
@@ -231,6 +204,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }

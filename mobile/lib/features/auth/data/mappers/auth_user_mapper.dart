@@ -11,6 +11,5 @@ AuthUser mapCurrentUserResponseToAuthUser(CurrentUserResponseDto dto) {
     provider: dto.provider,
     email: dto.email,
     displayName: dto.displayName,
-    avatarUrl: dto.avatarUrl,
   );
 }

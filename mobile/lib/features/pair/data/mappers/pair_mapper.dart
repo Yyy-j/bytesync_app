@@ -15,7 +15,6 @@ class PairMapper {
               (member) => PairMember(
                 userId: member.userId,
                 displayName: member.displayName ?? '未命名成员',
-                avatarUrl: member.avatarUrl,
                 isSelf: member.userId == currentUserId,
               ),
             )

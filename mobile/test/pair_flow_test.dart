@@ -18,12 +18,16 @@ import 'package:bytesync/features/pair/domain/pair_state.dart';
 import 'package:bytesync/features/pair/presentation/pair_controller.dart';
 import 'package:bytesync/features/pair/presentation/pairing_page.dart';
 
-final _user = AuthUser(id: 'user-1', provider: 'google', email: 'one@example.com');
+final _user = AuthUser(
+  id: 'user-1',
+  provider: 'google',
+  email: 'one@example.com',
+);
 final _pair = Pair(
   pairId: 'pair-1',
   inviteCode: 'ABC123',
   members: const [
-    PairMember(userId: 'user-1', displayName: 'One', avatarUrl: null, isSelf: true),
+    PairMember(userId: 'user-1', displayName: 'One', isSelf: true),
   ],
   createdAt: DateTime(2026),
 );
@@ -32,8 +36,8 @@ final _completedPair = Pair(
   pairId: 'pair-1',
   inviteCode: 'ABC123',
   members: const [
-    PairMember(userId: 'user-1', displayName: 'One', avatarUrl: null, isSelf: true),
-    PairMember(userId: 'user-2', displayName: 'Two', avatarUrl: null, isSelf: false),
+    PairMember(userId: 'user-1', displayName: 'One', isSelf: true),
+    PairMember(userId: 'user-2', displayName: 'Two', isSelf: false),
   ],
   createdAt: DateTime(2026),
 );
@@ -194,11 +198,17 @@ void main() {
     addTearDown(container.dispose);
 
     await container.read(pairControllerProvider.notifier).joinPair('bad');
-    expect((container.read(pairControllerProvider) as PairFailure).message, '邀请码无效或已失效，请检查后重试');
+    expect(
+      (container.read(pairControllerProvider) as PairFailure).message,
+      '邀请码无效或已失效，请检查后重试',
+    );
 
     repository.joinError = const ConflictException('pair full');
     await container.read(pairControllerProvider.notifier).joinPair('full');
-    expect((container.read(pairControllerProvider) as PairFailure).message, '这个配对已经有两位成员了');
+    expect(
+      (container.read(pairControllerProvider) as PairFailure).message,
+      '这个配对已经有两位成员了',
+    );
   });
 
   test('logout clears pair state', () async {

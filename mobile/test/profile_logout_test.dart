@@ -43,23 +43,18 @@ class _MemorySecureStorage extends SecureStorageService {
 }
 
 void main() {
-  test('profile DTO and update request map display name and avatar URL', () {
+  test('profile DTO and update request map display name', () {
     final profile = UserProfileDto.fromJson({
       'id': 'user-1',
       'email': 'one@example.com',
       'provider': 'google',
       'display_name': 'One',
-      'avatar_url': 'https://example.com/one.png',
       'goals': {'calories': 2000, 'protein': 90, 'carbs': 250, 'fat': 60},
     }).toDomain();
     expect(profile.displayName, 'One');
-    expect(profile.avatarUrl, 'https://example.com/one.png');
     expect(
-      const UpdateUserProfileRequestDto(
-        displayName: 'New Name',
-        avatarUrl: null,
-      ).toJson(),
-      {'display_name': 'New Name', 'avatar_url': null},
+      const UpdateUserProfileRequestDto(displayName: 'New Name').toJson(),
+      {'display_name': 'New Name'},
     );
   });
 

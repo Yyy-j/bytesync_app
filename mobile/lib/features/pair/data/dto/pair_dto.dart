@@ -18,7 +18,10 @@ class PairDto {
         pairId: json['pair_id'] as String,
         inviteCode: json['invite_code'] as String,
         members: rawMembers
-            .map((member) => PairMemberDto.fromJson(member as Map<String, dynamic>))
+            .map(
+              (member) =>
+                  PairMemberDto.fromJson(member as Map<String, dynamic>),
+            )
             .toList(growable: false),
         createdAt: json['created_at'] as String,
       );
@@ -34,19 +37,13 @@ class PairDto {
 }
 
 class PairMemberDto {
-  const PairMemberDto({
-    required this.userId,
-    required this.displayName,
-    required this.avatarUrl,
-  });
+  const PairMemberDto({required this.userId, required this.displayName});
 
   factory PairMemberDto.fromJson(Map<String, dynamic> json) => PairMemberDto(
-        userId: json['user_id'] as String,
-        displayName: json['display_name'] as String?,
-        avatarUrl: json['avatar_url'] as String?,
-      );
+    userId: json['user_id'] as String,
+    displayName: json['display_name'] as String?,
+  );
 
   final String userId;
   final String? displayName;
-  final String? avatarUrl;
 }

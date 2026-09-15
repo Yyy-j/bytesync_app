@@ -10,13 +10,11 @@ class GoogleAuthResult {
     required this.idToken,
     required this.email,
     this.displayName,
-    this.photoUrl,
   });
 
   final String idToken;
   final String email;
   final String? displayName;
-  final String? photoUrl;
 }
 
 /// Thin wrapper around the `google_sign_in` plugin.
@@ -66,7 +64,6 @@ class GoogleAuthClient {
         idToken: idToken,
         email: account.email,
         displayName: account.displayName,
-        photoUrl: account.photoUrl,
       );
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {

@@ -18,6 +18,7 @@ class HomeShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final index = ref.watch(homeTabIndexProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: IndexedStack(
@@ -31,6 +32,8 @@ class HomeShell extends ConsumerWidget {
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: index,
+        selectedItemColor: isDark ? const Color(0xFF00AEFF) : null,
+        unselectedItemColor: isDark ? const Color(0xFF6F7075) : null,
         onTap: (i) => ref.read(homeTabIndexProvider.notifier).state = i,
         items: const [
           BottomNavigationBarItem(

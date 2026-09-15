@@ -59,20 +59,14 @@ class ProfileController extends AutoDisposeNotifier<ProfileState> {
     }
   }
 
-  Future<ProfileSaveResult> save({
-    required String? displayName,
-    required String? avatarUrl,
-  }) async {
+  Future<ProfileSaveResult> save({required String? displayName}) async {
     final current = state;
     if (current is! ProfileReady || current.saving) {
       return const ProfileSaveResult.failure('当前无法保存，请稍后重试');
     }
     state = ProfileReady(profile: current.profile, saving: true);
     try {
-      final profile = await _repository.updateProfile(
-        displayName: displayName,
-        avatarUrl: avatarUrl,
-      );
+      final profile = await _repository.updateProfile(displayName: displayName);
       state = ProfileReady(profile: profile);
       return const ProfileSaveResult.success();
     } catch (error) {

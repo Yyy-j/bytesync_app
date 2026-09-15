@@ -3,25 +3,21 @@
 /// Fields that the current backend `/users/me` returns:
 /// - [id], [email] (nullable), [provider].
 ///
-/// [displayName] / [avatarUrl] are populated from the Google SDK at
-/// sign-in time (best-effort). On cold restore they may be `null`; the UI
-/// falls back to email prefix / initials. The backend can optionally add
-/// these to `CurrentUserResponse` in the future (see
-/// `API_CONTRACT.md` §5) without any Flutter change.
+/// [displayName] is populated from the Google SDK at sign-in time
+/// (best-effort). On cold restore it may be `null`; the UI falls back to
+/// the email prefix / initials.
 class AuthUser {
   const AuthUser({
     required this.id,
     required this.provider,
     this.email,
     this.displayName,
-    this.avatarUrl,
   });
 
   final String id;
   final String provider;
   final String? email;
   final String? displayName;
-  final String? avatarUrl;
 
   /// A display-safe label; never returns an empty string.
   String get label {
@@ -30,11 +26,10 @@ class AuthUser {
     return 'BiteSync 用户';
   }
 
-  AuthUser copyWith({String? displayName, String? avatarUrl}) => AuthUser(
+  AuthUser copyWith({String? displayName}) => AuthUser(
     id: id,
     provider: provider,
     email: email,
     displayName: displayName ?? this.displayName,
-    avatarUrl: avatarUrl ?? this.avatarUrl,
   );
 }

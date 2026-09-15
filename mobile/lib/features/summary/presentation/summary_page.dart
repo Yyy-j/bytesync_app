@@ -13,6 +13,20 @@ import '../../meals/presentation/meal_management_controller.dart';
 import '../domain/daily_summary.dart';
 import 'summary_controller.dart';
 
+class _SummaryDarkColors {
+  const _SummaryDarkColors._();
+
+  static const background = Color(0xFF000000);
+  static const blue = Color(0xFF00AEFF);
+  static const purple = Color(0xFF934BFB);
+  static const pink = Color(0xFFFC49B5);
+  static const progressTrack = Color(0xFF1B2028);
+  static const divider = Color(0xFF24262B);
+  static const primaryText = Color(0xFFFFFFFF);
+  static const secondaryText = Color(0xFFB8B8BF);
+  static const calorieGoalText = Color(0xFFC7C7CD);
+}
+
 /// Today's per-person nutrition overview and pair meal list.
 class SummaryPage extends ConsumerWidget {
   const SummaryPage({super.key});
@@ -20,9 +34,11 @@ class SummaryPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final state = ref.watch(summaryControllerProvider);
 
     return Scaffold(
+      backgroundColor: isDark ? _SummaryDarkColors.background : null,
       appBar: AppBar(
         title: const Text('今日'),
         actions: [
@@ -66,10 +82,7 @@ class SummaryPage extends ConsumerWidget {
 }
 
 class _SummaryBody extends ConsumerWidget {
-  const _SummaryBody({
-    required this.summary,
-    required this.emptyState,
-  });
+  const _SummaryBody({required this.summary, required this.emptyState});
 
   final DailySummary summary;
   final bool emptyState;
@@ -77,6 +90,10 @@ class _SummaryBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final secondaryTextColor = isDark
+        ? _SummaryDarkColors.secondaryText
+        : theme.colorScheme.onSurfaceVariant;
     final managementState = ref.watch(mealManagementControllerProvider);
     return ListView(
       // Ensures pull-to-refresh works even when content is short (empty
@@ -86,7 +103,7 @@ class _SummaryBody extends ConsumerWidget {
       children: [
         Text(
           DateFormat('yyyy年M月d日 EEEE', 'zh_CN').format(summary.date),
-          style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
+          style: TextStyle(fontSize: 13, color: secondaryTextColor),
         ),
         const SizedBox(height: AppSpacing.md),
         _NutritionCard(
@@ -94,6 +111,7 @@ class _SummaryBody extends ConsumerWidget {
           name: '我',
           slice: summary.selfSlice,
           goals: summary.selfGoals,
+          darkValueColor: _SummaryDarkColors.blue,
         ),
         if (summary.partnerSlice != null && summary.partnerGoals != null) ...[
           const SizedBox(height: AppSpacing.md),
@@ -102,6 +120,7 @@ class _SummaryBody extends ConsumerWidget {
             name: summary.partnerSlice!.displayName,
             slice: summary.partnerSlice!,
             goals: summary.partnerGoals!,
+            darkValueColor: _SummaryDarkColors.purple,
           ),
         ],
         const SizedBox(height: AppSpacing.xl),
@@ -110,7 +129,7 @@ class _SummaryBody extends ConsumerWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurfaceVariant,
+            color: secondaryTextColor,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -177,14 +196,8 @@ Future<void> _showMealActions(
               onTap: () => Navigator.pop(sheetContext, _MealAction.refine),
             ),
           ListTile(
-            leading: const Icon(
-              Icons.delete_outline,
-              color: AppColors.warning,
-            ),
-            title: const Text(
-              '删除',
-              style: TextStyle(color: AppColors.warning),
-            ),
+            leading: const Icon(Icons.delete_outline, color: AppColors.warning),
+            title: const Text('删除', style: TextStyle(color: AppColors.warning)),
             onTap: () => Navigator.pop(sheetContext, _MealAction.delete),
           ),
         ],
@@ -324,16 +337,8 @@ Future<_MealEditValues?> _showMealEditSheet(
                 controller: protein,
                 numeric: true,
               ),
-              _MealEditField(
-                label: '基础碳水',
-                controller: carbs,
-                numeric: true,
-              ),
-              _MealEditField(
-                label: '基础脂肪',
-                controller: fat,
-                numeric: true,
-              ),
+              _MealEditField(label: '基础碳水', controller: carbs, numeric: true),
+              _MealEditField(label: '基础脂肪', controller: fat, numeric: true),
               if (error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -420,9 +425,7 @@ Future<String?> _showRefineSheet(BuildContext context) async {
               autofocus: true,
               minLines: 2,
               maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: '例如：米饭其实只有半碗',
-              ),
+              decoration: const InputDecoration(hintText: '例如：米饭其实只有半碗'),
             ),
             if (error != null) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -521,17 +524,25 @@ class _NutritionCard extends StatelessWidget {
     required this.name,
     required this.slice,
     required this.goals,
+    required this.darkValueColor,
   });
 
   final String title;
   final String name;
   final UserDailySlice slice;
   final DailyGoals goals;
+  final Color darkValueColor;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final secondaryTextColor = isDark
+        ? _SummaryDarkColors.secondaryText
+        : theme.colorScheme.onSurfaceVariant;
     return AppCard(
+      backgroundColor: isDark ? _SummaryDarkColors.background : null,
+      borderColor: isDark ? _SummaryDarkColors.blue : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -540,7 +551,7 @@ class _NutritionCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurfaceVariant,
+              color: secondaryTextColor,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -556,7 +567,9 @@ class _NutritionCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
+                    color: isDark
+                        ? darkValueColor
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
               ),
@@ -565,13 +578,18 @@ class _NutritionCard extends StatelessWidget {
                 '/ ${goals.calorieGoal.round()} kcal',
                 style: TextStyle(
                   fontSize: 13,
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: isDark
+                      ? _SummaryDarkColors.calorieGoalText
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Divider(height: 1, color: theme.dividerColor),
+          Divider(
+            height: 1,
+            color: isDark ? _SummaryDarkColors.divider : theme.dividerColor,
+          ),
           const SizedBox(height: AppSpacing.md),
           MacroBar(
             protein: slice.protein,
@@ -580,6 +598,23 @@ class _NutritionCard extends StatelessWidget {
             carbsGoal: goals.carbsGoal,
             fat: slice.fat,
             fatGoal: goals.fatGoal,
+            proteinFillColor: isDark
+                ? _SummaryDarkColors.blue
+                : AppColors.protein,
+            carbsFillColor: isDark
+                ? _SummaryDarkColors.purple
+                : AppColors.carbs,
+            fatFillColor: isDark ? _SummaryDarkColors.pink : AppColors.fat,
+            proteinTrackColor: isDark
+                ? _SummaryDarkColors.progressTrack
+                : AppColors.proteinBg,
+            carbsTrackColor: isDark
+                ? _SummaryDarkColors.progressTrack
+                : AppColors.carbsBg,
+            fatTrackColor: isDark
+                ? _SummaryDarkColors.progressTrack
+                : AppColors.fatBg,
+            textColor: isDark ? _SummaryDarkColors.secondaryText : null,
           ),
         ],
       ),
@@ -603,8 +638,10 @@ class _MealListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
+      backgroundColor: isDark ? _SummaryDarkColors.background : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -613,7 +650,10 @@ class _MealListItem extends StatelessWidget {
               Expanded(
                 child: Text(
                   meal.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? _SummaryDarkColors.primaryText : null,
+                  ),
                 ),
               ),
               Column(
@@ -623,7 +663,9 @@ class _MealListItem extends StatelessWidget {
                     meal.mealTime,
                     style: TextStyle(
                       fontSize: 12,
-                      color: theme.colorScheme.onSurfaceVariant,
+                      color: isDark
+                          ? _SummaryDarkColors.secondaryText
+                          : theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   Text(
@@ -659,7 +701,9 @@ class _MealListItem extends StatelessWidget {
             '${meal.calories.round()} kcal',
             style: TextStyle(
               fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
+              color: isDark
+                  ? _SummaryDarkColors.secondaryText
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
