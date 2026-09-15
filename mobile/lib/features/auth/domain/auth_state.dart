@@ -15,6 +15,13 @@ class AuthInitial extends AuthState {
   const AuthInitial();
 }
 
+/// Stored credentials exist, but the backend could not be reached/verified.
+class AuthRestoreFailed extends AuthState {
+  const AuthRestoreFailed({required this.message});
+
+  final String message;
+}
+
 /// No signed-in user; optionally carrying the last error message.
 class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated({this.errorMessage});

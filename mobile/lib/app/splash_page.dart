@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/app_theme.dart';
+import '../features/auth/domain/auth_state.dart';
+import '../features/auth/presentation/auth_controller.dart';
 
 /// Shown briefly on app start while [AuthController] restores a session
 /// from secure storage.
-class SplashPage extends StatelessWidget {
+class SplashPage extends ConsumerWidget {
   const SplashPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final authState = ref.watch(authControllerProvider);
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Center(
@@ -18,7 +22,20 @@ class SplashPage extends StatelessWidget {
           children: [
             Text('🥗', style: TextStyle(fontSize: 48)),
             SizedBox(height: AppSpacing.lg),
-            CircularProgressIndicator(color: theme.colorScheme.primary),
+            if (authState case AuthRestoreFailed(:final message)) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                child: Text(message, textAlign: TextAlign.center),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton(
+                onPressed: () => ref
+                    .read(authControllerProvider.notifier)
+                    .retryRestoreSession(),
+                child: const Text('重试'),
+              ),
+            ] else
+              CircularProgressIndicator(color: theme.colorScheme.primary),
           ],
         ),
       ),

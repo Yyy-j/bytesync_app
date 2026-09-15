@@ -50,10 +50,9 @@ class RemoteAuthRepository implements AuthRepository {
     } on UnauthorizedException {
       return null;
     } on ApiException {
-      // Network / server error on cold start: don't clear the token
-      // (user still owns the session); just surface no user for now.
-      // AuthController will treat as unauthenticated for this launch.
-      return null;
+      // A transient failure cannot prove that the persisted session expired.
+      // Preserve both tokens and let AuthController expose a retryable state.
+      rethrow;
     }
   }
 

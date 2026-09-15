@@ -10,8 +10,8 @@ import '../domain/auth_user.dart';
 /// - never depend on any repository from another feature.
 abstract interface class AuthRepository {
   /// Restores a previous session from secure storage. Returns `null` if
-  /// there is no valid stored session. Never throws; transient failures
-  /// preserve both stored tokens.
+  /// there is no valid stored session. Transient verification failures throw
+  /// an [ApiException] while preserving both stored tokens.
   Future<AuthUser?> restoreSession();
 
   /// Runs the Google Sign-In flow, exchanges the id_token with the

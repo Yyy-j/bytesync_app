@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bytesync/core/network/auth_event_bus.dart';
@@ -12,6 +13,9 @@ import 'package:bytesync/core/network/dio_error_mapper.dart';
 import 'package:bytesync/core/storage/secure_storage_service.dart';
 import 'package:bytesync/features/auth/data/google_auth_client.dart';
 import 'package:bytesync/features/auth/data/remote_auth_repository.dart';
+import 'package:bytesync/features/auth/data/auth_providers.dart';
+import 'package:bytesync/features/auth/domain/auth_state.dart';
+import 'package:bytesync/features/auth/presentation/auth_controller.dart';
 
 typedef _Handler = FutureOr<ResponseBody> Function(RequestOptions options);
 
@@ -293,4 +297,74 @@ void main() {
     expect(harness.storage.refreshedAt, now);
     harness.dispose();
   });
+
+  test(
+    'cold start network failure preserves tokens and exposes retryable state',
+    () async {
+      var networkDown = true;
+      final harness = _Harness(
+        resourceHandler: (options) {
+          if (networkDown) {
+            throw DioException(
+              requestOptions: options,
+              type: DioExceptionType.connectionError,
+            );
+          }
+          return _json(200, {
+            'id': 'user-1',
+            'provider': 'google',
+            'email': 'one@example.com',
+          });
+        },
+        refreshHandler: (_) => _tokenPair(),
+      );
+      await harness.storage.saveTokenPair(
+        accessToken: 'access-1',
+        refreshToken: 'refresh-1',
+        refreshedAt: DateTime.now().toUtc(),
+      );
+      final repository = RemoteAuthRepository(
+        dio: harness.resourceDio,
+        storage: harness.storage,
+        googleAuthClient: GoogleAuthClient(),
+        errorMapper: const DioErrorMapper(),
+        sessionManager: harness.sessionManager,
+      );
+      final container = ProviderContainer(
+        overrides: [authRepositoryProvider.overrideWithValue(repository)],
+      );
+      final retryable = Completer<AuthRestoreFailed>();
+      final subscription = container.listen<AuthState>(authControllerProvider, (
+        _,
+        next,
+      ) {
+        if (next is AuthRestoreFailed && !retryable.isCompleted) {
+          retryable.complete(next);
+        }
+      }, fireImmediately: true);
+
+      final failedState = await retryable.future;
+
+      expect(failedState.message, '网络连接失败，请检查网络后重试');
+      expect(
+        container.read(authControllerProvider),
+        isNot(isA<AuthUnauthenticated>()),
+      );
+      expect(harness.storage.accessToken, 'access-1');
+      expect(harness.storage.refreshToken, 'refresh-1');
+      expect(harness.storage.clearCount, 0);
+
+      networkDown = false;
+      await container
+          .read(authControllerProvider.notifier)
+          .retryRestoreSession();
+      final restoredState = container.read(authControllerProvider);
+      expect(restoredState, isA<AuthAuthenticated>());
+      expect((restoredState as AuthAuthenticated).user.id, 'user-1');
+
+      subscription.close();
+      container.dispose();
+      harness.dispose();
+    },
+  );
 }

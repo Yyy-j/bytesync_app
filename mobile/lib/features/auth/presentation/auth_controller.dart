@@ -31,15 +31,26 @@ class AuthController extends Notifier<AuthState> {
     _authEventSub = bus.stream.listen(_onAuthEvent);
     ref.onDispose(() => _authEventSub?.cancel());
 
-    _restoreSession();
+    unawaited(_restoreSession());
     return const AuthInitial();
   }
 
   Future<void> _restoreSession() async {
-    final user = await _repository.restoreSession();
-    state = user != null
-        ? AuthAuthenticated(user)
-        : const AuthUnauthenticated();
+    try {
+      final user = await _repository.restoreSession();
+      state = user != null
+          ? AuthAuthenticated(user)
+          : const AuthUnauthenticated();
+    } on ApiException catch (error) {
+      state = AuthRestoreFailed(message: error.message);
+    } catch (_) {
+      state = const AuthRestoreFailed(message: '暂时无法验证登录状态，请重试');
+    }
+  }
+
+  Future<void> retryRestoreSession() async {
+    state = const AuthInitial();
+    await _restoreSession();
   }
 
   void _onAuthEvent(AuthEvent event) {

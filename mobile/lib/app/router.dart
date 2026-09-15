@@ -47,7 +47,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final pairState = ref.read(pairControllerProvider);
       final location = state.matchedLocation;
 
-      if (authState is AuthInitial) {
+      if (authState is AuthInitial || authState is AuthRestoreFailed) {
         return location == '/splash' ? null : '/splash';
       }
       if (authState is AuthAuthenticated) {
