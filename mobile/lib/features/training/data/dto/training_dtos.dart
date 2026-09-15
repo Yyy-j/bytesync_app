@@ -53,7 +53,7 @@ class TrainingCustomExerciseListResponseDto {
   ) {
     final rawExercises = json['exercises'];
     if (rawExercises is! List) {
-      throw const MalformedResponseException('Custom exercises 格式异常');
+      throw MalformedResponseException('Custom exercises 格式异常');
     }
     return TrainingCustomExerciseListResponseDto(
       exercises: rawExercises
@@ -124,7 +124,7 @@ class TrainingExerciseItemDto {
   factory TrainingExerciseItemDto.fromJson(Map<String, dynamic> json) {
     final rawSetDetails = json['set_details'] ?? const <dynamic>[];
     if (rawSetDetails is! List) {
-      throw const MalformedResponseException('Training set_details 格式异常');
+      throw MalformedResponseException('Training set_details 格式异常');
     }
     try {
       return TrainingExerciseItemDto(
@@ -142,8 +142,7 @@ class TrainingExerciseItemDto {
         setDetails: rawSetDetails
             .map((value) => TrainingSetDetailDto.fromJson(_jsonMap(value)))
             .toList(growable: false),
-        removedFromTemplate:
-            (json['removed_from_template'] as bool?) ?? false,
+        removedFromTemplate: (json['removed_from_template'] as bool?) ?? false,
       );
     } on TypeError catch (error) {
       throw MalformedResponseException('Training exercise 格式异常: $error');
@@ -175,7 +174,7 @@ class TrainingDayDto {
   factory TrainingDayDto.fromJson(Map<String, dynamic> json) {
     final rawExercises = json['exercises'];
     if (rawExercises is! List) {
-      throw const MalformedResponseException('Training exercises 格式异常');
+      throw MalformedResponseException('Training exercises 格式异常');
     }
     try {
       return TrainingDayDto(
@@ -339,7 +338,7 @@ class TrainingWeekHistoryResponseDto {
   factory TrainingWeekHistoryResponseDto.fromJson(Map<String, dynamic> json) {
     final rawWeeks = json['weeks'];
     if (rawWeeks is! List) {
-      throw const MalformedResponseException('Training weeks 格式异常');
+      throw MalformedResponseException('Training weeks 格式异常');
     }
     try {
       return TrainingWeekHistoryResponseDto(
@@ -407,7 +406,7 @@ class TrainingSetUpdateResponseDto {
 
 List<TrainingDayDto> _days(dynamic value) {
   if (value is! List) {
-    throw const MalformedResponseException('Training days 格式异常');
+    throw MalformedResponseException('Training days 格式异常');
   }
   return value
       .map((day) => TrainingDayDto.fromJson(_jsonMap(day)))
@@ -416,7 +415,7 @@ List<TrainingDayDto> _days(dynamic value) {
 
 Map<String, dynamic> _jsonMap(dynamic value) {
   if (value is! Map) {
-    throw const MalformedResponseException('Training object 格式异常');
+    throw MalformedResponseException('Training object 格式异常');
   }
   return Map<String, dynamic>.from(value);
 }

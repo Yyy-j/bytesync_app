@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../data/user_providers.dart';
@@ -55,14 +56,14 @@ class ProfileController extends AutoDisposeNotifier<ProfileState> {
     try {
       state = ProfileReady(profile: await _repository.getProfile());
     } catch (error) {
-      state = ProfileFailure(_message(error, '用户资料加载失败，请重试'));
+      state = ProfileFailure(_message(error, appL10n.profileLoadFailed));
     }
   }
 
   Future<ProfileSaveResult> save({required String? displayName}) async {
     final current = state;
     if (current is! ProfileReady || current.saving) {
-      return const ProfileSaveResult.failure('当前无法保存，请稍后重试');
+      return ProfileSaveResult.failure(appL10n.errorCannotSaveNow);
     }
     state = ProfileReady(profile: current.profile, saving: true);
     try {
@@ -71,7 +72,9 @@ class ProfileController extends AutoDisposeNotifier<ProfileState> {
       return const ProfileSaveResult.success();
     } catch (error) {
       state = ProfileReady(profile: current.profile);
-      return ProfileSaveResult.failure(_message(error, '用户资料保存失败，请重试'));
+      return ProfileSaveResult.failure(
+        _message(error, appL10n.profileSaveFailed),
+      );
     }
   }
 

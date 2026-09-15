@@ -11,7 +11,7 @@ class PairDto {
   factory PairDto.fromJson(Map<String, dynamic> json) {
     final rawMembers = json['members'];
     if (rawMembers is! List) {
-      throw const MalformedResponseException('pair members 格式异常');
+      throw MalformedResponseException('pair members 格式异常');
     }
     try {
       return PairDto(

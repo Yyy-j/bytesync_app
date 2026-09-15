@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../data/training_providers.dart';
@@ -82,7 +83,9 @@ class TrainingController extends Notifier<TrainingState> {
       if (preserveSelection && previous is TrainingReady) {
         state = previous;
       } else {
-        state = TrainingFailure(_message(error, fallback: '训练计划加载失败，请重试'));
+        state = TrainingFailure(
+          _message(error, fallback: appL10n.trainingLoadFailed),
+        );
       }
       return false;
     }
@@ -105,7 +108,7 @@ class TrainingController extends Notifier<TrainingState> {
   }) async {
     final current = state;
     if (current is! TrainingReady) {
-      return const TrainingCheckInOutcome.failure('训练数据尚未加载，请稍后重试');
+      return TrainingCheckInOutcome.failure(appL10n.trainingDataNotLoaded);
     }
 
     try {
@@ -116,16 +119,16 @@ class TrainingController extends Notifier<TrainingState> {
       );
       final refreshed = await _load(preserveSelection: true);
       if (!refreshed) {
-        return const TrainingCheckInOutcome.failure(
-          '该组已记录，但刷新失败。请保持当前内容并重试',
+        return TrainingCheckInOutcome.failure(
+          appL10n.trainingCheckInRefreshFailed,
         );
       }
       return TrainingCheckInOutcome.success(duplicate: result.duplicate);
     } catch (error) {
       return TrainingCheckInOutcome.failure(
         error is ConflictException
-            ? '目标组数已完成，请刷新后查看最新进度'
-            : _message(error, fallback: '打卡失败，请检查网络后重试'),
+            ? appL10n.trainingTargetComplete
+            : _message(error, fallback: appL10n.trainingCheckInFailed),
       );
     }
   }
@@ -137,7 +140,7 @@ class TrainingController extends Notifier<TrainingState> {
   }) async {
     final current = state;
     if (current is! TrainingReady) {
-      return const TrainingSetEditOutcome.failure('训练数据尚未加载，请稍后重试');
+      return TrainingSetEditOutcome.failure(appL10n.trainingDataNotLoaded);
     }
 
     try {
@@ -149,14 +152,14 @@ class TrainingController extends Notifier<TrainingState> {
       );
       final refreshed = await _load(preserveSelection: true);
       if (!refreshed) {
-        return const TrainingSetEditOutcome.failure(
-          '该组已更新，但刷新失败。请保持当前内容并重试',
+        return TrainingSetEditOutcome.failure(
+          appL10n.trainingEditRefreshFailed,
         );
       }
       return const TrainingSetEditOutcome.success();
     } catch (error) {
       return TrainingSetEditOutcome.failure(
-        _message(error, fallback: '修改失败，请检查网络后重试'),
+        _message(error, fallback: appL10n.trainingEditFailed),
       );
     }
   }

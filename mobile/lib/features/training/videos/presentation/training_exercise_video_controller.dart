@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/network/api_exception.dart';
 import '../data/training_exercise_video_providers.dart';
@@ -20,7 +21,10 @@ class TrainingExerciseVideoFailure extends TrainingExerciseVideoState {
 }
 
 class TrainingExerciseVideoReady extends TrainingExerciseVideoState {
-  const TrainingExerciseVideoReady({required this.videos, this.mutating = false});
+  const TrainingExerciseVideoReady({
+    required this.videos,
+    this.mutating = false,
+  });
 
   final Map<String, TrainingExerciseVideo> videos;
   final bool mutating;
@@ -34,10 +38,11 @@ class TrainingExerciseVideoActionResult {
   bool get isSuccess => errorMessage == null;
 }
 
-final trainingExerciseVideoControllerProvider = NotifierProvider.autoDispose<
-  TrainingExerciseVideoController,
-  TrainingExerciseVideoState
->(TrainingExerciseVideoController.new);
+final trainingExerciseVideoControllerProvider =
+    NotifierProvider.autoDispose<
+      TrainingExerciseVideoController,
+      TrainingExerciseVideoState
+    >(TrainingExerciseVideoController.new);
 
 class TrainingExerciseVideoController
     extends AutoDisposeNotifier<TrainingExerciseVideoState> {
@@ -69,7 +74,9 @@ class TrainingExerciseVideoController
   ) async {
     final current = state;
     if (current is! TrainingExerciseVideoReady || current.mutating) {
-      return const TrainingExerciseVideoActionResult.failure('视频列表尚未就绪');
+      return TrainingExerciseVideoActionResult.failure(
+        appL10n.trainingVideoListNotReady,
+      );
     }
     state = TrainingExerciseVideoReady(videos: current.videos, mutating: true);
     try {
@@ -90,7 +97,9 @@ class TrainingExerciseVideoController
   Future<TrainingExerciseVideoActionResult> delete(String exerciseId) async {
     final current = state;
     if (current is! TrainingExerciseVideoReady || current.mutating) {
-      return const TrainingExerciseVideoActionResult.failure('视频列表尚未就绪');
+      return TrainingExerciseVideoActionResult.failure(
+        appL10n.trainingVideoListNotReady,
+      );
     }
     state = TrainingExerciseVideoReady(videos: current.videos, mutating: true);
     try {
@@ -106,6 +115,8 @@ class TrainingExerciseVideoController
   }
 
   String _message(Object error) {
-    return error is ApiException ? error.message : '教学视频操作失败，请重试';
+    return error is ApiException
+        ? error.message
+        : appL10n.trainingVideoOperationFailed;
   }
 }

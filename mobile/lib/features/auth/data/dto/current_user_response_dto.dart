@@ -16,11 +16,11 @@ class CurrentUserResponseDto {
   factory CurrentUserResponseDto.fromJson(Map<String, dynamic> json) {
     final id = json['id'];
     if (id is! String || id.isEmpty) {
-      throw const MalformedResponseException('缺少用户 id');
+      throw MalformedResponseException('缺少用户 id');
     }
     final provider = json['provider'];
     if (provider is! String || provider.isEmpty) {
-      throw const MalformedResponseException('缺少 provider');
+      throw MalformedResponseException('缺少 provider');
     }
     return CurrentUserResponseDto(
       id: id,

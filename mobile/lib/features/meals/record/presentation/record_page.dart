@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../app/home_shell.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -50,18 +51,20 @@ class _LoadingView extends StatelessWidget {
             height: 42,
             child: CircularProgressIndicator(color: accent, strokeWidth: 3),
           ),
-          const SizedBox(height: 28),
+          SizedBox(height: 28),
           Text(
-            kind == RecordAnalysisKind.text ? '查询中…' : '识别中…',
+            kind == RecordAnalysisKind.text
+                ? appL10n.recordQuerying
+                : appL10n.recordRecognizing,
             style: TextStyle(
               color: accent,
               fontSize: 24,
               fontWeight: FontWeight.w800,
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Text(
-            '正在估算这份料理',
+            appL10n.recordEstimating,
             style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
           ),
         ],
@@ -89,17 +92,40 @@ class _ManualForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-    key: const ValueKey('record-manual-form'),
+    key: ValueKey('record-manual-form'),
     children: [
-      _field('食物名称', nameController, '手动记录'),
-      _field('卡路里 *', caloriesController, '千卡', numeric: true),
-      _field('蛋白质', proteinController, '0 克', numeric: true),
-      _field('碳水化合物', carbsController, '0 克', numeric: true),
-      _field('脂肪', fatController, '0 克', numeric: true),
-      const SizedBox(height: 4),
+      _field(appL10n.recordFoodName, nameController, appL10n.recordManual),
+      _field(
+        appL10n.recordCaloriesRequired,
+        caloriesController,
+        appL10n.recordKilocaloriesHint,
+        numeric: true,
+      ),
+      _field(
+        appL10n.commonProtein,
+        proteinController,
+        appL10n.recordZeroGrams,
+        numeric: true,
+      ),
+      _field(
+        appL10n.recordCarbohydrates,
+        carbsController,
+        appL10n.recordZeroGrams,
+        numeric: true,
+      ),
+      _field(
+        appL10n.commonFat,
+        fatController,
+        appL10n.recordZeroGrams,
+        numeric: true,
+      ),
+      SizedBox(height: 4),
       SizedBox(
         width: double.infinity,
-        child: FilledButton(onPressed: onGenerate, child: const Text('生成记录')),
+        child: FilledButton(
+          onPressed: onGenerate,
+          child: Text(appL10n.recordGenerate),
+        ),
       ),
     ],
   );
@@ -136,8 +162,8 @@ class _YesterdaySection extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '昨天也吃了？',
+          Text(
+            appL10n.recordYesterdayPrompt,
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 10),
@@ -153,7 +179,7 @@ class _YesterdaySection extends StatelessWidget {
               children: [
                 for (var index = 0; index < visible.length; index++) ...[
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 13, 10, 13),
+                    padding: EdgeInsets.fromLTRB(16, 13, 10, 13),
                     child: Row(
                       children: [
                         Expanded(
@@ -164,15 +190,17 @@ class _YesterdaySection extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${_value(visible[index].calories)} kcal',
+                          appL10n.commonCaloriesValue(
+                            _value(visible[index].calories),
+                          ),
                           style: TextStyle(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         TextButton(
                           onPressed: () => onSelected(visible[index]),
-                          child: const Text('添加'),
+                          child: Text(appL10n.recordAdd),
                         ),
                       ],
                     ),
@@ -228,18 +256,20 @@ class _ResultView extends StatelessWidget {
         ? MealShareMode.solo
         : draft.shareMode;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 30, 20, 40),
+      padding: EdgeInsets.fromLTRB(20, 30, 20, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            draft.source == MealSource.manual ? '手动记录' : '识别完成',
+            draft.source == MealSource.manual
+                ? appL10n.recordManual
+                : appL10n.recordRecognitionComplete,
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(18),
+            padding: EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkCard : Colors.white,
               borderRadius: BorderRadius.circular(18),
@@ -258,38 +288,43 @@ class _ResultView extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                 ],
                 Text(
                   draft.name,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
-                  '${_value(draft.calories)} kcal',
+                  appL10n.commonCaloriesValue(_value(draft.calories)),
                   style: TextStyle(
                     color: accent,
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 Text(
-                  '蛋白质 ${_value(draft.protein)}g  ·  '
-                  '碳水 ${_value(draft.carbs)}g  ·  '
-                  '脂肪 ${_value(draft.fat)}g',
+                  appL10n.recordMacroSummary(
+                    _value(draft.protein),
+                    _value(draft.carbs),
+                    _value(draft.fat),
+                  ),
                 ),
                 if (draft.dishes.isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  Text('菜品：${draft.dishes.map((dish) => dish.name).join('、')}'),
+                  SizedBox(height: 14),
+                  Text(
+                    appL10n.recordDishes(
+                      draft.dishes
+                          .map((dish) => dish.name)
+                          .join(appL10n.commonListSeparator),
+                    ),
+                  ),
                 ],
                 if (draft.source != MealSource.manual) ...[
-                  const SizedBox(height: 12),
+                  SizedBox(height: 12),
                   Text(
-                    'AI 估算，仅供参考',
+                    appL10n.recordAiDisclaimer,
                     style: TextStyle(
                       color: theme.colorScheme.onSurfaceVariant,
                       fontSize: 12,
@@ -300,62 +335,62 @@ class _ResultView extends StatelessWidget {
             ),
           ),
           if (error != null) ...[
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Text(error!, style: TextStyle(color: theme.colorScheme.error)),
           ],
-          const SizedBox(height: 18),
+          SizedBox(height: 18),
           Row(
             children: [
               if (onRefine != null)
                 Expanded(
                   child: OutlinedButton(
                     onPressed: onRefine,
-                    child: const Text('补充说明再识别'),
+                    child: Text(appL10n.recordRecognizeWithNote),
                   ),
                 ),
-              if (onRefine != null) const SizedBox(width: 10),
+              if (onRefine != null) SizedBox(width: 10),
               Expanded(
                 child: OutlinedButton(
                   onPressed: onEdit,
-                  child: const Text('手动改数据'),
+                  child: Text(appL10n.recordEditData),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 28),
-          const Text(
-            '吃了多少？',
+          SizedBox(height: 28),
+          Text(
+            appL10n.recordAmountQuestion,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           _ChoiceRow<double>(
-            choices: const [
-              (1, '全部'),
-              (0.5, '1/2'),
-              (2 / 3, '2/3'),
-              (1 / 3, '1/3'),
+            choices: [
+              (1, appL10n.commonAll),
+              (0.5, appL10n.recordPortionHalf),
+              (2 / 3, appL10n.recordPortionTwoThirds),
+              (1 / 3, appL10n.recordPortionOneThird),
             ],
             selected: draft.portionRatio,
             onSelected: onPortion,
           ),
-          const SizedBox(height: 30),
-          const Text(
-            '这顿要同步给 Ta 吗？',
+          SizedBox(height: 30),
+          Text(
+            appL10n.recordShareQuestion,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           if (partnerName == null)
             _ChoiceRow<MealShareMode>(
-              choices: const [(MealShareMode.solo, '只记录给我')],
+              choices: [(MealShareMode.solo, appL10n.recordShareSolo)],
               selected: MealShareMode.solo,
               onSelected: onShareMode,
             )
           else ...[
             _ChoiceRow<MealShareMode>(
-              choices: const [
-                (MealShareMode.solo, '只记录给我'),
-                (MealShareMode.partnerOnly, '只给 Ta 记'),
-                (MealShareMode.sharedHalf, '一起吃'),
+              choices: [
+                (MealShareMode.solo, appL10n.recordShareSolo),
+                (MealShareMode.partnerOnly, appL10n.recordSharePartnerOnly),
+                (MealShareMode.sharedHalf, appL10n.recordShareTogether),
               ],
               selected: effectiveShareMode.isShared
                   ? MealShareMode.sharedHalf
@@ -363,53 +398,70 @@ class _ResultView extends StatelessWidget {
               onSelected: onShareMode,
             ),
             if (effectiveShareMode.isShared) ...[
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               _ChoiceRow<MealShareMode>(
-                choices: const [
-                  (MealShareMode.sharedHalf, '一人一半'),
-                  (MealShareMode.sharedMeOneThird, '我 1/3 · Ta 2/3'),
-                  (MealShareMode.sharedMeTwoThirds, '我 2/3 · Ta 1/3'),
+                choices: [
+                  (MealShareMode.sharedHalf, appL10n.recordShareHalf),
+                  (
+                    MealShareMode.sharedMeOneThird,
+                    appL10n.recordShareMeOneThird,
+                  ),
+                  (
+                    MealShareMode.sharedMeTwoThirds,
+                    appL10n.recordShareMeTwoThirds,
+                  ),
                 ],
                 selected: effectiveShareMode,
                 onSelected: onShareMode,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: 12),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(14),
+                padding: EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.10),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
-                  '分配预览：我 ${_value(draft.calories * effectiveShareMode.meRatio)} kcal  '
-                  '$partnerName ${_value(draft.calories * effectiveShareMode.partnerRatio)} kcal',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  appL10n.recordSharePreview(
+                    _value(draft.calories * effectiveShareMode.meRatio),
+                    partnerName!,
+                    _value(draft.calories * effectiveShareMode.partnerRatio),
+                  ),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ],
           ],
-          const SizedBox(height: 30),
+          SizedBox(height: 30),
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              key: const ValueKey('record-save-button'),
+              key: ValueKey('record-save-button'),
               onPressed: saving ? null : onSave,
               style: FilledButton.styleFrom(
                 backgroundColor: accent,
                 foregroundColor: isDark ? Colors.black : Colors.white,
-                minimumSize: const Size.fromHeight(52),
+                minimumSize: Size.fromHeight(52),
               ),
-              child: Text(saving ? '记录中…' : '记录这一餐'),
+              child: Text(
+                saving ? appL10n.recordSaving : appL10n.recordThisMeal,
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(onPressed: onRetake, child: const Text('重新拍摄')),
-              const SizedBox(width: 8),
-              TextButton(onPressed: onReselect, child: const Text('重新选择')),
+              TextButton(
+                onPressed: onRetake,
+                child: Text(appL10n.recordRetake),
+              ),
+              SizedBox(width: 8),
+              TextButton(
+                onPressed: onReselect,
+                child: Text(appL10n.recordReselect),
+              ),
             ],
           ),
         ],
@@ -489,21 +541,21 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     final source = await showCupertinoModalPopup<ImageSource>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: const Text('拍一餐'),
+        title: Text(appL10n.recordTakeMeal),
         actions: [
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, ImageSource.camera),
-            child: const Text('拍照'),
+            child: Text(appL10n.recordTakePhoto),
           ),
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, ImageSource.gallery),
-            child: const Text('从相册选择'),
+            child: Text(appL10n.recordChooseGallery),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           isDefaultAction: true,
           onPressed: () => Navigator.pop(context),
-          child: const Text('取消'),
+          child: Text(appL10n.commonCancel),
         ),
       ),
     );
@@ -520,7 +572,9 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     final file = File(image.path);
     if (!await file.exists()) return;
     if (await file.length() > 5 * 1024 * 1024) {
-      ref.read(recordControllerProvider.notifier).showError('图片太大，请重新选择');
+      ref
+          .read(recordControllerProvider.notifier)
+          .showError(appL10n.recordImageTooLarge);
       return;
     }
     ref.read(selectedRecordImagePathProvider.notifier).state = image.path;
@@ -544,7 +598,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   void _createManualDraft() {
     final calories = num.tryParse(_caloriesController.text.trim());
     if (calories == null || calories <= 0) {
-      _snack('请填写大于 0 的卡路里');
+      _snack(appL10n.recordCaloriesMustBePositive);
       return;
     }
     ref.read(selectedRecordImagePathProvider.notifier).state = null;
@@ -552,7 +606,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
         .read(recordControllerProvider.notifier)
         .loadManual(
           name: _nameController.text.trim().isEmpty
-              ? '手动记录'
+              ? appL10n.recordManual
               : _nameController.text.trim(),
           calories: calories,
           protein: _number(_proteinController.text),
@@ -570,7 +624,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     _carbsController.text = _value(meal.carbs);
     _fatController.text = _value(meal.fat);
     setState(() => _manualExpanded = true);
-    _snack('已填入昨天的记录，可修改后生成');
+    _snack(appL10n.recordYesterdayFilled);
   }
 
   num _number(String value) => num.tryParse(value.trim()) ?? 0;
@@ -594,7 +648,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       _inputController.clear();
       _clearManual();
       setState(() => _manualExpanded = false);
-      _snack('已记录');
+      _snack(appL10n.recordSaved);
       ref.read(homeTabIndexProvider.notifier).state = 0;
     }
   }
@@ -684,23 +738,23 @@ class _RecordPageState extends ConsumerState<RecordPage> {
               ? constraints.maxHeight - verticalPadding
               : 0.0;
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 34, 24, 40),
+            padding: EdgeInsets.fromLTRB(24, 34, 24, 40),
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: minContentHeight),
               child: IntrinsicHeight(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '拍一餐',
+                    Text(
+                      appL10n.recordTakeMeal,
                       style: TextStyle(
                         fontSize: 30,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
-                      '饭前拍一下，轻轻记录这一餐',
+                      appL10n.recordHeroSubtitle,
                       style: TextStyle(
                         fontSize: 15,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -728,7 +782,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                                   ),
                                   alignment: Alignment.center,
                                   child: TextField(
-                                    key: const ValueKey('record-unified-input'),
+                                    key: ValueKey('record-unified-input'),
                                     controller: _inputController,
                                     maxLines: 1,
                                     maxLength: 80,
@@ -736,8 +790,8 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                                     onSubmitted: inputFilled
                                         ? (_) => _analyzeText()
                                         : null,
-                                    decoration: const InputDecoration(
-                                      hintText: '描述食物，或拍照前补充说明',
+                                    decoration: InputDecoration(
+                                      hintText: appL10n.recordDescriptionHint,
                                       counterText: '',
                                       filled: false,
                                       border: InputBorder.none,
@@ -750,25 +804,25 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                                   ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              SizedBox(width: 10),
                               Opacity(
                                 opacity: inputFilled ? 1 : 0.32,
                                 child: Semantics(
                                   button: true,
                                   enabled: inputFilled,
-                                  label: '发送文字描述',
+                                  label: appL10n.recordSendDescription,
                                   child: IconButton(
-                                    key: const ValueKey('record-send-button'),
+                                    key: ValueKey('record-send-button'),
                                     onPressed: inputFilled
                                         ? _analyzeText
                                         : null,
                                     style: IconButton.styleFrom(
-                                      fixedSize: const Size(50, 50),
-                                      padding: const EdgeInsets.all(13),
+                                      fixedSize: Size(50, 50),
+                                      padding: EdgeInsets.all(13),
                                       backgroundColor: accent.withValues(
                                         alpha: 0.12,
                                       ),
-                                      shape: const CircleBorder(),
+                                      shape: CircleBorder(),
                                     ),
                                     icon: SvgPicture.asset(
                                       isDark
@@ -786,12 +840,12 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                             ],
                           ),
                           if (error != null) ...[
-                            const SizedBox(height: 10),
+                            SizedBox(height: 10),
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
                                 error,
-                                key: const ValueKey('record-idle-error'),
+                                key: ValueKey('record-idle-error'),
                                 style: TextStyle(
                                   color: theme.colorScheme.error,
                                   fontSize: 13,
@@ -799,11 +853,11 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                               ),
                             ),
                           ],
-                          const SizedBox(height: 42),
+                          SizedBox(height: 42),
                           InkWell(
-                            key: const ValueKey('record-camera-button'),
+                            key: ValueKey('record-camera-button'),
                             onTap: _showImageSourceSheet,
-                            customBorder: const CircleBorder(),
+                            customBorder: CircleBorder(),
                             child: SizedBox(
                               width: 108,
                               height: 108,
@@ -819,21 +873,25 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            '拍一餐',
+                          SizedBox(height: 12),
+                          Text(
+                            appL10n.recordTakeMeal,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(height: 26),
+                          SizedBox(height: 26),
                           TextButton(
-                            key: const ValueKey('record-manual-toggle'),
+                            key: ValueKey('record-manual-toggle'),
                             onPressed: () => setState(
                               () => _manualExpanded = !_manualExpanded,
                             ),
-                            child: Text(_manualExpanded ? '收起' : '手动记录一餐'),
+                            child: Text(
+                              _manualExpanded
+                                  ? appL10n.recordCollapse
+                                  : appL10n.recordManualMeal,
+                            ),
                           ),
                           AnimatedSize(
                             duration: const Duration(milliseconds: 180),
@@ -872,20 +930,20 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     final note = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('补充说明再识别'),
+        title: Text(appL10n.recordRecognizeWithNote),
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: const InputDecoration(hintText: '例如：米饭实际只有半碗'),
+          decoration: InputDecoration(hintText: appL10n.recordCorrectionHint),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(appL10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('重新识别'),
+            child: Text(appL10n.recordRecognizeAgain),
           ),
         ],
       ),
@@ -905,23 +963,23 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('手动改数据'),
+        title: Text(appL10n.recordEditData),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _dialogField('名称', name, numeric: false),
-              _dialogField('卡路里', calories),
-              _dialogField('蛋白质', protein),
-              _dialogField('碳水化合物', carbs),
-              _dialogField('脂肪', fat),
+              _dialogField(appL10n.todayName, name, numeric: false),
+              _dialogField(appL10n.todayBaseCalories, calories),
+              _dialogField(appL10n.commonProtein, protein),
+              _dialogField(appL10n.recordCarbohydrates, carbs),
+              _dialogField(appL10n.commonFat, fat),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text(appL10n.commonCancel),
           ),
           FilledButton(
             onPressed: () {
@@ -936,7 +994,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                   );
               Navigator.pop(context);
             },
-            child: const Text('保存修改'),
+            child: Text(appL10n.commonSaveChanges),
           ),
         ],
       ),

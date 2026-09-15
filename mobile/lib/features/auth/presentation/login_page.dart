@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../domain/auth_state.dart';
@@ -26,38 +27,38 @@ class LoginPage extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Spacer(flex: 3),
+              Spacer(flex: 3),
               _Logo(),
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: AppSpacing.lg),
               Text(
-                'BiteSync',
+                appL10n.appTitle,
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: AppSpacing.sm),
               Text(
-                '轻松记录每一餐，掌握每日营养',
+                appL10n.authTagline,
                 style: TextStyle(
                   fontSize: 14,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-              const Spacer(flex: 4),
+              Spacer(flex: 4),
               if (errorMessage != null) ...[
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.md),
+                  padding: EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: theme.brightness == Brightness.dark
-                      ? AppColors.darkSurface
-                      : AppColors.warningLight,
+                        ? AppColors.darkSurface
+                        : AppColors.warningLight,
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
                   child: Text(
@@ -69,7 +70,7 @@ class LoginPage extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                SizedBox(height: AppSpacing.lg),
               ],
               SizedBox(
                 width: double.infinity,
@@ -80,7 +81,7 @@ class LoginPage extends ConsumerWidget {
                             .read(authControllerProvider.notifier)
                             .signInWithGoogle(),
                   icon: isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
@@ -88,8 +89,12 @@ class LoginPage extends ConsumerWidget {
                             valueColor: AlwaysStoppedAnimation(Colors.white),
                           ),
                         )
-                      : const Icon(Icons.g_mobiledata, size: 24),
-                  label: Text(isLoading ? '登录中…' : '使用 Google 登录'),
+                      : Icon(Icons.g_mobiledata, size: 24),
+                  label: Text(
+                    isLoading
+                        ? appL10n.authSigningIn
+                        : appL10n.authSignInWithGoogle,
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.xxl),
@@ -109,8 +114,8 @@ class _Logo extends StatelessWidget {
       height: 88,
       decoration: BoxDecoration(
         color: Theme.of(context).brightness == Brightness.dark
-          ? AppColors.darkSurface
-          : AppColors.primaryLight,
+            ? AppColors.darkSurface
+            : AppColors.primaryLight,
         borderRadius: BorderRadius.circular(AppRadius.lg + 8),
       ),
       alignment: Alignment.center,

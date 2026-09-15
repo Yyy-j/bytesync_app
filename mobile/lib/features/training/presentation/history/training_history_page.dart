@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_card.dart';
@@ -23,15 +24,14 @@ class TrainingHistoryPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(trainingHistoryControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('训练历史')),
+      appBar: AppBar(title: Text(appL10n.trainingHistory)),
       body: SafeArea(
         child: switch (state) {
           TrainingHistoryLoading() => const LoadingView(),
           TrainingHistoryFailure(:final message) => ErrorView(
             message: message,
-            onRetry: () => ref
-                .read(trainingHistoryControllerProvider.notifier)
-                .refresh(),
+            onRetry: () =>
+                ref.read(trainingHistoryControllerProvider.notifier).refresh(),
           ),
           TrainingHistoryLoaded(:final history) => _HistoryList(
             history: history,
@@ -59,7 +59,7 @@ class _HistoryList extends ConsumerWidget {
           physics: AlwaysScrollableScrollPhysics(),
           children: [
             SizedBox(height: 180),
-            EmptyView(message: '还没有训练历史', icon: '🏋️'),
+            EmptyView(message: appL10n.trainingHistoryEmpty, icon: '🏋️'),
           ],
         ),
       );
@@ -90,8 +90,12 @@ class _HistoryList extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${DateFormat('M/d').format(week.weekStart)} - '
-                          '${DateFormat('M/d').format(week.weekEnd)}',
+                          appL10n.trainingDateRange(
+                            DateFormat(appL10n.trainingShortDateFormat)
+                                .format(week.weekStart),
+                            DateFormat(appL10n.trainingShortDateFormat)
+                                .format(week.weekEnd),
+                          ),
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
@@ -99,7 +103,7 @@ class _HistoryList extends ConsumerWidget {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         Text(
-                          '$completed / $target 组',
+                          appL10n.trainingSetsProgress(completed, target),
                           style: TextStyle(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -130,12 +134,15 @@ class TrainingHistoryDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final week = ref.watch(trainingWeekDetailProvider(weekId));
     return Scaffold(
-      appBar: AppBar(title: const Text('训练详情')),
+      appBar: AppBar(title: Text(appL10n.trainingDetails)),
       body: SafeArea(
         child: week.when(
-          loading: () => const LoadingView(),
+          loading: () => LoadingView(),
           error: (error, _) => ErrorView(
-            message: trainingErrorMessage(error, fallback: '训练详情加载失败，请重试'),
+            message: trainingErrorMessage(
+              error,
+              fallback: appL10n.trainingDetailsLoadFailed,
+            ),
             onRetry: () => ref.invalidate(trainingWeekDetailProvider(weekId)),
           ),
           data: (value) => _WeekDetail(week: value),
@@ -158,39 +165,40 @@ class _WeekDetail extends ConsumerWidget {
         ? videoState.videos
         : const <String, TrainingExerciseVideo>{};
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
+      padding: EdgeInsets.all(AppSpacing.pagePadding),
       children: [
         Text(
-          '${DateFormat('M/d').format(week.weekStart)} - '
-          '${DateFormat('M/d').format(week.weekEnd)}',
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          appL10n.trainingDateRange(
+            DateFormat(appL10n.trainingShortDateFormat).format(week.weekStart),
+            DateFormat(appL10n.trainingShortDateFormat).format(week.weekEnd),
+          ),
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        SizedBox(height: AppSpacing.xs),
         Text(
-          '${_completedSets(week)} / ${_targetSets(week)} 组',
+          appL10n.trainingSetsProgress(_completedSets(week), _targetSets(week)),
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: AppSpacing.lg),
         ...week.days.map(
           (day) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            padding: EdgeInsets.only(bottom: AppSpacing.md),
             child: AppCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '${_weekdayNames[day.dayIndex]}'
-                    '${day.date == null ? '' : ' · ${DateFormat('M月d日').format(day.date!)}'}',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    '${day.date == null ? '' : appL10n.trainingDateSuffix(DateFormat(appL10n.trainingMonthDayFormat).format(day.date!))}',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
                   if (day.exercises.isEmpty)
                     Text(
-                      '休息日',
-                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                      appL10n.trainingRestDay,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     )
                   else
                     ...day.exercises.map(
@@ -221,21 +229,21 @@ class _HistoryExercise extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: EdgeInsets.only(bottom: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             exercise.exerciseName,
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: TextStyle(fontWeight: FontWeight.w600),
           ),
           if (videoUrl != null)
             TextButton.icon(
               onPressed: () => openTrainingVideoUrl(context, videoUrl!),
-              icon: const Icon(Icons.play_circle_outline, size: 18),
-              label: const Text('查看教学视频'),
+              icon: Icon(Icons.play_circle_outline, size: 18),
+              label: Text(appL10n.trainingViewVideo),
             ),
-          const SizedBox(height: AppSpacing.xs),
+          SizedBox(height: AppSpacing.xs),
           Text(
             trainingTargetText(
               itemType: exercise.itemType,
@@ -250,19 +258,19 @@ class _HistoryExercise extends StatelessWidget {
             ),
           ),
           if (exercise.removedFromTemplate) ...[
-            const SizedBox(height: AppSpacing.xs),
+            SizedBox(height: AppSpacing.xs),
             Text(
-              '已从当前模板移除',
+              appL10n.trainingRemovedFromTemplate,
               style: TextStyle(
                 fontSize: 12,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           if (exercise.setDetails.isEmpty)
             Text(
-              '未完成训练组',
+              appL10n.trainingIncompleteSets,
               style: TextStyle(
                 fontSize: 12,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -270,10 +278,8 @@ class _HistoryExercise extends StatelessWidget {
             )
           else
             ...exercise.setDetails.map(
-              (detail) => _SetDetailRow(
-                detail: detail,
-                itemType: exercise.itemType,
-              ),
+              (detail) =>
+                  _SetDetailRow(detail: detail, itemType: exercise.itemType),
             ),
         ],
       ),
@@ -292,15 +298,16 @@ class _SetDetailRow extends StatelessWidget {
     final theme = Theme.of(context);
     final values = <String>[
       if (itemType == TrainingItemType.strength) ...[
-        if (detail.weight != null) '${_weight(detail.weight!)} kg',
-        if (detail.reps != null) '${detail.reps} reps',
+        if (detail.weight != null)
+          appL10n.trainingWeightValue(_weight(detail.weight!)),
+        if (detail.reps != null) appL10n.trainingRepsValue(detail.reps!),
       ] else if (detail.durationSeconds != null)
         formatTrainingDuration(detail.durationSeconds!),
-      if (detail.rpe != null) 'RPE ${_weight(detail.rpe!)}',
+      if (detail.rpe != null) appL10n.trainingRpeValue(_weight(detail.rpe!)),
     ];
     return Container(
-      margin: const EdgeInsets.only(top: AppSpacing.xs),
-      padding: const EdgeInsets.symmetric(
+      margin: EdgeInsets.only(top: AppSpacing.xs),
+      padding: EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
@@ -312,17 +319,22 @@ class _SetDetailRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '第 ${detail.setIndex} 组 · '
-            '${DateFormat('HH:mm').format(detail.completedAt.toLocal())}',
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            appL10n.trainingHistorySetTime(
+              detail.setIndex,
+              DateFormat(appL10n.trainingTimeFormat)
+                  .format(detail.completedAt.toLocal()),
+            ),
+            style: TextStyle(fontWeight: FontWeight.w600),
           ),
-          const SizedBox(width: AppSpacing.md),
+          SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  values.isEmpty ? '已完成' : values.join(' · '),
+                  values.isEmpty
+                      ? appL10n.trainingCompleted
+                      : values.join(' · '),
                   style: const TextStyle(fontSize: 13),
                 ),
                 if (detail.remark?.isNotEmpty == true) ...[
@@ -349,10 +361,7 @@ int _completedSets(TrainingWeek week) {
     0,
     (sum, day) =>
         sum +
-        day.exercises.fold(
-          0,
-          (value, item) => value + item.completedSets,
-        ),
+        day.exercises.fold(0, (value, item) => value + item.completedSets),
   );
 }
 
@@ -360,12 +369,19 @@ int _targetSets(TrainingWeek week) {
   return week.days.fold(
     0,
     (sum, day) =>
-        sum +
-        day.exercises.fold(0, (value, item) => value + item.targetSets),
+        sum + day.exercises.fold(0, (value, item) => value + item.targetSets),
   );
 }
 
-const _weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+List<String> get _weekdayNames => [
+  appL10n.trainingWeekdayMonday,
+  appL10n.trainingWeekdayTuesday,
+  appL10n.trainingWeekdayWednesday,
+  appL10n.trainingWeekdayThursday,
+  appL10n.trainingWeekdayFriday,
+  appL10n.trainingWeekdaySaturday,
+  appL10n.trainingWeekdaySunday,
+];
 
 String _weight(double value) {
   return value == value.roundToDouble()

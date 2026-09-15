@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../data/training_providers.dart';
 import '../../data/training_repository.dart';
@@ -49,10 +50,10 @@ class TemplateActionResult {
   bool get isSuccess => errorMessage == null;
 }
 
-final trainingTemplateControllerProvider = NotifierProvider<
-  TrainingTemplateController,
-  TrainingTemplateState
->(TrainingTemplateController.new);
+final trainingTemplateControllerProvider =
+    NotifierProvider<TrainingTemplateController, TrainingTemplateState>(
+      TrainingTemplateController.new,
+    );
 
 class TrainingTemplateController extends Notifier<TrainingTemplateState> {
   late final TrainingRepository _repository;
@@ -74,7 +75,7 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
       );
     } catch (error) {
       state = TrainingTemplateFailure(
-        trainingErrorMessage(error, fallback: '训练计划加载失败，请重试'),
+        trainingErrorMessage(error, fallback: appL10n.trainingLoadFailed),
       );
     }
   }
@@ -86,11 +87,10 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
   void addExercise(int dayIndex, TrainingExerciseItem exercise) {
     final current = state;
     if (current is! TrainingTemplateReady || current.busy) return;
-    _replaceDay(
-      current,
-      dayIndex,
-      [..._day(current.days, dayIndex).exercises, exercise],
-    );
+    _replaceDay(current, dayIndex, [
+      ..._day(current.days, dayIndex).exercises,
+      exercise,
+    ]);
   }
 
   void updateExercise(int dayIndex, TrainingExerciseItem exercise) {
@@ -114,7 +114,7 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
   Future<TemplateActionResult> save() async {
     final current = state;
     if (current is! TrainingTemplateReady || current.busy) {
-      return const TemplateActionResult.failure('当前无法保存，请稍后重试');
+      return TemplateActionResult.failure(appL10n.errorCannotSaveNow);
     }
     state = TrainingTemplateReady(
       days: current.days,
@@ -124,10 +124,7 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
     );
     try {
       final saved = await _repository.saveTemplate(current.days);
-      state = TrainingTemplateReady(
-        days: saved.days,
-        hasSavedTemplate: true,
-      );
+      state = TrainingTemplateReady(days: saved.days, hasSavedTemplate: true);
       return const TemplateActionResult.success();
     } catch (error) {
       state = TrainingTemplateReady(
@@ -136,17 +133,20 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
         hasUnsavedChanges: current.hasUnsavedChanges,
       );
       return TemplateActionResult.failure(
-        trainingErrorMessage(error, fallback: '训练计划保存失败，请重试'),
+        trainingErrorMessage(
+          error,
+          fallback: appL10n.trainingTemplateSaveFailed,
+        ),
       );
     }
   }
 
   Future<TemplateActionResult> syncCurrentWeek() async {
     final current = state;
-    if (current is! TrainingTemplateReady ||
-        current.busy ||
-        !current.canSync) {
-      return const TemplateActionResult.failure('当前无法同步，请稍后重试');
+    if (current is! TrainingTemplateReady || current.busy || !current.canSync) {
+      return TemplateActionResult.failure(
+        appL10n.trainingTemplateSyncUnavailable,
+      );
     }
     state = TrainingTemplateReady(
       days: current.days,
@@ -155,18 +155,15 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
     );
     try {
       await _repository.syncCurrentWeek();
-      state = TrainingTemplateReady(
-        days: current.days,
-        hasSavedTemplate: true,
-      );
+      state = TrainingTemplateReady(days: current.days, hasSavedTemplate: true);
       return const TemplateActionResult.success();
     } catch (error) {
-      state = TrainingTemplateReady(
-        days: current.days,
-        hasSavedTemplate: true,
-      );
+      state = TrainingTemplateReady(days: current.days, hasSavedTemplate: true);
       return TemplateActionResult.failure(
-        trainingErrorMessage(error, fallback: '同步到本周失败，请重试'),
+        trainingErrorMessage(
+          error,
+          fallback: appL10n.trainingTemplateSyncFailed,
+        ),
       );
     }
   }
@@ -207,10 +204,7 @@ class TrainingTemplateController extends Notifier<TrainingTemplateState> {
     );
   }
 
-  TrainingExerciseItem _copyWithOrder(
-    TrainingExerciseItem item,
-    int order,
-  ) {
+  TrainingExerciseItem _copyWithOrder(TrainingExerciseItem item, int order) {
     return TrainingExerciseItem(
       itemId: item.itemId,
       exerciseId: item.exerciseId,

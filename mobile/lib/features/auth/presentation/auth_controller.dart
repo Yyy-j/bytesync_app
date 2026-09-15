@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/auth_event_bus.dart';
@@ -44,7 +45,7 @@ class AuthController extends Notifier<AuthState> {
     } on ApiException catch (error) {
       state = AuthRestoreFailed(message: error.message);
     } catch (_) {
-      state = const AuthRestoreFailed(message: '暂时无法验证登录状态，请重试');
+      state = AuthRestoreFailed(message: appL10n.authRestoreFailed);
     }
   }
 
@@ -56,7 +57,7 @@ class AuthController extends Notifier<AuthState> {
   void _onAuthEvent(AuthEvent event) {
     if (event == AuthEvent.unauthorized) {
       // The interceptor already cleared the token; just flip state.
-      state = const AuthUnauthenticated(errorMessage: '登录已过期，请重新登录');
+      state = AuthUnauthenticated(errorMessage: appL10n.authSessionExpired);
     }
   }
 
@@ -77,6 +78,6 @@ class AuthController extends Notifier<AuthState> {
 
   String _messageFor(Object error) {
     if (error is ApiException) return error.message;
-    return '登录失败，请重试';
+    return appL10n.authSignInFailed;
   }
 }

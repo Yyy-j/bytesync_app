@@ -188,7 +188,7 @@ void main() {
 
   test('invalid invite and full pair errors are translated', () async {
     final repository = _FakePairRepository()
-      ..joinError = const ValidationException('invalid invite');
+      ..joinError = ValidationException('invalid invite');
     final container = ProviderContainer(
       overrides: [
         authControllerProvider.overrideWith(_FixedAuthController.new),
@@ -203,7 +203,7 @@ void main() {
       '邀请码无效或已失效，请检查后重试',
     );
 
-    repository.joinError = const ConflictException('pair full');
+    repository.joinError = ConflictException('pair full');
     await container.read(pairControllerProvider.notifier).joinPair('full');
     expect(
       (container.read(pairControllerProvider) as PairFailure).message,

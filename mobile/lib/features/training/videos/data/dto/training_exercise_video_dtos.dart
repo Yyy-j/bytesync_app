@@ -36,7 +36,7 @@ class TrainingExerciseVideoListDto {
   factory TrainingExerciseVideoListDto.fromJson(Map<String, dynamic> json) {
     final values = json['videos'];
     if (values is! List) {
-      throw const MalformedResponseException('教学视频列表格式异常');
+      throw MalformedResponseException('教学视频列表格式异常');
     }
     return TrainingExerciseVideoListDto(
       values

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -11,8 +12,7 @@ class NutritionGoalsPage extends ConsumerStatefulWidget {
   const NutritionGoalsPage({super.key});
 
   @override
-  ConsumerState<NutritionGoalsPage> createState() =>
-      _NutritionGoalsPageState();
+  ConsumerState<NutritionGoalsPage> createState() => _NutritionGoalsPageState();
 }
 
 class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
@@ -36,15 +36,14 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(nutritionGoalsControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('营养目标')),
+      appBar: AppBar(title: Text(appL10n.profileNutritionGoals)),
       body: SafeArea(
         child: switch (state) {
           NutritionGoalsLoading() => const LoadingView(),
           NutritionGoalsFailure(:final message) => ErrorView(
             message: message,
-            onRetry: () => ref
-                .read(nutritionGoalsControllerProvider.notifier)
-                .refresh(),
+            onRetry: () =>
+                ref.read(nutritionGoalsControllerProvider.notifier).refresh(),
           ),
           NutritionGoalsReady() => _buildForm(state),
         },
@@ -59,22 +58,34 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
       _populated = true;
     }
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
+      padding: EdgeInsets.all(AppSpacing.pagePadding),
       children: [
         Text(
-          '设置你的每日热量和营养素目标。',
+          appL10n.goalsDescription,
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: AppSpacing.lg),
         AppCard(
           child: Column(
             children: [
-              _field('每日热量', 'kcal', _caloriesController),
-              _field('Protein', 'g', _proteinController),
-              _field('Carbs', 'g', _carbsController),
-              _field('Fat', 'g', _fatController),
+              _field(
+                appL10n.goalsDailyCalories,
+                appL10n.commonKilocaloriesUnit,
+                _caloriesController,
+              ),
+              _field(
+                appL10n.goalsProtein,
+                appL10n.commonGramsUnit,
+                _proteinController,
+              ),
+              _field(
+                appL10n.goalsCarbs,
+                appL10n.commonGramsUnit,
+                _carbsController,
+              ),
+              _field(appL10n.goalsFat, appL10n.commonGramsUnit, _fatController),
               if (_validationError != null) ...[
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: AppSpacing.xs),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -86,20 +97,16 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: AppSpacing.lg),
         ElevatedButton(
           onPressed: state.saving ? null : _save,
-          child: Text(state.saving ? '保存中…' : '保存营养目标'),
+          child: Text(state.saving ? appL10n.commonSaving : appL10n.goalsSave),
         ),
       ],
     );
   }
 
-  Widget _field(
-    String label,
-    String suffix,
-    TextEditingController controller,
-  ) {
+  Widget _field(String label, String suffix, TextEditingController controller) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: TextField(
@@ -119,7 +126,7 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
       double.tryParse(_fatController.text.trim()),
     ];
     if (values.any((value) => value == null || !value.isFinite || value < 0)) {
-      setState(() => _validationError = '请输入大于等于 0 的有效数值');
+      setState(() => _validationError = appL10n.goalsInvalidValue);
       return;
     }
     setState(() => _validationError = null);
@@ -136,7 +143,9 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(result.isSuccess ? '营养目标已保存' : result.errorMessage!),
+        content: Text(
+          result.isSuccess ? appL10n.goalsSaved : result.errorMessage!,
+        ),
       ),
     );
   }

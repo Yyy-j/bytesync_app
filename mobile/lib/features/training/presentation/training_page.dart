@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -25,10 +26,10 @@ class TrainingPage extends ConsumerWidget {
     final state = ref.watch(trainingControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('训练')),
+      appBar: AppBar(title: Text(appL10n.navTraining)),
       body: SafeArea(
         child: switch (state) {
-          TrainingLoading() => const LoadingView(message: '正在加载本周训练'),
+          TrainingLoading() => LoadingView(message: appL10n.trainingLoading),
           TrainingFailure(:final message) => ErrorView(
             message: message,
             onRetry: () =>
@@ -65,18 +66,21 @@ class _TrainingBody extends ConsumerWidget {
         ]);
       },
       child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppSpacing.pagePadding),
+        physics: AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(AppSpacing.pagePadding),
         children: [
           Text(
-            '本周 ${DateFormat('M/d').format(week.weekStart)} - '
-            '${DateFormat('M/d').format(week.weekEnd)}',
+            appL10n.trainingWeekRange(
+              DateFormat(appL10n.trainingShortDateFormat)
+                  .format(week.weekStart),
+              DateFormat(appL10n.trainingShortDateFormat).format(week.weekEnd),
+            ),
             style: TextStyle(
               fontSize: 13,
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           _WeekSelector(
             weekStart: week.weekStart,
             selectedDayIndex: state.selectedDayIndex,
@@ -84,36 +88,36 @@ class _TrainingBody extends ConsumerWidget {
                 .read(trainingControllerProvider.notifier)
                 .selectDay(dayIndex),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => context.push('/training/template'),
-                  icon: const Icon(Icons.edit_calendar_outlined),
-                  label: const Text('编辑训练计划'),
+                  icon: Icon(Icons.edit_calendar_outlined),
+                  label: Text(appL10n.trainingEditPlan),
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => context.push('/training/history'),
-                  icon: const Icon(Icons.history),
-                  label: const Text('训练历史'),
+                  icon: Icon(Icons.history),
+                  label: Text(appL10n.trainingHistory),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: AppSpacing.xl),
           Text(
             _dayHeading(selectedDay, state.selectedDayIndex),
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           if (selectedDay == null || selectedDay.exercises.isEmpty)
-            const Padding(
+            Padding(
               padding: EdgeInsets.only(top: AppSpacing.xxl),
-              child: EmptyView(message: '这天没有训练计划', icon: '🏋️'),
+              child: EmptyView(message: appL10n.trainingDayEmpty, icon: '🏋️'),
             )
           else
             ...selectedDay.exercises.map(
@@ -134,7 +138,11 @@ class _TrainingBody extends ConsumerWidget {
 
   String _dayHeading(TrainingDay? day, int dayIndex) {
     final date = day?.date;
-    final dateText = date == null ? '' : ' · ${DateFormat('M月d日').format(date)}';
+    final dateText = date == null
+        ? ''
+        : appL10n.trainingDateSuffix(
+            DateFormat(appL10n.trainingMonthDayFormat).format(date),
+          );
     return '${_weekdayNames[dayIndex]}$dateText';
   }
 }
@@ -158,7 +166,8 @@ class _WeekSelector extends StatelessWidget {
       children: List.generate(7, (index) {
         final date = weekStart.add(Duration(days: index));
         final selected = index == selectedDayIndex;
-        final isToday = date.year == now.year &&
+        final isToday =
+            date.year == now.year &&
             date.month == now.month &&
             date.day == now.day;
         return Expanded(
@@ -171,14 +180,12 @@ class _WeekSelector extends StatelessWidget {
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: selected
-                      ? theme.colorScheme.primary
-                      : theme.cardColor,
+                  color: selected ? theme.colorScheme.primary : theme.cardColor,
                   borderRadius: BorderRadius.circular(AppRadius.md),
                   border: Border.all(
                     color: isToday && !selected
-                      ? theme.colorScheme.primary
-                      : theme.dividerColor,
+                        ? theme.colorScheme.primary
+                        : theme.dividerColor,
                   ),
                 ),
                 child: Column(
@@ -188,8 +195,8 @@ class _WeekSelector extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 12,
                         color: selected
-                          ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onSurfaceVariant,
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
@@ -198,8 +205,8 @@ class _WeekSelector extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         color: selected
-                          ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onSurface,
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.onSurface,
                       ),
                     ),
                   ],
@@ -233,10 +240,7 @@ class _ExerciseCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     exercise.exerciseName,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                   ),
                 ),
                 if (exercise.category.isNotEmpty)
@@ -249,7 +253,7 @@ class _ExerciseCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             Text(
               trainingTargetText(
                 itemType: exercise.itemType,
@@ -261,23 +265,26 @@ class _ExerciseCard extends StatelessWidget {
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
             if (videoUrl != null) ...[
-              const SizedBox(height: AppSpacing.xs),
+              SizedBox(height: AppSpacing.xs),
               TextButton.icon(
                 onPressed: () => openTrainingVideoUrl(context, videoUrl!),
-                icon: const Icon(Icons.play_circle_outline, size: 20),
-                label: const Text('查看教学视频'),
+                icon: Icon(Icons.play_circle_outline, size: 20),
+                label: Text(appL10n.trainingViewVideo),
               ),
             ],
-            const SizedBox(height: AppSpacing.xs),
+            SizedBox(height: AppSpacing.xs),
             Text(
-              '进度：${exercise.completedSets} / ${exercise.targetSets} 组',
+              appL10n.trainingProgress(
+                exercise.completedSets,
+                exercise.targetSets,
+              ),
               style: TextStyle(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
             if (exercise.setDetails.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: AppSpacing.sm),
               ...exercise.setDetails.map(
                 (detail) => _CompletedSetRow(
                   itemType: exercise.itemType,
@@ -287,24 +294,25 @@ class _ExerciseCard extends StatelessWidget {
               ),
             ],
             if (exercise.removedFromTemplate) ...[
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: AppSpacing.sm),
               Text(
-                '已从当前模板移除',
+                appL10n.trainingRemovedFromTemplate,
                 style: TextStyle(
                   fontSize: 12,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
             ],
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             SizedBox(
               width: double.infinity,
               child: FilledButton.tonal(
-                onPressed: exercise.removedFromTemplate ||
+                onPressed:
+                    exercise.removedFromTemplate ||
                         exercise.completedSets >= exercise.targetSets
                     ? null
                     : () => _openCheckInSheet(context),
-                child: const Text('完成一组'),
+                child: Text(appL10n.trainingCompleteSet),
               ),
             ),
           ],
@@ -321,9 +329,8 @@ class _ExerciseCard extends StatelessWidget {
       builder: (_) => _CheckInSheet(exercise: exercise),
     );
     if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已完成一组')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(appL10n.trainingSetCompleted)));
     }
   }
 
@@ -338,9 +345,8 @@ class _ExerciseCard extends StatelessWidget {
       builder: (_) => _SetEditSheet(exercise: exercise, detail: detail),
     );
     if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('该组记录已更新')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(appL10n.trainingSetUpdated)));
     }
   }
 }
@@ -362,23 +368,24 @@ class _CompletedSetRow extends StatelessWidget {
     final performance = <String>[
       if (itemType == TrainingItemType.strength) ...[
         if (detail.weight != null && detail.reps != null)
-          '${_weight(detail.weight!)} kg × ${detail.reps}'
+          appL10n.trainingWeightRepsValue(_weight(detail.weight!), detail.reps!)
         else ...[
-          if (detail.weight != null) '${_weight(detail.weight!)} kg',
-          if (detail.reps != null) '${detail.reps} reps',
+          if (detail.weight != null)
+            appL10n.trainingWeightValue(_weight(detail.weight!)),
+          if (detail.reps != null) appL10n.trainingRepsValue(detail.reps!),
         ],
       ] else if (detail.durationSeconds != null)
         formatTrainingDuration(detail.durationSeconds!),
-      if (detail.rpe != null) 'RPE ${_weight(detail.rpe!)}',
+      if (detail.rpe != null) appL10n.trainingRpeValue(_weight(detail.rpe!)),
     ];
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      padding: EdgeInsets.only(bottom: AppSpacing.xs),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppRadius.md),
         onTap: onTap,
         child: Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
           ),
@@ -394,8 +401,12 @@ class _CompletedSetRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '第 ${detail.setIndex} 组  '
-                      '${performance.isEmpty ? '已完成' : performance.join('  ')}',
+                      appL10n.trainingSetPerformance(
+                        detail.setIndex,
+                        performance.isEmpty
+                            ? appL10n.trainingCompleted
+                            : performance.join('  '),
+                      ),
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     if (detail.remark?.isNotEmpty == true) ...[
@@ -494,20 +505,20 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
     if (isStrength &&
         weightText.isNotEmpty &&
         (weight == null || !weight.isFinite || weight < 0 || weight > 10000)) {
-      setState(() => _error = '重量请输入 0 到 10000，或留空');
+      setState(() => _error = appL10n.trainingInvalidEditWeight);
       return;
     }
     if (isStrength &&
         repsText.isNotEmpty &&
         (reps == null || reps < 0 || reps > 9999)) {
-      setState(() => _error = '次数请输入 0 到 9999，或留空');
+      setState(() => _error = appL10n.trainingInvalidEditReps);
       return;
     }
     final duration = isStrength ? null : _readDuration();
     if (!isStrength && duration == -1) return;
     if (rpeText.isNotEmpty &&
         (rpe == null || !rpe.isFinite || rpe < 1 || rpe > 10)) {
-      setState(() => _error = 'RPE 请输入 1 到 10，或留空');
+      setState(() => _error = appL10n.trainingInvalidEditRpe);
       return;
     }
 
@@ -559,12 +570,12 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
         minutes < 0 ||
         seconds < 0 ||
         seconds > 59) {
-      setState(() => _error = '时长请输入有效的分钟和 0 到 59 秒');
+      setState(() => _error = appL10n.trainingInvalidDurationParts);
       return -1;
     }
     final total = minutes * 60 + seconds;
     if (total < 1 || total > maxTrainingDurationSeconds) {
-      setState(() => _error = '时长需为 1 秒到 1440 分钟，或全部清空');
+      setState(() => _error = appL10n.trainingInvalidOptionalDuration);
       return -1;
     }
     return total;
@@ -574,42 +585,45 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AnimatedPadding(
-      duration: const Duration(milliseconds: 150),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      duration: Duration(milliseconds: 150),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '编辑第 ${widget.detail.setIndex} 组 · '
-              '${widget.exercise.exerciseName}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              appL10n.trainingEditSetTitle(
+                widget.detail.setIndex,
+                widget.exercise.exerciseName,
+              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: AppSpacing.xs),
+            SizedBox(height: AppSpacing.xs),
             Text(
-              '清空字段后保存，会删除该项记录值。',
-              style: TextStyle(fontSize: 12, color: theme.colorScheme.onSurfaceVariant),
+              appL10n.trainingClearFieldHint,
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             if (widget.exercise.itemType == TrainingItemType.strength)
               Row(
                 children: [
                   Expanded(
                     child: _editField(
                       controller: _weightController,
-                      label: '重量 kg',
+                      label: appL10n.trainingWeightKg,
                       decimal: true,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: _editField(
                       controller: _repsController,
-                      label: '次数 reps',
+                      label: appL10n.trainingReps,
                     ),
                   ),
                 ],
@@ -620,43 +634,47 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
                   Expanded(
                     child: _editField(
                       controller: _durationMinutesController,
-                      label: '时长（分钟）',
+                      label: appL10n.trainingDurationMinutes,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: _editField(
                       controller: _durationSecondsController,
-                      label: '秒',
+                      label: appL10n.commonSeconds,
                     ),
                   ),
                 ],
               ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             _editField(
               controller: _rpeController,
-              label: 'RPE',
+              label: appL10n.trainingRpe,
               decimal: true,
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             TextField(
               controller: _remarkController,
               enabled: !_submitting,
               maxLength: 500,
               minLines: 2,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: '备注'),
+              decoration: InputDecoration(labelText: appL10n.trainingNote),
             ),
             if (_error != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(_error!, style: const TextStyle(color: AppColors.warning)),
+              SizedBox(height: AppSpacing.sm),
+              Text(_error!, style: TextStyle(color: AppColors.warning)),
             ],
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _submitting ? null : _submit,
-                child: Text(_submitting ? '保存中…' : '保存修改'),
+                child: Text(
+                  _submitting
+                      ? appL10n.commonSaving
+                      : appL10n.commonSaveChanges,
+                ),
               ),
             ),
           ],
@@ -737,18 +755,18 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
     final rpe = rpeText.isEmpty ? null : double.tryParse(rpeText);
     if (isStrength &&
         (weight == null || !weight.isFinite || weight < 0 || weight > 10000)) {
-      setState(() => _error = '请输入 0 到 10000 之间的重量');
+      setState(() => _error = appL10n.trainingInvalidWeight);
       return;
     }
     if (isStrength && (reps == null || reps < 0 || reps > 9999)) {
-      setState(() => _error = '请输入 0 到 9999 之间的次数');
+      setState(() => _error = appL10n.trainingInvalidReps);
       return;
     }
     final duration = isStrength ? null : _readDuration();
     if (!isStrength && duration == -1) return;
     if (rpeText.isNotEmpty &&
         (rpe == null || !rpe.isFinite || rpe < 1 || rpe > 10)) {
-      setState(() => _error = 'RPE 请输入 1 到 10 之间的数值');
+      setState(() => _error = appL10n.trainingInvalidRpe);
       return;
     }
 
@@ -792,12 +810,12 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
         minutes < 0 ||
         seconds < 0 ||
         seconds > 59) {
-      setState(() => _error = '时长请输入有效的分钟和 0 到 59 秒');
+      setState(() => _error = appL10n.trainingInvalidDurationParts);
       return -1;
     }
     final total = minutes * 60 + seconds;
     if (total < 1 || total > maxTrainingDurationSeconds) {
-      setState(() => _error = '时长需为 1 秒到 1440 分钟，或全部留空');
+      setState(() => _error = appL10n.trainingInvalidBlankDuration);
       return -1;
     }
     return total;
@@ -806,21 +824,19 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
   @override
   Widget build(BuildContext context) {
     return AnimatedPadding(
-      duration: const Duration(milliseconds: 150),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      duration: Duration(milliseconds: 150),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '完成一组 · ${widget.exercise.exerciseName}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              appL10n.trainingCompleteSetTitle(widget.exercise.exerciseName),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             if (widget.exercise.itemType == TrainingItemType.strength)
               Row(
                 children: [
@@ -828,20 +844,22 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
                     child: TextField(
                       controller: _weightController,
                       enabled: !_submitting,
-                      keyboardType: const TextInputType.numberWithOptions(
+                      keyboardType: TextInputType.numberWithOptions(
                         decimal: true,
                       ),
-                      decoration: const InputDecoration(labelText: '重量 kg'),
+                      decoration: InputDecoration(
+                        labelText: appL10n.trainingWeightKg,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: TextField(
                       controller: _repsController,
                       enabled: !_submitting,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: '次数 reps',
+                      decoration: InputDecoration(
+                        labelText: appL10n.trainingReps,
                       ),
                     ),
                   ),
@@ -855,53 +873,59 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
                       controller: _durationMinutesController,
                       enabled: !_submitting,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: '时长（分钟）',
+                      decoration: InputDecoration(
+                        labelText: appL10n.trainingDurationMinutes,
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: TextField(
                       controller: _durationSecondsController,
                       enabled: !_submitting,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: '秒'),
+                      decoration: InputDecoration(
+                        labelText: appL10n.commonSeconds,
+                      ),
                     ),
                   ),
                 ],
               ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             TextField(
               controller: _rpeController,
               enabled: !_submitting,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: 'RPE（可选）',
-                hintText: '1 - 10',
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: appL10n.trainingRpeOptional,
+                hintText: appL10n.trainingRpeHint,
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             TextField(
               controller: _remarkController,
               enabled: !_submitting,
               maxLength: 500,
               minLines: 2,
               maxLines: 3,
-              decoration: const InputDecoration(labelText: '备注（可选）'),
+              decoration: InputDecoration(
+                labelText: appL10n.trainingNoteOptional,
+              ),
             ),
             if (_error != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(_error!, style: const TextStyle(color: AppColors.warning)),
+              SizedBox(height: AppSpacing.sm),
+              Text(_error!, style: TextStyle(color: AppColors.warning)),
             ],
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _submitting ? null : _submit,
-                child: Text(_submitting ? '保存中…' : '确认完成'),
+                child: Text(
+                  _submitting
+                      ? appL10n.commonSaving
+                      : appL10n.trainingConfirmComplete,
+                ),
               ),
             ),
           ],
@@ -911,7 +935,15 @@ class _CheckInSheetState extends ConsumerState<_CheckInSheet> {
   }
 }
 
-const _weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+List<String> get _weekdayNames => [
+  appL10n.trainingWeekdayMonday,
+  appL10n.trainingWeekdayTuesday,
+  appL10n.trainingWeekdayWednesday,
+  appL10n.trainingWeekdayThursday,
+  appL10n.trainingWeekdayFriday,
+  appL10n.trainingWeekdaySaturday,
+  appL10n.trainingWeekdaySunday,
+];
 
 String _weight(double value) {
   return value == value.roundToDouble()

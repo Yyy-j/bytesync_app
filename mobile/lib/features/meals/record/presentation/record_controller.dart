@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/network/api_exception.dart';
 import '../../../summary/presentation/summary_controller.dart';
@@ -68,7 +69,7 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
     try {
       final imageRepository = _aiRepository;
       if (imageRepository is! MealImageAiRepository) {
-        state = const RecordError('图片识别暂不可用');
+        state = RecordError(appL10n.recordImageRecognitionUnavailable);
         return false;
       }
       final result = await (imageRepository as MealImageAiRepository)
@@ -245,18 +246,24 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
       .whereType<String>()
       .map((value) => value.trim())
       .where((value) => value.isNotEmpty)
-      .join('；');
+      .join(appL10n.commonErrorSeparator);
 
   String _messageFor(Object error) {
-    if (error is NetworkException) return '网络连接失败，请检查网络';
-    if (error is ApiException && error.statusCode == 413) return '图片太大，请重新选择';
-    if (error is ApiException && error.statusCode == 415) return '暂不支持这张图片格式';
-    if (error is ApiException && error.statusCode == 503) {
-      return 'AI 服务暂时不可用，请稍后重试';
+    if (error is NetworkException) return appL10n.recordNetworkFailed;
+    if (error is ApiException && error.statusCode == 413) {
+      return appL10n.recordImageTooLarge;
     }
-    if (error is ApiException && error.statusCode == 502) return '识别失败，请重新尝试';
-    if (error is ServerException) return 'AI 服务暂时不可用，请稍后重试';
-    return 'AI 估算失败，请稍后重试';
+    if (error is ApiException && error.statusCode == 415) {
+      return appL10n.recordUnsupportedImage;
+    }
+    if (error is ApiException && error.statusCode == 503) {
+      return appL10n.recordAiUnavailable;
+    }
+    if (error is ApiException && error.statusCode == 502) {
+      return appL10n.recordRecognitionFailed;
+    }
+    if (error is ServerException) return appL10n.recordAiUnavailable;
+    return appL10n.recordAiEstimateFailed;
   }
 }
 

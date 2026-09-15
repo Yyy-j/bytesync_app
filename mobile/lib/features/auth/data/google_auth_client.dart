@@ -1,4 +1,5 @@
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/config/app_config.dart';
 import '../../../core/network/api_exception.dart';
@@ -32,9 +33,7 @@ class GoogleAuthClient {
   Future<void> _ensureInitialized() async {
     if (_initialized) return;
     if (AppConfig.googleClientId.isEmpty) {
-      throw const ValidationException(
-        'Google 登录尚未配置（缺少 GOOGLE_CLIENT_ID），请联系开发者',
-      );
+      throw ValidationException(appL10n.authGoogleNotConfigured);
     }
     await _googleSignIn.initialize(
       clientId: AppConfig.googleClientId,
@@ -58,7 +57,7 @@ class GoogleAuthClient {
       final account = await _googleSignIn.authenticate();
       final idToken = account.authentication.idToken;
       if (idToken == null) {
-        throw const ValidationException('未获取到 Google 登录凭证，请重试');
+        throw ValidationException(appL10n.authGoogleCredentialMissing);
       }
       return GoogleAuthResult(
         idToken: idToken,
@@ -67,9 +66,11 @@ class GoogleAuthClient {
       );
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
-        throw const UnknownApiException('已取消登录');
+        throw UnknownApiException(appL10n.authSignInCancelled);
       }
-      throw UnknownApiException('Google 登录失败：${e.description ?? e.code}');
+      throw UnknownApiException(
+        appL10n.authGoogleSignInFailed((e.description ?? e.code).toString()),
+      );
     }
   }
 

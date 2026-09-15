@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../summary/presentation/summary_controller.dart';
@@ -22,14 +23,12 @@ class MealManagementState {
 
 class MealManagementResult {
   const MealManagementResult.success()
-      : isSuccess = true,
-        message = null,
-        isConflict = false;
+    : isSuccess = true,
+      message = null,
+      isConflict = false;
 
-  const MealManagementResult.failure(
-    this.message, {
-    this.isConflict = false,
-  }) : isSuccess = false;
+  const MealManagementResult.failure(this.message, {this.isConflict = false})
+    : isSuccess = false;
 
   final bool isSuccess;
   final String? message;
@@ -52,14 +51,8 @@ class MealManagementController extends Notifier<MealManagementState> {
     return const MealManagementState();
   }
 
-  Future<MealManagementResult> updatePortion(
-    Meal meal,
-    double portionRatio,
-  ) {
-    return updateMeal(
-      meal,
-      MealPatch(portionRatio: portionRatio),
-    );
+  Future<MealManagementResult> updatePortion(Meal meal, double portionRatio) {
+    return updateMeal(meal, MealPatch(portionRatio: portionRatio));
   }
 
   Future<MealManagementResult> updateDetails(
@@ -97,28 +90,22 @@ class MealManagementController extends Notifier<MealManagementState> {
       originalInput: patch.originalInput,
       expectedUpdatedAt: meal.updatedAt,
     );
-    return _mutate(
-      meal.id,
-      () async {
-        await _mealsRepository.updateMeal(meal.id, guardedPatch);
-      },
-    );
+    return _mutate(meal.id, () async {
+      await _mealsRepository.updateMeal(meal.id, guardedPatch);
+    });
   }
 
   Future<MealManagementResult> deleteMeal(Meal meal) {
-    return _mutate(
-      meal.id,
-      () => _mealsRepository.deleteMeal(meal.id),
-    );
+    return _mutate(meal.id, () => _mealsRepository.deleteMeal(meal.id));
   }
 
   Future<MealManagementResult> refineMeal(Meal meal, String newHint) async {
     final trimmedHint = newHint.trim();
     if (meal.source != MealSource.text) {
-      return const MealManagementResult.failure('这条记录暂不支持重新估算');
+      return MealManagementResult.failure(appL10n.mealReestimateUnsupported);
     }
     if (trimmedHint.isEmpty) {
-      return const MealManagementResult.failure('请输入补充说明');
+      return MealManagementResult.failure(appL10n.todayNoteRequired);
     }
 
     return _mutate(meal.id, () async {
@@ -152,7 +139,7 @@ class MealManagementController extends Notifier<MealManagementState> {
     Future<void> Function() operation,
   ) async {
     if (state.isBusy(mealId)) {
-      return const MealManagementResult.failure('正在处理，请稍候');
+      return MealManagementResult.failure(appL10n.mealProcessing);
     }
     _setBusy(mealId, true);
     try {
@@ -161,8 +148,8 @@ class MealManagementController extends Notifier<MealManagementState> {
       return const MealManagementResult.success();
     } on ConflictException {
       await ref.read(summaryControllerProvider.notifier).refresh();
-      return const MealManagementResult.failure(
-        '这条记录已经在其他地方被修改，请刷新后重试',
+      return MealManagementResult.failure(
+        appL10n.mealConflict,
         isConflict: true,
       );
     } catch (error) {
@@ -184,9 +171,7 @@ class MealManagementController extends Notifier<MealManagementState> {
 
   List<MealAiDish> _dishesFrom(MealAiResult result) => result.dishes
       .map(
-        (dish) => dish is MealAiDish
-            ? dish
-            : MealAiDish(name: dish.toString()),
+        (dish) => dish is MealAiDish ? dish : MealAiDish(name: dish.toString()),
       )
       .toList(growable: false);
 
@@ -194,13 +179,13 @@ class MealManagementController extends Notifier<MealManagementState> {
       .whereType<String>()
       .map((value) => value.trim())
       .where((value) => value.isNotEmpty)
-      .join('；');
+      .join(appL10n.commonErrorSeparator);
 
   String _messageFor(Object error) {
-    if (error is NetworkException) return '网络连接失败，请检查网络后重试';
-    if (error is ValidationException) return '修改内容有误，请检查后重试';
-    if (error is ServerException) return '服务器开小差了，请稍后重试';
+    if (error is NetworkException) return appL10n.errorNetworkRetry;
+    if (error is ValidationException) return appL10n.mealInvalidChange;
+    if (error is ServerException) return appL10n.errorServer;
     if (error is ApiException) return error.message;
-    return '操作失败，请稍后重试';
+    return appL10n.errorOperationFailed;
   }
 }

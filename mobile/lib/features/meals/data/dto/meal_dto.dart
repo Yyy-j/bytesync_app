@@ -37,7 +37,7 @@ class MealDto {
   factory MealDto.fromJson(Map<String, dynamic> json) {
     final rawDishes = json['dishes'] ?? const <dynamic>[];
     if (rawDishes is! List) {
-      throw const MalformedResponseException('Meal dishes 格式异常');
+      throw MalformedResponseException('Meal dishes 格式异常');
     }
     try {
       return MealDto(
@@ -128,7 +128,7 @@ class MealListResponseDto {
   factory MealListResponseDto.fromJson(Map<String, dynamic> json) {
     final rawList = json['meals'];
     if (rawList is! List) {
-      throw const MalformedResponseException('meals 列表格式异常');
+      throw MalformedResponseException('meals 列表格式异常');
     }
     return MealListResponseDto(
       meals: rawList

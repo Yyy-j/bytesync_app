@@ -1,3 +1,5 @@
+import 'package:bytesync/l10n/l10n.dart';
+
 /// The authenticated BiteSync user.
 ///
 /// Fields that the current backend `/users/me` returns:
@@ -23,7 +25,7 @@ class AuthUser {
   String get label {
     if (displayName != null && displayName!.isNotEmpty) return displayName!;
     if (email != null && email!.isNotEmpty) return email!.split('@').first;
-    return 'BiteSync 用户';
+    return appL10n.commonDefaultUser;
   }
 
   AuthUser copyWith({String? displayName}) => AuthUser(

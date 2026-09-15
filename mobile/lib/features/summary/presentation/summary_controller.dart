@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../data/summary_providers.dart';
@@ -63,7 +64,9 @@ class SummaryController extends Notifier<SummaryState> {
           ? SummaryEmpty(summary)
           : SummaryLoaded(summary);
     } catch (e) {
-      state = SummaryFailure(e is ApiException ? e.message : '加载失败，请重试');
+      state = SummaryFailure(
+        e is ApiException ? e.message : appL10n.todayLoadFailed,
+      );
     }
   }
 

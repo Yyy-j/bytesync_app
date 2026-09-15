@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -80,20 +81,23 @@ class ErrorView extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.error_outline, color: theme.colorScheme.error, size: 36),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             Text(
               message,
               textAlign: TextAlign.center,
               style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
             if (onRetry != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              OutlinedButton(onPressed: onRetry, child: const Text('重试')),
+              SizedBox(height: AppSpacing.lg),
+              OutlinedButton(
+                onPressed: onRetry,
+                child: Text(appL10n.commonRetry),
+              ),
             ],
           ],
         ),

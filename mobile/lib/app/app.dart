@@ -8,6 +8,7 @@ import '../core/theme/theme_controller.dart';
 import '../core/providers/core_providers.dart';
 import '../features/auth/domain/auth_state.dart';
 import '../features/auth/presentation/auth_controller.dart';
+import '../l10n/l10n.dart';
 import '../shared/widgets/bitesync_screen_frame.dart';
 import '../shared/widgets/dismiss_keyboard.dart';
 import 'router.dart';
@@ -55,16 +56,16 @@ class _BiteSyncAppState extends ConsumerState<BiteSyncApp>
     final themeController = ref.watch(themeModeControllerProvider);
 
     return MaterialApp.router(
-      title: 'BiteSync',
+      onGenerateTitle: (context) => context.l10n.appTitle,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       theme: buildLightTheme(),
       darkTheme: buildDarkTheme(),
       themeMode: themeController.mode,
       routerConfig: router,
       builder: (context, child) => BiteSyncScreenFrame(
-        child: DismissKeyboard(
-          child: child ?? const SizedBox.shrink(),
-        ),
+        child: DismissKeyboard(child: child ?? const SizedBox.shrink()),
       ),
     );
   }

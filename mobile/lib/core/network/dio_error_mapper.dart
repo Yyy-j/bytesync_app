@@ -26,13 +26,13 @@ class DioErrorMapper {
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
       case DioExceptionType.connectionError:
-        return const NetworkException();
+        return NetworkException();
       default:
         break;
     }
 
     final response = error.response;
-    if (response == null) return const NetworkException();
+    if (response == null) return NetworkException();
 
     final statusCode = response.statusCode ?? 0;
     final detail = _extractDetail(response.data);

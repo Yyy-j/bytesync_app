@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../auth/domain/auth_state.dart';
@@ -7,8 +8,9 @@ import '../data/pair_providers.dart';
 import '../data/pair_repository.dart';
 import '../domain/pair_state.dart';
 
-final pairControllerProvider =
-    NotifierProvider<PairController, PairState>(PairController.new);
+final pairControllerProvider = NotifierProvider<PairController, PairState>(
+  PairController.new,
+);
 
 class PairController extends Notifier<PairState> {
   late final PairRepository _repository;
@@ -55,7 +57,9 @@ class PairController extends Notifier<PairState> {
 
   Future<void> joinPair(String inviteCode) async {
     await _runMutation(() async {
-      final joinedPair = await _repository.joinPair(inviteCode: inviteCode.trim());
+      final joinedPair = await _repository.joinPair(
+        inviteCode: inviteCode.trim(),
+      );
       final refreshedPair = await _repository.getCurrentPair();
       state = PairConnected(refreshedPair ?? joinedPair);
     });
@@ -78,22 +82,24 @@ class PairController extends Notifier<PairState> {
   }
 
   String _messageFor(Object error) {
-    if (error is! ApiException) return '操作失败，请稍后重试';
-    if (error is NetworkException) return '网络连接失败，请检查网络后重试';
-    if (error is UnauthorizedException) return '登录已过期，请重新登录';
+    if (error is! ApiException) return appL10n.errorOperationFailed;
+    if (error is NetworkException) return appL10n.errorNetworkRetry;
+    if (error is UnauthorizedException) return appL10n.authSessionExpired;
     if (error is ConflictException) {
       final message = error.message.toLowerCase();
       if (message.contains('full') || message.contains('满')) {
-        return '这个配对已经有两位成员了';
+        return appL10n.pairFull;
       }
-      if (message.contains('already') || message.contains('paired') || message.contains('加入')) {
-        return '你已经加入配对，不能重复操作';
+      if (message.contains('already') ||
+          message.contains('paired') ||
+          message.contains('加入')) {
+        return appL10n.pairAlreadyJoined;
       }
-      return '当前配对状态发生冲突，请刷新后重试';
+      return appL10n.pairConflict;
     }
     if (error is ValidationException || error is NotFoundException) {
-      return '邀请码无效或已失效，请检查后重试';
+      return appL10n.pairInvalidInviteCode;
     }
-    return '配对操作失败，请稍后重试';
+    return appL10n.pairOperationFailed;
   }
 }

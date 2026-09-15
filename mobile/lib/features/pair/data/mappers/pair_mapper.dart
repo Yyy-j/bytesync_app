@@ -1,3 +1,5 @@
+import 'package:bytesync/l10n/l10n.dart';
+
 import '../../../../core/network/api_exception.dart';
 import '../../domain/pair.dart';
 import '../dto/pair_dto.dart';
@@ -14,7 +16,7 @@ class PairMapper {
             .map(
               (member) => PairMember(
                 userId: member.userId,
-                displayName: member.displayName ?? '未命名成员',
+                displayName: member.displayName ?? appL10n.commonUnnamedMember,
                 isSelf: member.userId == currentUserId,
               ),
             )

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_card.dart';
@@ -19,15 +20,14 @@ class TrainingTemplatePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(trainingTemplateControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('编辑训练计划')),
+      appBar: AppBar(title: Text(appL10n.trainingEditPlan)),
       body: SafeArea(
         child: switch (state) {
           TrainingTemplateLoading() => const LoadingView(),
           TrainingTemplateFailure(:final message) => ErrorView(
             message: message,
-            onRetry: () => ref
-                .read(trainingTemplateControllerProvider.notifier)
-                .refresh(),
+            onRetry: () =>
+                ref.read(trainingTemplateControllerProvider.notifier).refresh(),
           ),
           TrainingTemplateReady() => _TemplateBody(state: state),
         },
@@ -46,36 +46,37 @@ class _TemplateBody extends ConsumerWidget {
     final theme = Theme.of(context);
     ref.watch(trainingExerciseVideoControllerProvider);
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
+      padding: EdgeInsets.all(AppSpacing.pagePadding),
       children: [
         Text(
-          '设置每周固定训练。保存模板后，可由你决定是否同步到本周。',
+          appL10n.trainingTemplateDescription,
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        SizedBox(height: AppSpacing.lg),
         ...state.days.map(
           (day) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            padding: EdgeInsets.only(bottom: AppSpacing.md),
             child: AppCard(
               padding: EdgeInsets.zero,
               child: ExpansionTile(
-                initiallyExpanded: day.exercises.isNotEmpty || day.dayIndex == 0,
-                shape: const Border(),
-                collapsedShape: const Border(),
+                initiallyExpanded:
+                    day.exercises.isNotEmpty || day.dayIndex == 0,
+                shape: Border(),
+                collapsedShape: Border(),
                 title: Text(
                   _weekdayNames[day.dayIndex],
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 subtitle: Text(
                   day.exercises.isEmpty
-                      ? '休息日'
-                      : '${day.exercises.length} 个动作',
+                      ? appL10n.trainingRestDay
+                      : appL10n.trainingExerciseCount(day.exercises.length),
                   style: TextStyle(
                     fontSize: 12,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                childrenPadding: const EdgeInsets.fromLTRB(
+                childrenPadding: EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   0,
                   AppSpacing.lg,
@@ -95,18 +96,14 @@ class _TemplateBody extends ConsumerWidget {
                                 exerciseId: exercise.exerciseId!,
                                 exerciseName: exercise.exerciseName,
                               ),
-                        onEdit: () => _openEditor(
-                          context,
-                          ref,
-                          day.dayIndex,
-                          exercise,
-                        ),
+                        onEdit: () =>
+                            _openEditor(context, ref, day.dayIndex, exercise),
                         onDelete: () => ref
                             .read(trainingTemplateControllerProvider.notifier)
                             .deleteExercise(day.dayIndex, exercise.itemId),
                       ),
                     ),
-                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(height: AppSpacing.sm),
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -118,8 +115,8 @@ class _TemplateBody extends ConsumerWidget {
                               day.dayIndex,
                               day.exercises.length,
                             ),
-                      icon: const Icon(Icons.add),
-                      label: const Text('新增动作'),
+                      icon: Icon(Icons.add),
+                      label: Text(appL10n.trainingAddExercise),
                     ),
                   ),
                 ],
@@ -127,15 +124,17 @@ class _TemplateBody extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.sm),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
             onPressed: state.busy ? null : () => _save(context, ref),
-            child: Text(state.saving ? '保存中…' : '保存训练计划'),
+            child: Text(
+              state.saving ? appL10n.commonSaving : appL10n.trainingSavePlan,
+            ),
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
+        SizedBox(height: AppSpacing.sm),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton(
@@ -144,10 +143,10 @@ class _TemplateBody extends ConsumerWidget {
                 : () => _sync(context, ref),
             child: Text(
               state.syncing
-                  ? '同步中…'
+                  ? appL10n.trainingSyncing
                   : !state.canSync
-                  ? '请先保存再同步'
-                  : '同步到本周',
+                  ? appL10n.trainingSaveBeforeSync
+                  : appL10n.trainingSyncWeek,
             ),
           ),
         ),
@@ -178,19 +177,13 @@ class _TemplateBody extends ConsumerWidget {
       case FixedTrainingExerciseSelection(:final exercise):
         controller.addExercise(
           dayIndex,
-          exercise.toTemplateItem(
-            itemId: controller.newItemId(),
-            order: order,
-          ),
+          exercise.toTemplateItem(itemId: controller.newItemId(), order: order),
         );
         break;
       case CustomTrainingExerciseSelection(:final exercise):
         controller.addExercise(
           dayIndex,
-          exercise.toTemplateItem(
-            itemId: controller.newItemId(),
-            order: order,
-          ),
+          exercise.toTemplateItem(itemId: controller.newItemId(), order: order),
         );
         break;
       case ManualTrainingExerciseSelection():
@@ -212,9 +205,7 @@ class _TemplateBody extends ConsumerWidget {
       builder: (_) => _ExerciseEditorSheet(
         initial: exercise,
         newItemId: exercise == null
-            ? ref
-                  .read(trainingTemplateControllerProvider.notifier)
-                  .newItemId()
+            ? ref.read(trainingTemplateControllerProvider.notifier).newItemId()
             : exercise.itemId,
       ),
     );
@@ -238,9 +229,9 @@ class _TemplateBody extends ConsumerWidget {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('训练计划已保存'),
+        content: Text(appL10n.trainingPlanSaved),
         action: SnackBarAction(
-          label: '同步到本周',
+          label: appL10n.trainingSyncWeek,
           onPressed: () => _sync(context, ref),
         ),
       ),
@@ -257,13 +248,12 @@ class _TemplateBody extends ConsumerWidget {
       return;
     }
     await ref.read(trainingControllerProvider.notifier).refresh();
-    if (context.mounted) _snack(context, '已同步到本周');
+    if (context.mounted) _snack(context, appL10n.trainingSyncedWeek);
   }
 
   void _snack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -286,7 +276,7 @@ class _ExerciseRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.sm),
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: theme.dividerColor)),
       ),
@@ -298,18 +288,29 @@ class _ExerciseRow extends StatelessWidget {
               children: [
                 Text(
                   exercise.exerciseName,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: AppSpacing.xs),
+                SizedBox(height: AppSpacing.xs),
                 Text(
-                  '${trainingTargetText(
-                    itemType: exercise.itemType,
-                    targetSets: exercise.targetSets,
-                    targetReps: exercise.targetReps,
-                    targetWeight: exercise.targetWeight,
-                    targetDurationSeconds: exercise.targetDurationSeconds,
-                  ).replaceFirst('目标：', '')}'
-                  '${exercise.category.isEmpty ? '' : ' · ${exercise.category}'}',
+                  exercise.category.isEmpty
+                      ? trainingTargetText(
+                          itemType: exercise.itemType,
+                          targetSets: exercise.targetSets,
+                          targetReps: exercise.targetReps,
+                          targetWeight: exercise.targetWeight,
+                          targetDurationSeconds: exercise.targetDurationSeconds,
+                        ).replaceFirst(appL10n.trainingTargetPrefix, '')
+                      : appL10n.trainingExerciseTargetWithCategory(
+                          trainingTargetText(
+                            itemType: exercise.itemType,
+                            targetSets: exercise.targetSets,
+                            targetReps: exercise.targetReps,
+                            targetWeight: exercise.targetWeight,
+                            targetDurationSeconds:
+                                exercise.targetDurationSeconds,
+                          ).replaceFirst(appL10n.trainingTargetPrefix, ''),
+                          exercise.category,
+                        ),
                   style: TextStyle(
                     fontSize: 12,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -320,17 +321,17 @@ class _ExerciseRow extends StatelessWidget {
           ),
           if (onVideo != null)
             IconButton(
-              tooltip: '管理教学视频',
+              tooltip: appL10n.trainingManageVideo,
               onPressed: enabled ? onVideo : null,
-              icon: const Icon(Icons.video_library_outlined, size: 20),
+              icon: Icon(Icons.video_library_outlined, size: 20),
             ),
           IconButton(
-            tooltip: '编辑动作',
+            tooltip: appL10n.trainingEditExercise,
             onPressed: enabled ? onEdit : null,
-            icon: const Icon(Icons.edit_outlined, size: 20),
+            icon: Icon(Icons.edit_outlined, size: 20),
           ),
           IconButton(
-            tooltip: '删除动作',
+            tooltip: appL10n.trainingDeleteExercise,
             onPressed: enabled ? onDelete : null,
             icon: const Icon(Icons.delete_outline, size: 20),
           ),
@@ -368,7 +369,9 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
     super.initState();
     final value = widget.initial;
     _nameController = TextEditingController(text: value?.exerciseName ?? '');
-    _categoryController = TextEditingController(text: value?.category ?? '力量');
+    _categoryController = TextEditingController(
+      text: value?.category ?? appL10n.trainingTypeStrength,
+    );
     _setsController = TextEditingController(text: '${value?.targetSets ?? 3}');
     _repsController = TextEditingController(text: '${value?.targetReps ?? 10}');
     _weightController = TextEditingController(
@@ -404,24 +407,24 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
     final reps = int.tryParse(_repsController.text.trim());
     final weight = double.tryParse(_weightController.text.trim());
     if (name.isEmpty || name.length > 100) {
-      setState(() => _error = '动作名称需为 1 到 100 个字符');
+      setState(() => _error = appL10n.trainingExerciseNameInvalid);
       return;
     }
     if (category.length > 50) {
-      setState(() => _error = '分类不能超过 50 个字符');
+      setState(() => _error = appL10n.trainingCategoryTooLong);
       return;
     }
     if (sets == null || sets < 1 || sets > 50) {
-      setState(() => _error = '目标组数请输入 1 到 50');
+      setState(() => _error = appL10n.trainingTargetSetsInvalid);
       return;
     }
     if (isStrength && (reps == null || reps < 0 || reps > 999)) {
-      setState(() => _error = '目标次数请输入 0 到 999');
+      setState(() => _error = appL10n.trainingTargetRepsInvalid);
       return;
     }
     if (isStrength &&
         (weight == null || !weight.isFinite || weight < 0 || weight > 10000)) {
-      setState(() => _error = '目标重量请输入 0 到 10000');
+      setState(() => _error = appL10n.trainingTargetWeightInvalid);
       return;
     }
 
@@ -457,12 +460,12 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
         minutes < 0 ||
         seconds < 0 ||
         seconds > 59) {
-      setState(() => _error = '时长请输入有效的分钟和 0 到 59 秒');
+      setState(() => _error = appL10n.trainingInvalidDurationParts);
       return -1;
     }
     final total = minutes * 60 + seconds;
     if (total < 1 || total > maxTrainingDurationSeconds) {
-      setState(() => _error = '目标时长需为 1 秒到 1440 分钟');
+      setState(() => _error = appL10n.trainingTargetDurationInvalid);
       return -1;
     }
     return total;
@@ -472,30 +475,27 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AnimatedPadding(
-      duration: const Duration(milliseconds: 150),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      duration: Duration(milliseconds: 150),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.initial == null ? '新增动作' : '编辑动作',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              widget.initial == null
+                  ? appL10n.trainingAddExercise
+                  : appL10n.trainingEditExercise,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             if (_isFixed) ...[
               Text(
                 _nameController.text,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
               ),
-              const SizedBox(height: AppSpacing.xs),
+              SizedBox(height: AppSpacing.xs),
               Text(
                 _categoryController.text,
                 style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
@@ -505,18 +505,24 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
                 controller: _nameController,
                 autofocus: widget.initial == null,
                 maxLength: 100,
-                decoration: const InputDecoration(labelText: '动作名称'),
+                decoration: InputDecoration(
+                  labelText: appL10n.trainingExerciseName,
+                ),
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               TextField(
                 controller: _categoryController,
                 maxLength: 50,
-                decoration: const InputDecoration(labelText: '分类'),
+                decoration: InputDecoration(
+                  labelText: appL10n.trainingExerciseCategory,
+                ),
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               DropdownButtonFormField<TrainingItemType>(
                 initialValue: _itemType,
-                decoration: const InputDecoration(labelText: '类型'),
+                decoration: InputDecoration(
+                  labelText: appL10n.trainingExerciseType,
+                ),
                 items: TrainingItemType.values
                     .map(
                       (type) => DropdownMenuItem(
@@ -530,56 +536,69 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
                 },
               ),
             ],
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             if (_isFixed)
               Text(
-                '类型：${_typeLabel(_itemType)}',
+                appL10n.trainingExerciseTypeValue(_typeLabel(_itemType)),
                 style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
               ),
-            if (_isFixed) const SizedBox(height: AppSpacing.md),
+            if (_isFixed) SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                Expanded(child: _numberField('目标组数', _setsController)),
+                Expanded(
+                  child: _numberField(
+                    appL10n.trainingTargetSets,
+                    _setsController,
+                  ),
+                ),
                 if (_itemType == TrainingItemType.strength) ...[
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(child: _numberField('目标次数', _repsController)),
+                  SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _numberField(
+                      appL10n.trainingTargetReps,
+                      _repsController,
+                    ),
+                  ),
                 ],
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             if (_itemType == TrainingItemType.strength)
               TextField(
                 controller: _weightController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: appL10n.trainingTargetWeightKg,
                 ),
-                decoration: const InputDecoration(labelText: '目标重量 kg'),
               )
             else
               Row(
                 children: [
                   Expanded(
                     child: _numberField(
-                      '目标时长（分钟）',
+                      appL10n.trainingTargetDurationMinutes,
                       _durationMinutesController,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: _numberField('秒', _durationSecondsController),
+                    child: _numberField(
+                      appL10n.commonSeconds,
+                      _durationSecondsController,
+                    ),
                   ),
                 ],
               ),
             if (_error != null) ...[
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: AppSpacing.sm),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _submit,
-                child: const Text('保存动作'),
+                child: Text(appL10n.trainingSaveExercise),
               ),
             ),
           ],
@@ -598,12 +617,20 @@ class _ExerciseEditorSheetState extends State<_ExerciseEditorSheet> {
 }
 
 String _typeLabel(TrainingItemType type) => switch (type) {
-  TrainingItemType.strength => '力量',
-  TrainingItemType.duration => '时长',
-  TrainingItemType.cardio => '有氧',
+  TrainingItemType.strength => appL10n.trainingTypeStrength,
+  TrainingItemType.duration => appL10n.trainingTypeDuration,
+  TrainingItemType.cardio => appL10n.trainingTypeCardio,
 };
 
-const _weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+List<String> get _weekdayNames => [
+  appL10n.trainingWeekdayMonday,
+  appL10n.trainingWeekdayTuesday,
+  appL10n.trainingWeekdayWednesday,
+  appL10n.trainingWeekdayThursday,
+  appL10n.trainingWeekdayFriday,
+  appL10n.trainingWeekdaySaturday,
+  appL10n.trainingWeekdaySunday,
+];
 
 String _weight(double value) {
   return value == value.roundToDouble()

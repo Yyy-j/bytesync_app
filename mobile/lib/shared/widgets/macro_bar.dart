@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../core/theme/app_theme.dart';
 
@@ -59,7 +60,7 @@ class MacroBarRow extends StatelessWidget {
           SizedBox(
             width: 44,
             child: Text(
-              '${grams.round()}g',
+              appL10n.commonGramsValue(grams.round()),
               textAlign: TextAlign.end,
               style: TextStyle(fontSize: 12, color: secondaryText),
             ),
@@ -109,7 +110,7 @@ class MacroBar extends StatelessWidget {
     return Column(
       children: [
         MacroBarRow(
-          label: '蛋白质',
+          label: appL10n.commonProtein,
           grams: protein,
           goalGrams: proteinGoal,
           fillColor: proteinFillColor,
@@ -117,7 +118,7 @@ class MacroBar extends StatelessWidget {
           textColor: textColor,
         ),
         MacroBarRow(
-          label: '碳水',
+          label: appL10n.macroCarbs,
           grams: carbs,
           goalGrams: carbsGoal,
           fillColor: carbsFillColor,
@@ -125,7 +126,7 @@ class MacroBar extends StatelessWidget {
           textColor: textColor,
         ),
         MacroBarRow(
-          label: '脂肪',
+          label: appL10n.commonFat,
           grams: fat,
           goalGrams: fatGoal,
           fillColor: fatFillColor,

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../data/training_providers.dart';
 import '../../data/training_repository.dart';
@@ -25,10 +26,10 @@ class TrainingHistoryLoaded extends TrainingHistoryState {
   final TrainingWeekHistory history;
 }
 
-final trainingHistoryControllerProvider = NotifierProvider<
-  TrainingHistoryController,
-  TrainingHistoryState
->(TrainingHistoryController.new);
+final trainingHistoryControllerProvider =
+    NotifierProvider<TrainingHistoryController, TrainingHistoryState>(
+      TrainingHistoryController.new,
+    );
 
 class TrainingHistoryController extends Notifier<TrainingHistoryState> {
   late final TrainingRepository _repository;
@@ -46,7 +47,10 @@ class TrainingHistoryController extends Notifier<TrainingHistoryState> {
       state = TrainingHistoryLoaded(await _repository.getWeekHistory());
     } catch (error) {
       state = TrainingHistoryFailure(
-        trainingErrorMessage(error, fallback: '训练历史加载失败，请重试'),
+        trainingErrorMessage(
+          error,
+          fallback: appL10n.trainingHistoryLoadFailed,
+        ),
       );
     }
   }

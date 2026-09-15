@@ -1,3 +1,5 @@
+import 'package:bytesync/l10n/l10n.dart';
+
 import 'training_exercise_item.dart';
 
 const maxTrainingDurationSeconds = 86400;
@@ -5,9 +7,11 @@ const maxTrainingDurationSeconds = 86400;
 String formatTrainingDuration(int seconds) {
   final minutes = seconds ~/ 60;
   final remainingSeconds = seconds % 60;
-  if (minutes == 0) return '$remainingSeconds秒';
-  if (remainingSeconds == 0) return '$minutes分钟';
-  return '$minutes分$remainingSeconds秒';
+  if (minutes == 0) return appL10n.trainingDurationSeconds(remainingSeconds);
+  if (remainingSeconds == 0) {
+    return appL10n.trainingDurationMinutesValue(minutes);
+  }
+  return appL10n.trainingDurationMinutesSeconds(minutes, remainingSeconds);
 }
 
 String trainingTargetText({
@@ -18,14 +22,18 @@ String trainingTargetText({
   required int? targetDurationSeconds,
 }) {
   if (itemType == TrainingItemType.strength) {
-    return '目标：$targetSets × $targetReps · ${formatTrainingWeight(targetWeight)} kg';
+    return appL10n.trainingTargetStrength(
+      targetSets,
+      targetReps,
+      formatTrainingWeight(targetWeight),
+    );
   }
   final duration = targetDurationSeconds;
-  if (duration == null) return '目标：$targetSets 组';
+  if (duration == null) return appL10n.trainingTargetSetsOnly(targetSets);
   final durationText = formatTrainingDuration(duration);
   return itemType == TrainingItemType.cardio
-      ? '目标：$targetSets 组 · $durationText'
-      : '目标：$targetSets 组 · 每组 $durationText';
+      ? appL10n.trainingTargetCardio(targetSets, durationText)
+      : appL10n.trainingTargetPerSetDuration(targetSets, durationText);
 }
 
 String formatTrainingWeight(double value) {

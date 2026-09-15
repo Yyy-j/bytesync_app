@@ -14,7 +14,7 @@ class MealAiResultDto {
   factory MealAiResultDto.fromJson(Map<String, dynamic> json) {
     final rawDishes = json['dishes'];
     if (rawDishes is! List) {
-      throw const MalformedResponseException('AI 菜品列表格式异常');
+      throw MalformedResponseException('AI 菜品列表格式异常');
     }
 
     try {
@@ -39,7 +39,7 @@ class MealAiResultDto {
         calories: dish['calories'] as num?,
       );
     }
-    throw const MalformedResponseException('AI 菜品格式异常');
+    throw MalformedResponseException('AI 菜品格式异常');
   }
 
   final String name;

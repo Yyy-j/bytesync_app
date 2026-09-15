@@ -20,11 +20,11 @@ class TokenPairResponseDto {
   factory TokenPairResponseDto.fromJson(Map<String, dynamic> json) {
     final accessToken = json['access_token'];
     if (accessToken is! String || accessToken.isEmpty) {
-      throw const MalformedResponseException('缺少 access_token');
+      throw MalformedResponseException('缺少 access_token');
     }
     final refreshToken = json['refresh_token'];
     if (refreshToken is! String || refreshToken.isEmpty) {
-      throw const MalformedResponseException('缺少 refresh_token');
+      throw MalformedResponseException('缺少 refresh_token');
     }
     final tokenType = json['token_type'];
     return TokenPairResponseDto(

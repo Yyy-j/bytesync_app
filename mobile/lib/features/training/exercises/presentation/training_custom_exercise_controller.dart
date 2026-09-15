@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/network/api_exception.dart';
 import '../../data/training_providers.dart';
@@ -44,10 +45,11 @@ class TrainingCustomExerciseActionResult {
   bool get isSuccess => errorMessage == null;
 }
 
-final trainingCustomExerciseControllerProvider = NotifierProvider<
-  TrainingCustomExerciseController,
-  TrainingCustomExerciseState
->(TrainingCustomExerciseController.new);
+final trainingCustomExerciseControllerProvider =
+    NotifierProvider<
+      TrainingCustomExerciseController,
+      TrainingCustomExerciseState
+    >(TrainingCustomExerciseController.new);
 
 class TrainingCustomExerciseController
     extends Notifier<TrainingCustomExerciseState> {
@@ -71,7 +73,7 @@ class TrainingCustomExerciseController
       state = TrainingCustomExerciseReady(exercises: exercises);
     } catch (error) {
       state = TrainingCustomExerciseFailure(
-        _message(error, fallback: '我的动作加载失败，请重试'),
+        _message(error, fallback: appL10n.trainingCustomLoadFailed),
       );
     }
   }
@@ -79,30 +81,24 @@ class TrainingCustomExerciseController
   Future<TrainingCustomExerciseActionResult> create(
     TrainingCustomExerciseInput input,
   ) {
-    return _mutate(
-      () async {
-        await _repository.createCustomExercise(input);
-      },
-      fallback: '新增动作失败，请重试',
-    );
+    return _mutate(() async {
+      await _repository.createCustomExercise(input);
+    }, fallback: appL10n.trainingCustomAddFailed);
   }
 
   Future<TrainingCustomExerciseActionResult> update(
     String exerciseId,
     TrainingCustomExerciseInput input,
   ) {
-    return _mutate(
-      () async {
-        await _repository.updateCustomExercise(exerciseId, input);
-      },
-      fallback: '编辑动作失败，请重试',
-    );
+    return _mutate(() async {
+      await _repository.updateCustomExercise(exerciseId, input);
+    }, fallback: appL10n.trainingCustomEditFailed);
   }
 
   Future<TrainingCustomExerciseActionResult> delete(String exerciseId) {
     return _mutate(
       () => _repository.deleteCustomExercise(exerciseId),
-      fallback: '删除动作失败，请重试',
+      fallback: appL10n.trainingCustomDeleteFailed,
       refreshOnNotFound: true,
     );
   }
@@ -114,8 +110,8 @@ class TrainingCustomExerciseController
   }) async {
     final current = state;
     if (current is! TrainingCustomExerciseReady || current.mutating) {
-      return const TrainingCustomExerciseActionResult.failure(
-        '动作库尚未就绪，请稍后重试',
+      return TrainingCustomExerciseActionResult.failure(
+        appL10n.trainingExerciseLibraryNotReady,
       );
     }
     state = TrainingCustomExerciseReady(
@@ -135,8 +131,8 @@ class TrainingCustomExerciseController
         } catch (_) {
           state = TrainingCustomExerciseReady(exercises: current.exercises);
         }
-        return const TrainingCustomExerciseActionResult.failure(
-          '动作已不存在，列表已刷新',
+        return TrainingCustomExerciseActionResult.failure(
+          appL10n.trainingExerciseMissing,
           isNotFound: true,
         );
       }

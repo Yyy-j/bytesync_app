@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../domain/pair_state.dart';
 import '../../auth/presentation/auth_controller.dart';
@@ -31,73 +32,86 @@ class _PairingPageState extends ConsumerState<PairingPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('与搭档配对'),
+        title: Text(appL10n.pairTitle),
         actions: [
           IconButton(
-            tooltip: '退出登录',
-            onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
-            icon: const Icon(Icons.logout),
+            tooltip: appL10n.authSignOut,
+            onPressed: () =>
+                ref.read(authControllerProvider.notifier).signOut(),
+            icon: Icon(Icons.logout),
           ),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(24),
         children: [
-          const Text(
-            '与搭档配对',
+          Text(
+            appL10n.pairTitle,
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
-            connected == null ? '先创建一个配对，或输入搭档发来的邀请码。' : '查看当前配对详情。',
+            connected == null
+                ? appL10n.pairIntro
+                : appL10n.pairCurrentDetailsHint,
           ),
           if (pairState is PairFailure) ...[
-            const SizedBox(height: 20),
-            Text(pairState.message, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            SizedBox(height: 20),
+            Text(
+              pairState.message,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ],
           if (connected != null) ...[
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('配对详情'),
-                    const SizedBox(height: 12),
-                    const Text('邀请码'),
+                    Text(appL10n.pairDetails),
+                    SizedBox(height: 12),
+                    Text(appL10n.pairInviteCode),
                     Row(
                       children: [
                         Expanded(
                           child: SelectableText(
                             connected.pair.inviteCode,
-                            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         IconButton(
-                          tooltip: '复制邀请码',
+                          tooltip: appL10n.pairCopyInviteCode,
                           icon: const Icon(Icons.copy_outlined),
                           onPressed: () async {
-                            await Clipboard.setData(ClipboardData(text: connected.pair.inviteCode));
+                            await Clipboard.setData(
+                              ClipboardData(text: connected.pair.inviteCode),
+                            );
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('邀请码已复制')),
+                                SnackBar(
+                                  content: Text(appL10n.pairInviteCodeCopied),
+                                ),
                               );
                             }
                           },
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       connected.pair.members.length == 1
-                          ? '等待搭档加入'
-                          : '已完成配对',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                          ? appL10n.pairWaitingForPartner
+                          : appL10n.pairConnected,
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 12),
-                    const Text('成员'),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 12),
+                    Text(appL10n.commonMember),
+                    SizedBox(height: 8),
                     ...connected.pair.members.map(
                       (member) => ListTile(
                         contentPadding: EdgeInsets.zero,
@@ -105,7 +119,11 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                           member.isSelf ? Icons.person : Icons.people_outline,
                         ),
                         title: Text(member.displayName),
-                        subtitle: Text(member.isSelf ? '我的信息' : '搭档信息'),
+                        subtitle: Text(
+                          member.isSelf
+                              ? appL10n.pairMyInfo
+                              : appL10n.pairPartnerInfo,
+                        ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -116,40 +134,43 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                             .continueToHome();
                         context.go('/');
                       },
-                      child: const Text('进入主页'),
+                      child: Text(appL10n.pairEnterHome),
                     ),
                   ],
                 ),
               ),
             ),
           ] else ...[
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             FilledButton.icon(
               onPressed: isLoading
                   ? null
-                  : () => ref.read(pairControllerProvider.notifier).createPair(),
-              icon: const Icon(Icons.add_link),
-              label: const Text('创建配对'),
+                  : () =>
+                        ref.read(pairControllerProvider.notifier).createPair(),
+              icon: Icon(Icons.add_link),
+              label: Text(appL10n.pairCreate),
             ),
-            const SizedBox(height: 24),
-            const Divider(),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
+            Divider(),
+            SizedBox(height: 24),
             TextField(
               controller: _inviteCodeController,
               enabled: !isLoading,
               textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(
-                labelText: '邀请码',
+              decoration: InputDecoration(
+                labelText: appL10n.pairInviteCode,
                 border: OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: isLoading
                   ? null
-                  : () => ref.read(pairControllerProvider.notifier).joinPair(_inviteCodeController.text),
-              icon: const Icon(Icons.group_add_outlined),
-              label: const Text('加入配对'),
+                  : () => ref
+                        .read(pairControllerProvider.notifier)
+                        .joinPair(_inviteCodeController.text),
+              icon: Icon(Icons.group_add_outlined),
+              label: Text(appL10n.pairJoin),
             ),
           ],
           if (isLoading) ...[

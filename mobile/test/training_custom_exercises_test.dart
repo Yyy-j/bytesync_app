@@ -91,7 +91,7 @@ class _FakeTrainingRepository implements TrainingRepository {
   @override
   Future<void> deleteCustomExercise(String exerciseId) async {
     deleteCalls++;
-    if (deleteAsNotFound) throw const NotFoundException();
+    if (deleteAsNotFound) throw NotFoundException();
     exercises.removeWhere((value) => value.id == exerciseId);
   }
 

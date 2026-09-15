@@ -214,7 +214,7 @@ void main() {
   test('delete failure does not refresh or pretend success', () async {
     final scope = _container();
     addTearDown(scope.container.dispose);
-    scope.meals.deleteError = const NetworkException();
+    scope.meals.deleteError = NetworkException();
     final meal = _meal();
 
     final result = await scope.container
@@ -230,7 +230,7 @@ void main() {
   test('409 refreshes server state and never retries the stale PATCH', () async {
     final scope = _container();
     addTearDown(scope.container.dispose);
-    scope.meals.updateError = const ConflictException();
+    scope.meals.updateError = ConflictException();
     final meal = _meal();
 
     final result = await scope.container

@@ -1,3 +1,5 @@
+import 'package:bytesync/l10n/l10n.dart';
+
 import '../../meals/domain/meal.dart';
 import '../../meals/data/mappers/meal_mapper.dart';
 import '../../meals/data/dto/meal_dto.dart';
@@ -47,7 +49,9 @@ class DailySummary {
               MealMapper.fromDto(MealDto.fromJson(m as Map<String, dynamic>)),
         )
         .toList(),
-    selfSlice: UserDailySlice.fromJson(json['self_slice'] as Map<String, dynamic>?),
+    selfSlice: UserDailySlice.fromJson(
+      json['self_slice'] as Map<String, dynamic>?,
+    ),
     partnerSlice: UserDailySlice.fromNullableJson(
       json['partner_slice'] as Map<String, dynamic>?,
     ),
@@ -102,18 +106,19 @@ class UserDailySlice {
   });
 
   const UserDailySlice.empty()
-      : userId = '',
-        displayName = '',
-        calories = 0,
-        protein = 0,
-        carbs = 0,
-        fat = 0;
+    : userId = '',
+      displayName = '',
+      calories = 0,
+      protein = 0,
+      carbs = 0,
+      fat = 0;
 
   factory UserDailySlice.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const UserDailySlice.empty();
     return UserDailySlice(
       userId: json['user_id'] as String? ?? '',
-      displayName: json['display_name'] as String? ?? '未命名成员',
+      displayName:
+          json['display_name'] as String? ?? appL10n.commonUnnamedMember,
       calories: json['calories'] as num? ?? 0,
       protein: json['protein'] as num? ?? 0,
       carbs: json['carbs'] as num? ?? 0,

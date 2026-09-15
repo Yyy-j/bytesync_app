@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -40,15 +41,15 @@ class SummaryPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: isDark ? _SummaryDarkColors.background : null,
       appBar: AppBar(
-        title: const Text('今日'),
+        title: Text(appL10n.navToday),
         actions: [
           IconButton(
-            tooltip: '营养目标',
-            icon: const Icon(Icons.track_changes_outlined),
+            tooltip: appL10n.profileNutritionGoals,
+            icon: Icon(Icons.track_changes_outlined),
             onPressed: () => context.push('/nutrition-goals'),
           ),
           IconButton(
-            tooltip: '配对详情',
+            tooltip: appL10n.pairDetails,
             icon: const Icon(Icons.people_outline),
             onPressed: () => context.push('/pairing'),
           ),
@@ -98,45 +99,45 @@ class _SummaryBody extends ConsumerWidget {
     return ListView(
       // Ensures pull-to-refresh works even when content is short (empty
       // state) by always allowing scroll.
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
+      physics: AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.all(AppSpacing.pagePadding),
       children: [
         Text(
-          DateFormat('yyyy年M月d日 EEEE', 'zh_CN').format(summary.date),
+          DateFormat(appL10n.todayDateFormat, 'zh_CN').format(summary.date),
           style: TextStyle(fontSize: 13, color: secondaryTextColor),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         _NutritionCard(
-          title: '我的今日摄入',
-          name: '我',
+          title: appL10n.todayMyIntake,
+          name: appL10n.todayMe,
           slice: summary.selfSlice,
           goals: summary.selfGoals,
           darkValueColor: _SummaryDarkColors.blue,
         ),
         if (summary.partnerSlice != null && summary.partnerGoals != null) ...[
-          const SizedBox(height: AppSpacing.md),
+          SizedBox(height: AppSpacing.md),
           _NutritionCard(
-            title: '搭档今日摄入',
+            title: appL10n.todayPartnerIntake,
             name: summary.partnerSlice!.displayName,
             slice: summary.partnerSlice!,
             goals: summary.partnerGoals!,
             darkValueColor: _SummaryDarkColors.purple,
           ),
         ],
-        const SizedBox(height: AppSpacing.xl),
+        SizedBox(height: AppSpacing.xl),
         Text(
-          '今日记录',
+          appL10n.todayRecords,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
             color: secondaryTextColor,
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        SizedBox(height: AppSpacing.md),
         if (emptyState || summary.meals.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(top: AppSpacing.xl),
-            child: EmptyView(message: '还没有记录，去记一笔吧'),
+            child: EmptyView(message: appL10n.todayEmpty),
           )
         else
           ...summary.meals.map(
@@ -157,12 +158,12 @@ class _SummaryBody extends ConsumerWidget {
   }
 
   String _ownerName(Meal meal) {
-    if (meal.userId == summary.selfSlice.userId) return '我';
+    if (meal.userId == summary.selfSlice.userId) return appL10n.todayMe;
     final partner = summary.partnerSlice;
     if (partner != null && meal.userId == partner.userId) {
       return partner.displayName;
     }
-    return '成员';
+    return appL10n.commonMember;
   }
 }
 
@@ -180,24 +181,27 @@ Future<void> _showMealActions(
       child: Wrap(
         children: [
           ListTile(
-            leading: const Icon(Icons.pie_chart_outline),
-            title: const Text('调整份量'),
+            leading: Icon(Icons.pie_chart_outline),
+            title: Text(appL10n.todayAdjustPortion),
             onTap: () => Navigator.pop(sheetContext, _MealAction.portion),
           ),
           ListTile(
-            leading: const Icon(Icons.edit_outlined),
-            title: const Text('直接编辑'),
+            leading: Icon(Icons.edit_outlined),
+            title: Text(appL10n.todayEditDirectly),
             onTap: () => Navigator.pop(sheetContext, _MealAction.edit),
           ),
           if (meal.source == MealSource.text)
             ListTile(
-              leading: const Icon(Icons.auto_awesome_outlined),
-              title: const Text('补充说明再估算'),
+              leading: Icon(Icons.auto_awesome_outlined),
+              title: Text(appL10n.todayReestimateWithNote),
               onTap: () => Navigator.pop(sheetContext, _MealAction.refine),
             ),
           ListTile(
-            leading: const Icon(Icons.delete_outline, color: AppColors.warning),
-            title: const Text('删除', style: TextStyle(color: AppColors.warning)),
+            leading: Icon(Icons.delete_outline, color: AppColors.warning),
+            title: Text(
+              appL10n.commonDelete,
+              style: TextStyle(color: AppColors.warning),
+            ),
             onTap: () => Navigator.pop(sheetContext, _MealAction.delete),
           ),
         ],
@@ -208,13 +212,13 @@ Future<void> _showMealActions(
 
   final controller = ref.read(mealManagementControllerProvider.notifier);
   MealManagementResult? result;
-  String successMessage = '记录已更新';
+  String successMessage = appL10n.todayRecordUpdated;
   switch (action) {
     case _MealAction.portion:
       final ratio = await _showPortionPicker(context, meal);
       if (ratio == null || !context.mounted) return;
       result = await controller.updatePortion(meal, ratio);
-      successMessage = '份量已更新';
+      successMessage = appL10n.todayPortionUpdated;
       break;
     case _MealAction.edit:
       final values = await _showMealEditSheet(context, meal);
@@ -232,13 +236,13 @@ Future<void> _showMealActions(
       final hint = await _showRefineSheet(context);
       if (hint == null || !context.mounted) return;
       result = await controller.refineMeal(meal, hint);
-      successMessage = '已重新估算并更新';
+      successMessage = appL10n.todayReestimated;
       break;
     case _MealAction.delete:
       final confirmed = await _showDeleteConfirmation(context);
       if (!confirmed || !context.mounted) return;
       result = await controller.deleteMeal(meal);
-      successMessage = '记录已删除';
+      successMessage = appL10n.todayRecordDeleted;
       break;
   }
 
@@ -246,7 +250,9 @@ Future<void> _showMealActions(
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(
-        result.isSuccess ? successMessage : result.message ?? '操作失败，请稍后重试',
+        result.isSuccess
+            ? successMessage
+            : result.message ?? appL10n.errorOperationFailed,
       ),
     ),
   );
@@ -258,7 +264,7 @@ Future<double?> _showPortionPicker(BuildContext context, Meal meal) {
     showDragHandle: true,
     builder: (sheetContext) => SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
+        padding: EdgeInsets.fromLTRB(
           AppSpacing.pagePadding,
           0,
           AppSpacing.pagePadding,
@@ -268,8 +274,8 @@ Future<double?> _showPortionPicker(BuildContext context, Meal meal) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '调整份量',
+            Text(
+              appL10n.todayAdjustPortion,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -279,7 +285,7 @@ Future<double?> _showPortionPicker(BuildContext context, Meal meal) {
               children: <double>[0.5, 0.75, 1, 1.25, 1.5, 2]
                   .map(
                     (ratio) => ChoiceChip(
-                      label: Text('${ratio}x'),
+                      label: Text(appL10n.todayPortionRatio('$ratio')),
                       selected: meal.portionRatio == ratio,
                       onSelected: (_) => Navigator.pop(sheetContext, ratio),
                     ),
@@ -321,24 +327,32 @@ Future<_MealEditValues?> _showMealEditSheet(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '直接编辑',
+              Text(
+                appL10n.todayEditDirectly,
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: AppSpacing.md),
-              _MealEditField(label: '名称', controller: name),
+              SizedBox(height: AppSpacing.md),
+              _MealEditField(label: appL10n.todayName, controller: name),
               _MealEditField(
-                label: '基础卡路里',
+                label: appL10n.todayBaseCalories,
                 controller: calories,
                 numeric: true,
               ),
               _MealEditField(
-                label: '基础蛋白质',
+                label: appL10n.todayBaseProtein,
                 controller: protein,
                 numeric: true,
               ),
-              _MealEditField(label: '基础碳水', controller: carbs, numeric: true),
-              _MealEditField(label: '基础脂肪', controller: fat, numeric: true),
+              _MealEditField(
+                label: appL10n.todayBaseCarbs,
+                controller: carbs,
+                numeric: true,
+              ),
+              _MealEditField(
+                label: appL10n.todayBaseFat,
+                controller: fat,
+                numeric: true,
+              ),
               if (error != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -363,7 +377,7 @@ Future<_MealEditValues?> _showMealEditSheet(
                               value == null || !value.isFinite || value < 0,
                         )) {
                       setModalState(() {
-                        error = '请填写名称和大于等于 0 的有效营养数值';
+                        error = appL10n.todayInvalidMealValues;
                       });
                       return;
                     }
@@ -378,7 +392,7 @@ Future<_MealEditValues?> _showMealEditSheet(
                       ),
                     );
                   },
-                  child: const Text('保存修改'),
+                  child: Text(appL10n.commonSaveChanges),
                 ),
               ),
             ],
@@ -415,34 +429,36 @@ Future<String?> _showRefineSheet(BuildContext context) async {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              '补充说明再估算',
+            Text(
+              appL10n.todayReestimateWithNote,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             TextField(
               controller: hint,
               autofocus: true,
               minLines: 2,
               maxLines: 4,
-              decoration: const InputDecoration(hintText: '例如：米饭其实只有半碗'),
+              decoration: InputDecoration(
+                hintText: appL10n.todayReestimateHint,
+              ),
             ),
             if (error != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(error!, style: const TextStyle(color: AppColors.warning)),
+              SizedBox(height: AppSpacing.sm),
+              Text(error!, style: TextStyle(color: AppColors.warning)),
             ],
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
                 onPressed: () {
                   if (hint.text.trim().isEmpty) {
-                    setModalState(() => error = '请输入补充说明');
+                    setModalState(() => error = appL10n.todayNoteRequired);
                     return;
                   }
                   Navigator.pop(sheetContext, hint.text.trim());
                 },
-                child: const Text('重新估算'),
+                child: Text(appL10n.todayReestimate),
               ),
             ),
           ],
@@ -458,17 +474,17 @@ Future<bool> _showDeleteConfirmation(BuildContext context) async {
   return await showDialog<bool>(
         context: context,
         builder: (dialogContext) => AlertDialog(
-          title: const Text('删除这条记录？'),
-          content: const Text('删除后无法恢复。'),
+          title: Text(appL10n.todayDeleteTitle),
+          content: Text(appL10n.todayDeleteDescription),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('取消'),
+              child: Text(appL10n.commonCancel),
             ),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('确认删除'),
+              child: Text(appL10n.todayConfirmDelete),
             ),
           ],
         ),
@@ -561,7 +577,7 @@ class _NutritionCard extends StatelessWidget {
             children: [
               Flexible(
                 child: Text(
-                  '$name ${slice.calories.round()}',
+                  appL10n.todayIntakeCalories(name, slice.calories.round()),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -575,7 +591,7 @@ class _NutritionCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '/ ${goals.calorieGoal.round()} kcal',
+                appL10n.todayCalorieGoal(goals.calorieGoal.round()),
                 style: TextStyle(
                   fontSize: 13,
                   color: isDark
@@ -688,7 +704,7 @@ class _MealListItem extends StatelessWidget {
                   )
                 else
                   IconButton(
-                    tooltip: '管理${meal.name}',
+                    tooltip: appL10n.todayManageMeal(meal.name),
                     visualDensity: VisualDensity.compact,
                     onPressed: onManage,
                     icon: const Icon(Icons.more_vert),
@@ -698,7 +714,7 @@ class _MealListItem extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            '${meal.calories.round()} kcal',
+            appL10n.commonCaloriesValue('${meal.calories.round()}'),
             style: TextStyle(
               fontSize: 13,
               color: isDark
@@ -711,17 +727,17 @@ class _MealListItem extends StatelessWidget {
             spacing: AppSpacing.sm,
             children: [
               _MacroTag(
-                label: '蛋白 ${meal.protein.round()}g',
+                label: appL10n.todayProteinGrams(meal.protein.round()),
                 color: AppColors.protein,
                 bg: AppColors.proteinBg,
               ),
               _MacroTag(
-                label: '碳水 ${meal.carbs.round()}g',
+                label: appL10n.todayCarbsGrams(meal.carbs.round()),
                 color: AppColors.carbs,
                 bg: AppColors.carbsBg,
               ),
               _MacroTag(
-                label: '脂肪 ${meal.fat.round()}g',
+                label: appL10n.todayFatGrams(meal.fat.round()),
                 color: AppColors.fat,
                 bg: AppColors.fatBg,
               ),

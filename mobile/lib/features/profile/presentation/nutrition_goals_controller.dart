@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../summary/presentation/summary_controller.dart';
@@ -35,12 +36,13 @@ class NutritionGoalsSaveResult {
   bool get isSuccess => errorMessage == null;
 }
 
-final nutritionGoalsControllerProvider = NotifierProvider.autoDispose<
-  NutritionGoalsController,
-  NutritionGoalsState
->(NutritionGoalsController.new);
+final nutritionGoalsControllerProvider =
+    NotifierProvider.autoDispose<NutritionGoalsController, NutritionGoalsState>(
+      NutritionGoalsController.new,
+    );
 
-class NutritionGoalsController extends AutoDisposeNotifier<NutritionGoalsState> {
+class NutritionGoalsController
+    extends AutoDisposeNotifier<NutritionGoalsState> {
   late final UserRepository _repository;
 
   @override
@@ -55,7 +57,7 @@ class NutritionGoalsController extends AutoDisposeNotifier<NutritionGoalsState> 
     try {
       state = NutritionGoalsReady(profile: await _repository.getProfile());
     } catch (error) {
-      state = NutritionGoalsFailure(_message(error, '营养目标加载失败，请重试'));
+      state = NutritionGoalsFailure(_message(error, appL10n.goalsLoadFailed));
     }
   }
 
@@ -64,7 +66,7 @@ class NutritionGoalsController extends AutoDisposeNotifier<NutritionGoalsState> 
   Future<NutritionGoalsSaveResult> save(NutritionGoals goals) async {
     final current = state;
     if (current is! NutritionGoalsReady || current.saving) {
-      return const NutritionGoalsSaveResult.failure('当前无法保存，请稍后重试');
+      return NutritionGoalsSaveResult.failure(appL10n.errorCannotSaveNow);
     }
     state = NutritionGoalsReady(profile: current.profile, saving: true);
     try {
@@ -75,7 +77,7 @@ class NutritionGoalsController extends AutoDisposeNotifier<NutritionGoalsState> 
     } catch (error) {
       state = NutritionGoalsReady(profile: current.profile);
       return NutritionGoalsSaveResult.failure(
-        _message(error, '营养目标保存失败，请重试'),
+        _message(error, appL10n.goalsSaveFailed),
       );
     }
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../core/theme/app_theme.dart';
 import '../features/auth/domain/auth_state.dart';
@@ -24,15 +25,15 @@ class SplashPage extends ConsumerWidget {
             SizedBox(height: AppSpacing.lg),
             if (authState case AuthRestoreFailed(:final message)) ...[
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
                 child: Text(message, textAlign: TextAlign.center),
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: AppSpacing.md),
               FilledButton(
                 onPressed: () => ref
                     .read(authControllerProvider.notifier)
                     .retryRestoreSession(),
-                child: const Text('重试'),
+                child: Text(appL10n.commonRetry),
               ),
             ] else
               CircularProgressIndicator(color: theme.colorScheme.primary),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/training_duration.dart';
@@ -68,7 +69,7 @@ class _TrainingExercisePickerState
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(
+            padding: EdgeInsets.fromLTRB(
               AppSpacing.pagePadding,
               AppSpacing.md,
               AppSpacing.pagePadding,
@@ -76,13 +77,10 @@ class _TrainingExercisePickerState
             ),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    '选择训练动作',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    appL10n.trainingPickerTitle,
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                   ),
                 ),
                 if (_tab == _PickerTab.custom)
@@ -90,34 +88,30 @@ class _TrainingExercisePickerState
                     onPressed: _mutationDisabled(customState)
                         ? null
                         : () => _createCustomExercise(context),
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('新增动作'),
+                    icon: Icon(Icons.add, size: 18),
+                    label: Text(appL10n.trainingAddExercise),
                   ),
                 TextButton(
-                  onPressed: () => Navigator.pop(
-                    context,
-                    const ManualTrainingExerciseSelection(),
-                  ),
-                  child: const Text('自定义填写'),
+                  onPressed: () =>
+                      Navigator.pop(context, ManualTrainingExerciseSelection()),
+                  child: Text(appL10n.trainingCustomFill),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.pagePadding,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
             child: SizedBox(
               width: double.infinity,
               child: SegmentedButton<_PickerTab>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: _PickerTab.system,
-                    label: Text('系统动作'),
+                    label: Text(appL10n.trainingSystemExercises),
                   ),
                   ButtonSegment(
                     value: _PickerTab.custom,
-                    label: Text('我的动作'),
+                    label: Text(appL10n.trainingMyExercises),
                   ),
                 ],
                 selected: {_tab},
@@ -130,34 +124,30 @@ class _TrainingExercisePickerState
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.pagePadding,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
             child: TextField(
               controller: _searchController,
               autofocus: true,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: Icon(Icons.search),
                 hintText: _tab == _PickerTab.system
-                    ? '搜索中文或英文名称'
-                    : '搜索动作名称或分类',
+                    ? appL10n.trainingSearchSystemHint
+                    : appL10n.trainingSearchMyHint,
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          SizedBox(height: AppSpacing.sm),
           SizedBox(
             height: 42,
             child: ListView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pagePadding,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
               children: [
                 ChoiceChip(
-                  label: const Text('全部'),
+                  label: Text(appL10n.commonAll),
                   selected: _category == null,
                   onSelected: (_) => setState(() => _category = null),
                 ),
@@ -204,23 +194,26 @@ class _TrainingExercisePickerState
       itemBuilder: (context, index) {
         final exercise = exercises[index];
         return ListTile(
-          contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          contentPadding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
           title: Text(exercise.name),
           subtitle: Text(
-            '${exercise.englishName} · ${exercise.category}\n'
-            '${trainingTargetText(
-              itemType: exercise.itemType,
-              targetSets: exercise.defaultSets,
-              targetReps: exercise.defaultReps,
-              targetWeight: exercise.defaultWeight,
-              targetDurationSeconds: exercise.defaultDuration == 0
-                  ? null
-                  : exercise.defaultDuration,
-            ).replaceFirst('目标：', '')}',
+            appL10n.trainingSystemExerciseSubtitle(
+              exercise.englishName,
+              exercise.category,
+              trainingTargetText(
+                itemType: exercise.itemType,
+                targetSets: exercise.defaultSets,
+                targetReps: exercise.defaultReps,
+                targetWeight: exercise.defaultWeight,
+                targetDurationSeconds: exercise.defaultDuration == 0
+                    ? null
+                    : exercise.defaultDuration,
+              ).replaceFirst(appL10n.trainingTargetPrefix, ''),
+            ),
           ),
           isThreeLine: true,
           trailing: IconButton(
-            tooltip: '管理教学视频',
+            tooltip: appL10n.trainingManageVideo,
             onPressed: () => showTrainingVideoEditor(
               context,
               ref,
@@ -229,10 +222,8 @@ class _TrainingExercisePickerState
             ),
             icon: const Icon(Icons.video_library_outlined, size: 20),
           ),
-          onTap: () => Navigator.pop(
-            context,
-            FixedTrainingExerciseSelection(exercise),
-          ),
+          onTap: () =>
+              Navigator.pop(context, FixedTrainingExerciseSelection(exercise)),
         );
       },
     );
@@ -240,7 +231,7 @@ class _TrainingExercisePickerState
 
   Widget _customExerciseList(TrainingCustomExerciseState state) {
     return switch (state) {
-      TrainingCustomExerciseLoading() => const Center(
+      TrainingCustomExerciseLoading() => Center(
         child: CircularProgressIndicator(),
       ),
       TrainingCustomExerciseFailure(:final message) => Center(
@@ -248,12 +239,12 @@ class _TrainingExercisePickerState
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             OutlinedButton(
               onPressed: () => ref
                   .read(trainingCustomExerciseControllerProvider.notifier)
                   .refresh(),
-              child: const Text('重试'),
+              child: Text(appL10n.commonRetry),
             ),
           ],
         ),
@@ -274,7 +265,9 @@ class _TrainingExercisePickerState
     );
     if (exercises.isEmpty) {
       return _EmptyExercises(
-        message: allExercises.isEmpty ? '还没有我的动作' : '没有匹配的动作',
+        message: allExercises.isEmpty
+            ? appL10n.trainingMyExercisesEmpty
+            : appL10n.trainingNoMatchingExercises,
       );
     }
     return Stack(
@@ -291,27 +284,29 @@ class _TrainingExercisePickerState
           itemBuilder: (context, index) {
             final exercise = exercises[index];
             return ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.xs,
-              ),
+              contentPadding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
               title: Text(exercise.name),
               subtitle: Text(
-                '${exercise.category.isEmpty ? '未分类' : exercise.category} · '
-                '${_typeLabel(exercise.itemType)}\n'
-                '${trainingTargetText(
-                  itemType: exercise.itemType,
-                  targetSets: exercise.defaultSets,
-                  targetReps: exercise.defaultReps,
-                  targetWeight: exercise.defaultWeight,
-                  targetDurationSeconds: exercise.defaultDurationSeconds,
-                ).replaceFirst('目标：', '')}',
+                appL10n.trainingCustomExerciseSubtitle(
+                  exercise.category.isEmpty
+                      ? appL10n.commonUncategorized
+                      : exercise.category,
+                  _typeLabel(exercise.itemType),
+                  trainingTargetText(
+                    itemType: exercise.itemType,
+                    targetSets: exercise.defaultSets,
+                    targetReps: exercise.defaultReps,
+                    targetWeight: exercise.defaultWeight,
+                    targetDurationSeconds: exercise.defaultDurationSeconds,
+                  ).replaceFirst(appL10n.trainingTargetPrefix, ''),
+                ),
               ),
               isThreeLine: true,
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    tooltip: '管理教学视频',
+                    tooltip: appL10n.trainingManageVideo,
                     onPressed: mutating
                         ? null
                         : () => showTrainingVideoEditor(
@@ -320,17 +315,17 @@ class _TrainingExercisePickerState
                             exerciseId: exercise.id,
                             exerciseName: exercise.name,
                           ),
-                    icon: const Icon(Icons.video_library_outlined, size: 20),
+                    icon: Icon(Icons.video_library_outlined, size: 20),
                   ),
                   IconButton(
-                    tooltip: '编辑动作',
+                    tooltip: appL10n.trainingEditExercise,
                     onPressed: mutating
                         ? null
                         : () => _editCustomExercise(context, exercise),
-                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    icon: Icon(Icons.edit_outlined, size: 20),
                   ),
                   IconButton(
-                    tooltip: '删除动作',
+                    tooltip: appL10n.trainingDeleteExercise,
                     onPressed: mutating
                         ? null
                         : () => _deleteCustomExercise(context, exercise),
@@ -372,7 +367,7 @@ class _TrainingExercisePickerState
     if (!context.mounted) return;
     if (result.isSuccess) {
       setState(() => _category = null);
-      _snack(context, '动作已新增');
+      _snack(context, appL10n.trainingExerciseAdded);
     } else {
       _snack(context, result.errorMessage!);
     }
@@ -395,7 +390,7 @@ class _TrainingExercisePickerState
     if (!context.mounted) return;
     if (result.isSuccess) {
       setState(() => _category = null);
-      _snack(context, '动作已更新');
+      _snack(context, appL10n.trainingExerciseUpdated);
     } else {
       _snack(context, result.errorMessage!);
     }
@@ -408,16 +403,16 @@ class _TrainingExercisePickerState
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('删除动作？'),
-        content: const Text('删除后不会影响已经保存的训练计划和历史记录。'),
+        title: Text(appL10n.trainingDeleteExerciseTitle),
+        content: Text(appL10n.trainingDeleteExerciseDescription),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('取消'),
+            child: Text(appL10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('删除'),
+            child: Text(appL10n.commonDelete),
           ),
         ],
       ),
@@ -429,7 +424,7 @@ class _TrainingExercisePickerState
     if (!context.mounted) return;
     if (result.isSuccess) {
       setState(() => _category = null);
-      _snack(context, '动作已删除');
+      _snack(context, appL10n.trainingExerciseDeleted);
     } else {
       if (result.isNotFound) setState(() => _category = null);
       _snack(context, result.errorMessage!);
@@ -437,9 +432,8 @@ class _TrainingExercisePickerState
   }
 
   void _snack(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }
 
@@ -507,25 +501,25 @@ class _CustomExerciseEditorSheetState
     final reps = int.tryParse(_repsController.text.trim());
     final weight = double.tryParse(_weightController.text.trim());
     if (name.isEmpty || name.length > 100) {
-      setState(() => _error = '动作名称需为 1 到 100 个字符');
+      setState(() => _error = appL10n.trainingExerciseNameInvalid);
       return;
     }
     if (category.length > 50) {
-      setState(() => _error = '分类不能超过 50 个字符');
+      setState(() => _error = appL10n.trainingCategoryTooLong);
       return;
     }
     if (sets == null || sets < 1 || sets > 50) {
-      setState(() => _error = '默认组数请输入 1 到 50');
+      setState(() => _error = appL10n.trainingDefaultSetsInvalid);
       return;
     }
     final isStrength = _itemType == TrainingItemType.strength;
     if (isStrength && (reps == null || reps < 0 || reps > 999)) {
-      setState(() => _error = '默认次数请输入 0 到 999');
+      setState(() => _error = appL10n.trainingDefaultRepsInvalid);
       return;
     }
     if (isStrength &&
         (weight == null || !weight.isFinite || weight < 0 || weight > 10000)) {
-      setState(() => _error = '默认重量请输入 0 到 10000');
+      setState(() => _error = appL10n.trainingDefaultWeightInvalid);
       return;
     }
     final duration = isStrength ? null : _readDuration();
@@ -555,12 +549,12 @@ class _CustomExerciseEditorSheetState
         minutes < 0 ||
         seconds < 0 ||
         seconds > 59) {
-      setState(() => _error = '时长请输入有效的分钟和 0 到 59 秒');
+      setState(() => _error = appL10n.trainingInvalidDurationParts);
       return -1;
     }
     final total = minutes * 60 + seconds;
     if (total < 1 || total > maxTrainingDurationSeconds) {
-      setState(() => _error = '默认时长需为 1 秒到 1440 分钟');
+      setState(() => _error = appL10n.trainingDefaultDurationInvalid);
       return -1;
     }
     return total;
@@ -570,37 +564,43 @@ class _CustomExerciseEditorSheetState
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AnimatedPadding(
-      duration: const Duration(milliseconds: 150),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.viewInsetsOf(context).bottom,
-      ),
+      duration: Duration(milliseconds: 150),
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.initial == null ? '新增我的动作' : '编辑我的动作',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              widget.initial == null
+                  ? appL10n.trainingAddMyExercise
+                  : appL10n.trainingEditMyExercise,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             TextField(
               controller: _nameController,
               autofocus: widget.initial == null,
               maxLength: 100,
-              decoration: const InputDecoration(labelText: '动作名称'),
+              decoration: InputDecoration(
+                labelText: appL10n.trainingExerciseName,
+              ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             TextField(
               controller: _categoryController,
               maxLength: 50,
-              decoration: const InputDecoration(labelText: '分类'),
+              decoration: InputDecoration(
+                labelText: appL10n.trainingExerciseCategory,
+              ),
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             DropdownButtonFormField<TrainingItemType>(
               initialValue: _itemType,
-              decoration: const InputDecoration(labelText: '类型'),
+              decoration: InputDecoration(
+                labelText: appL10n.trainingExerciseType,
+              ),
               items: TrainingItemType.values
                   .map(
                     (type) => DropdownMenuItem(
@@ -613,50 +613,63 @@ class _CustomExerciseEditorSheetState
                 if (value != null) setState(() => _itemType = value);
               },
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                Expanded(child: _numberField('默认组数', _setsController)),
+                Expanded(
+                  child: _numberField(
+                    appL10n.trainingDefaultSets,
+                    _setsController,
+                  ),
+                ),
                 if (_itemType == TrainingItemType.strength) ...[
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(child: _numberField('默认次数', _repsController)),
+                  SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _numberField(
+                      appL10n.trainingDefaultReps,
+                      _repsController,
+                    ),
+                  ),
                 ],
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             if (_itemType == TrainingItemType.strength)
               TextField(
                 controller: _weightController,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: appL10n.trainingDefaultWeightKg,
                 ),
-                decoration: const InputDecoration(labelText: '默认重量 kg'),
               )
             else
               Row(
                 children: [
                   Expanded(
                     child: _numberField(
-                      '默认时长（分钟）',
+                      appL10n.trainingDefaultDurationMinutes,
                       _durationMinutesController,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
+                  SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: _numberField('秒', _durationSecondsController),
+                    child: _numberField(
+                      appL10n.commonSeconds,
+                      _durationSecondsController,
+                    ),
                   ),
                 ],
               ),
             if (_error != null) ...[
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: AppSpacing.sm),
               Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
             ],
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: AppSpacing.lg),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: _submit,
-                child: const Text('保存动作'),
+                child: Text(appL10n.trainingSaveExercise),
               ),
             ),
           ],
@@ -675,16 +688,16 @@ class _CustomExerciseEditorSheetState
 }
 
 class _EmptyExercises extends StatelessWidget {
-  const _EmptyExercises({this.message = '没有匹配的动作'});
+  const _EmptyExercises({this.message});
 
-  final String message;
+  final String? message;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Center(
       child: Text(
-        message,
+        message ?? appL10n.trainingNoMatchingExercises,
         style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
       ),
     );
@@ -696,9 +709,9 @@ bool _mutationDisabled(TrainingCustomExerciseState state) {
 }
 
 String _typeLabel(TrainingItemType type) => switch (type) {
-  TrainingItemType.strength => '力量',
-  TrainingItemType.duration => '时长',
-  TrainingItemType.cardio => '有氧',
+  TrainingItemType.strength => appL10n.trainingTypeStrength,
+  TrainingItemType.duration => appL10n.trainingTypeDuration,
+  TrainingItemType.cardio => appL10n.trainingTypeCardio,
 };
 
 String _weight(double value) {

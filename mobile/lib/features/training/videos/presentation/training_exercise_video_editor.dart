@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import 'training_exercise_video_controller.dart';
 
@@ -12,9 +13,8 @@ Future<void> openTrainingVideoUrl(BuildContext context, Uri url) async {
     opened = false;
   }
   if (!opened && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('无法打开教学视频链接')),
-    );
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(appL10n.trainingVideoOpenFailed)));
   }
 }
 
@@ -36,7 +36,7 @@ Future<void> showTrainingVideoEditor(
         content: Text(
           state is TrainingExerciseVideoFailure
               ? state.message
-              : '教学视频列表尚未加载完成',
+              : appL10n.trainingVideoListLoading,
         ),
       ),
     );
@@ -51,35 +51,33 @@ Future<void> showTrainingVideoEditor(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        title: Text('$exerciseName · 教学视频'),
+        title: Text(appL10n.trainingVideoTitle(exerciseName)),
         content: TextField(
           controller: controller,
           autofocus: true,
           keyboardType: TextInputType.url,
           maxLength: 2048,
           decoration: InputDecoration(
-            labelText: '外部视频链接',
-            hintText: 'https://...',
+            labelText: appL10n.trainingVideoExternalLink,
+            hintText: appL10n.trainingVideoUrlHint,
             errorText: error,
           ),
         ),
         actions: [
           if (existing != null)
             TextButton(
-              onPressed: () => Navigator.pop(
-                dialogContext,
-                const _VideoEditorAction.delete(),
-              ),
-              child: const Text('删除链接'),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, _VideoEditorAction.delete()),
+              child: Text(appL10n.trainingVideoDeleteLink),
             ),
           if (existing != null)
             TextButton(
               onPressed: () => openTrainingVideoUrl(context, existing.videoUrl),
-              child: const Text('查看'),
+              child: Text(appL10n.commonView),
             ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('取消'),
+            child: Text(appL10n.commonCancel),
           ),
           FilledButton(
             onPressed: () {
@@ -89,15 +87,12 @@ Future<void> showTrainingVideoEditor(
                   uri == null ||
                   !uri.hasAuthority ||
                   (uri.scheme != 'http' && uri.scheme != 'https')) {
-                setState(() => error = '请输入有效的 http / https 链接');
+                setState(() => error = appL10n.trainingVideoInvalidUrl);
                 return;
               }
-              Navigator.pop(
-                dialogContext,
-                _VideoEditorAction.save(value),
-              );
+              Navigator.pop(dialogContext, _VideoEditorAction.save(value));
             },
-            child: const Text('保存'),
+            child: Text(appL10n.commonSave),
           ),
         ],
       ),
@@ -119,8 +114,8 @@ Future<void> showTrainingVideoEditor(
         content: Text(
           result.isSuccess
               ? action.delete
-                    ? '教学视频链接已删除'
-                    : '教学视频链接已保存'
+                    ? appL10n.trainingVideoDeleted
+                    : appL10n.trainingVideoSaved
               : result.errorMessage!,
         ),
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../features/meals/presentation/add_meal_page.dart';
 import '../features/summary/presentation/summary_page.dart';
@@ -23,38 +24,33 @@ class HomeShell extends ConsumerWidget {
     return Scaffold(
       body: IndexedStack(
         index: index,
-        children: const [
-          SummaryPage(),
-          AddMealPage(),
-          TrainingPage(),
-          ProfilePage(),
-        ],
+        children: [SummaryPage(), AddMealPage(), TrainingPage(), ProfilePage()],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: index,
-        selectedItemColor: isDark ? const Color(0xFF00AEFF) : null,
-        unselectedItemColor: isDark ? const Color(0xFF6F7075) : null,
+        selectedItemColor: isDark ? Color(0xFF00AEFF) : null,
+        unselectedItemColor: isDark ? Color(0xFF6F7075) : null,
         onTap: (i) => ref.read(homeTabIndexProvider.notifier).state = i,
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.today_outlined),
             activeIcon: Icon(Icons.today),
-            label: '今日',
+            label: appL10n.navToday,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
             activeIcon: Icon(Icons.add_circle),
-            label: '记录',
+            label: appL10n.navRecord,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.fitness_center_outlined),
             activeIcon: Icon(Icons.fitness_center),
-            label: '训练',
+            label: appL10n.navTraining,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
-            label: '我的',
+            label: appL10n.navProfile,
           ),
         ],
       ),
