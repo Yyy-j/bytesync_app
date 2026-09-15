@@ -4,13 +4,16 @@ sealed class RecordState {
   const RecordState();
 }
 
+enum RecordAnalysisKind { text, image }
+
 class RecordIdle extends RecordState {
   const RecordIdle();
 }
 
 class RecordAnalyzing extends RecordState {
-  const RecordAnalyzing([this.draft]);
+  const RecordAnalyzing({required this.kind, this.draft});
 
+  final RecordAnalysisKind kind;
   final RecordDraft? draft;
 }
 

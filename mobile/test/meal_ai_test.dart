@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bytesync/features/meals/data/meal_ai_repository.dart';
 import 'package:bytesync/features/meals/data/meals_providers.dart';
+import 'package:bytesync/features/meals/domain/meal.dart';
 import 'package:bytesync/features/meals/domain/meal_ai_result.dart';
 import 'package:bytesync/features/meals/domain/meal_share_mode.dart';
 import 'package:bytesync/features/meals/domain/meal_source.dart';
@@ -36,6 +39,29 @@ class _FakeMealAiRepository implements MealAiRepository {
   }
 }
 
+class _FakeImageMealAiRepository
+    implements MealAiRepository, MealImageAiRepository {
+  String? lastImagePath;
+  String? lastHint;
+
+  @override
+  Future<MealAiResult> analyzeText(String text) async => _result;
+
+  @override
+  Future<MealAiResult> analyzeImage(String imagePath, {String? hint}) async {
+    lastImagePath = imagePath;
+    lastHint = hint;
+    return _result;
+  }
+}
+
+class _PendingMealAiRepository implements MealAiRepository {
+  final result = Completer<MealAiResult>();
+
+  @override
+  Future<MealAiResult> analyzeText(String text) => result.future;
+}
+
 class _FixedPairController extends PairController {
   _FixedPairController({required this.withPartner});
 
@@ -43,27 +69,27 @@ class _FixedPairController extends PairController {
 
   @override
   PairState build() => PairConnected(
-        Pair(
-          pairId: 'pair-1',
-          inviteCode: 'ABC123',
-          members: [
-            const PairMember(
-              userId: 'self-1',
-              displayName: '我',
-              avatarUrl: null,
-              isSelf: true,
-            ),
-            if (withPartner)
-              const PairMember(
-                userId: 'partner-1',
-                displayName: 'Harper',
-                avatarUrl: null,
-                isSelf: false,
-              ),
-          ],
-          createdAt: DateTime(2026),
+    Pair(
+      pairId: 'pair-1',
+      inviteCode: 'ABC123',
+      members: [
+        const PairMember(
+          userId: 'self-1',
+          displayName: '我',
+          avatarUrl: null,
+          isSelf: true,
         ),
-      );
+        if (withPartner)
+          const PairMember(
+            userId: 'partner-1',
+            displayName: 'Harper',
+            avatarUrl: null,
+            isSelf: false,
+          ),
+      ],
+      createdAt: DateTime(2026),
+    ),
+  );
 }
 
 void main() {
@@ -102,11 +128,30 @@ void main() {
     expect(state.draft.shareMode, MealShareMode.solo);
   });
 
+  test('image analysis forwards the unified input as hint', () async {
+    final repository = _FakeImageMealAiRepository();
+    final container = ProviderContainer(
+      overrides: [mealAiRepositoryProvider.overrideWithValue(repository)],
+    );
+    addTearDown(container.dispose);
+
+    final submitted = await container
+        .read(recordControllerProvider.notifier)
+        .analyzeImage('/tmp/meal.jpg', hint: '米饭只有半碗');
+
+    expect(submitted, isTrue);
+    expect(repository.lastImagePath, '/tmp/meal.jpg');
+    expect(repository.lastHint, '米饭只有半碗');
+    expect(container.read(recordControllerProvider), isA<RecordResult>());
+  });
+
   test('manual input becomes an editable solo draft', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
-    container.read(recordControllerProvider.notifier).loadManual(
+    container
+        .read(recordControllerProvider.notifier)
+        .loadManual(
           name: '鸡胸肉沙拉',
           calories: 600,
           protein: 50,
@@ -142,7 +187,8 @@ void main() {
 
     final input = find.byType(TextField).first;
     await tester.enterText(input, '一份鸡肉沙拉');
-    await tester.tap(find.text('AI 估算'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('record-send-button')));
     await tester.pumpAndSettle();
 
     expect(find.text('AI 估算失败，请稍后重试'), findsOneWidget);
@@ -165,14 +211,45 @@ void main() {
 
     final input = find.byType(TextField).first;
     await tester.enterText(input, '牛肉面和煎蛋');
-    await tester.tap(find.text('AI 估算'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('record-send-button')));
     await tester.pumpAndSettle();
 
-    expect(tester.widget<TextField>(input).controller?.text, isEmpty);
+    expect(find.byKey(const ValueKey('record-unified-input')), findsNothing);
     expect(find.text('菜品：牛肉面、煎蛋'), findsOneWidget);
     expect(find.text('AI 估算，仅供参考'), findsOneWidget);
-    expect(find.text('我吃'), findsOneWidget);
-    expect(find.text('Ta 吃'), findsNothing);
+    expect(find.text('只记录给我'), findsOneWidget);
+    expect(find.text('只给 Ta 记'), findsNothing);
+  });
+
+  testWidgets('text analysis replaces idle with its loading page', (
+    tester,
+  ) async {
+    final repository = _PendingMealAiRepository();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          mealAiRepositoryProvider.overrideWithValue(repository),
+          yesterdayMealsProvider.overrideWith((ref) async => []),
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(withPartner: false),
+          ),
+        ],
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField).first, '鸡肉饭');
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('record-send-button')));
+    await tester.pump();
+
+    expect(find.text('查询中…'), findsOneWidget);
+    expect(find.text('正在估算这份料理'), findsOneWidget);
+    expect(find.byKey(const ValueKey('record-unified-input')), findsNothing);
+
+    repository.result.complete(_result);
+    await tester.pumpAndSettle();
   });
 
   testWidgets('tapping the record page dismisses the keyboard', (tester) async {
@@ -195,7 +272,7 @@ void main() {
     await tester.pump();
     expect(tester.binding.focusManager.primaryFocus, isNotNull);
 
-    await tester.tap(find.text('AI 识别'));
+    await tester.tap(find.text('拍一餐').first);
     await tester.pump();
     expect(
       tester.binding.focusManager.primaryFocus,
@@ -220,14 +297,15 @@ void main() {
     );
 
     await tester.enterText(find.byType(TextField).first, '600 kcal 晚餐');
-    await tester.tap(find.text('AI 估算'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('record-send-button')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('一起吃'));
     await tester.tap(find.text('一起吃'));
     await tester.pump();
 
-    expect(find.text('Ta 吃'), findsOneWidget);
-    expect(find.text('1 : 1'), findsOneWidget);
+    expect(find.text('只给 Ta 记'), findsOneWidget);
+    expect(find.text('一人一半'), findsOneWidget);
     expect(find.text('分配预览：我 325 kcal  Harper 325 kcal'), findsOneWidget);
   });
 
@@ -254,7 +332,8 @@ void main() {
         '/tmp/stale-meal.jpg';
 
     await tester.enterText(find.byType(TextField).first, '一碗牛肉面');
-    await tester.tap(find.text('AI 估算'));
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('record-send-button')));
     await tester.pumpAndSettle();
 
     expect(container.read(selectedRecordImagePathProvider), isNull);
@@ -281,20 +360,152 @@ void main() {
     container.read(selectedRecordImagePathProvider.notifier).state =
         '/tmp/stale-meal.jpg';
 
+    await tester.tap(find.text('手动记录一餐'));
+    await tester.pumpAndSettle();
+
     final nameField = find.byWidgetPredicate(
-      (widget) =>
-          widget is TextField && widget.decoration?.labelText == '食物名称',
+      (widget) => widget is TextField && widget.decoration?.labelText == '食物名称',
     );
     final caloriesField = find.byWidgetPredicate(
       (widget) =>
-          widget is TextField && widget.decoration?.labelText == '卡路里',
+          widget is TextField && widget.decoration?.labelText == '卡路里 *',
     );
     await tester.enterText(nameField, '鸡胸肉沙拉');
     await tester.enterText(caloriesField, '600');
-    await tester.ensureVisible(find.text('生成记录预览'));
-    await tester.tap(find.text('生成记录预览'));
+    await tester.ensureVisible(find.text('生成记录'));
+    await tester.tap(find.text('生成记录'));
     await tester.pump();
 
     expect(container.read(selectedRecordImagePathProvider), isNull);
+  });
+
+  testWidgets('idle is minimal and manual form starts collapsed', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          yesterdayMealsProvider.overrideWith((ref) async => []),
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(withPartner: false),
+          ),
+        ],
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+
+    expect(find.text('拍一餐'), findsNWidgets(2));
+    expect(find.text('饭前拍一下，轻轻记录这一餐'), findsOneWidget);
+    expect(find.text('记录饮食'), findsNothing);
+    expect(find.text('AI 识别'), findsNothing);
+    expect(find.byKey(const ValueKey('record-manual-form')), findsNothing);
+
+    await tester.tap(find.text('手动记录一餐'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('record-manual-form')), findsOneWidget);
+    expect(find.text('卡路里 *'), findsOneWidget);
+  });
+
+  testWidgets('empty text send is disabled and camera opens source sheet', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          yesterdayMealsProvider.overrideWith((ref) async => []),
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(withPartner: false),
+          ),
+        ],
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+
+    final send = tester.widget<IconButton>(
+      find.byKey(const ValueKey('record-send-button')),
+    );
+    expect(send.onPressed, isNull);
+
+    await tester.tap(find.byKey(const ValueKey('record-camera-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('拍照'), findsOneWidget);
+    expect(find.text('从相册选择'), findsOneWidget);
+    expect(find.text('取消'), findsOneWidget);
+  });
+
+  testWidgets('yesterday meal fills and expands manual form', (tester) async {
+    final yesterday = Meal(
+      id: 'meal-1',
+      pairId: 'pair-1',
+      userId: 'self-1',
+      sharedMealId: null,
+      name: '番茄炒蛋',
+      source: MealSource.manual,
+      baseCalories: 420,
+      baseProtein: 18,
+      baseCarbs: 32,
+      baseFat: 21,
+      calories: 420,
+      protein: 18,
+      carbs: 32,
+      fat: 21,
+      portionRatio: 1,
+      shareRatio: 1,
+      shareMode: MealShareMode.solo,
+      mealDate: DateTime(2026, 9, 14),
+      mealTime: '12:00',
+      createdAt: DateTime(2026, 9, 14),
+      updatedAt: DateTime(2026, 9, 14),
+    );
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          yesterdayMealsProvider.overrideWith((ref) async => [yesterday]),
+          pairControllerProvider.overrideWith(
+            () => _FixedPairController(withPartner: false),
+          ),
+        ],
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('昨天也吃了？'), findsOneWidget);
+    await tester.tap(find.text('添加'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('record-manual-form')), findsOneWidget);
+    expect(find.text('番茄炒蛋'), findsWidgets);
+    final caloriesField = tester.widget<TextField>(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is TextField && widget.decoration?.labelText == '卡路里 *',
+      ),
+    );
+    expect(caloriesField.controller?.text, '420');
+  });
+
+  testWidgets('light and dark modes select matching SVG assets', (
+    tester,
+  ) async {
+    Widget page(ThemeData theme) => ProviderScope(
+      overrides: [
+        yesterdayMealsProvider.overrideWith((ref) async => []),
+        pairControllerProvider.overrideWith(
+          () => _FixedPairController(withPartner: false),
+        ),
+      ],
+      child: MaterialApp(theme: theme, home: const AddMealPage()),
+    );
+
+    await tester.pumpWidget(page(ThemeData.light()));
+    expect(find.byKey(const ValueKey('record-add-green-svg')), findsOneWidget);
+    expect(find.byKey(const ValueKey('record-send-green-svg')), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpWidget(page(ThemeData.dark()));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('record-add-blue-svg')), findsOneWidget);
+    expect(find.byKey(const ValueKey('record-send-blue-svg')), findsOneWidget);
   });
 }

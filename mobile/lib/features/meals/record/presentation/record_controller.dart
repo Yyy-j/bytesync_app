@@ -14,7 +14,9 @@ import '../domain/record_draft.dart';
 import '../domain/record_state.dart';
 
 final recordControllerProvider =
-    NotifierProvider.autoDispose<RecordController, RecordState>(RecordController.new);
+    NotifierProvider.autoDispose<RecordController, RecordState>(
+      RecordController.new,
+    );
 
 final yesterdayMealsProvider = FutureProvider.autoDispose<List<Meal>>((ref) {
   final now = DateTime.now();
@@ -43,15 +45,17 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
   Future<bool> analyzeText(String text, {String? hint}) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return false;
-    state = const RecordAnalyzing();
+    state = const RecordAnalyzing(kind: RecordAnalysisKind.text);
     try {
       final result = await _aiRepository.analyzeText(_combine(trimmed, hint));
-      state = RecordResult(RecordDraft.fromAi(
-        result: result,
-        source: MealSource.text,
-        originalText: trimmed,
-        hint: hint,
-      ));
+      state = RecordResult(
+        RecordDraft.fromAi(
+          result: result,
+          source: MealSource.text,
+          originalText: trimmed,
+          hint: hint,
+        ),
+      );
       return true;
     } catch (error) {
       state = RecordError(_messageFor(error));
@@ -60,7 +64,7 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
   }
 
   Future<bool> analyzeImage(String path, {String? hint}) async {
-    state = const RecordAnalyzing();
+    state = const RecordAnalyzing(kind: RecordAnalysisKind.image);
     try {
       final imageRepository = _aiRepository;
       if (imageRepository is! MealImageAiRepository) {
@@ -69,12 +73,14 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
       }
       final result = await (imageRepository as MealImageAiRepository)
           .analyzeImage(path, hint: hint);
-      state = RecordResult(RecordDraft.fromAi(
-        result: result,
-        source: MealSource.ai,
-        hint: hint,
-        localImagePath: path,
-      ));
+      state = RecordResult(
+        RecordDraft.fromAi(
+          result: result,
+          source: MealSource.ai,
+          hint: hint,
+          localImagePath: path,
+        ),
+      );
       return true;
     } catch (error) {
       state = RecordError(_messageFor(error));
@@ -86,11 +92,21 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
     final current = _draft;
     final trimmed = note.trim();
     if (current == null || trimmed.isEmpty) return false;
-    state = RecordAnalyzing(current);
+    state = RecordAnalyzing(
+      kind: current.source == MealSource.text
+          ? RecordAnalysisKind.text
+          : RecordAnalysisKind.image,
+      draft: current,
+    );
     try {
       final result = current.source == MealSource.text
-          ? await _aiRepository.analyzeText(_combine(current.originalText ?? current.name, trimmed))
-          : await (_aiRepository as MealImageAiRepository).analyzeImage(current.localImagePath!, hint: _combine(current.hint, trimmed));
+          ? await _aiRepository.analyzeText(
+              _combine(current.originalText ?? current.name, trimmed),
+            )
+          : await (_aiRepository as MealImageAiRepository).analyzeImage(
+              current.localImagePath!,
+              hint: _combine(current.hint, trimmed),
+            );
       state = RecordResult(
         RecordDraft.fromAi(
           result: result,
@@ -109,7 +125,9 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
 
   void setPortion(double ratio) {
     final current = _draft;
-    if (current != null) state = RecordResult(current.copyWith(portionRatio: ratio));
+    if (current != null) {
+      state = RecordResult(current.copyWith(portionRatio: ratio));
+    }
   }
 
   void setShareMode(MealShareMode shareMode) {
@@ -157,37 +175,47 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
     );
   }
 
-  void applyEdit({required String name, required num calories, required num protein, required num carbs, required num fat}) {
+  void applyEdit({
+    required String name,
+    required num calories,
+    required num protein,
+    required num carbs,
+    required num fat,
+  }) {
     final current = _draft;
     if (current == null) return;
-    state = RecordResult(current.copyWith(
-      name: name.trim().isEmpty ? current.name : name.trim(),
-      baseCalories: calories,
-      baseProtein: protein,
-      baseCarbs: carbs,
-      baseFat: fat,
-      portionRatio: 1,
-    ));
+    state = RecordResult(
+      current.copyWith(
+        name: name.trim().isEmpty ? current.name : name.trim(),
+        baseCalories: calories,
+        baseProtein: protein,
+        baseCarbs: carbs,
+        baseFat: fat,
+        portionRatio: 1,
+      ),
+    );
   }
 
   Future<bool> save() async {
     final current = _draft;
     if (current == null) return false;
     try {
-      await _mealsRepository.addMeal(NewMealInput(
-        name: current.name,
-        source: current.source,
-        baseCalories: current.baseCalories,
-        baseProtein: current.baseProtein,
-        baseCarbs: current.baseCarbs,
-        baseFat: current.baseFat,
-        portionRatio: current.portionRatio,
-        shareMode: current.shareMode,
-        mealTime: _mealTime,
-        dishes: current.dishes,
-        aiHint: current.hint,
-        originalInput: current.originalText,
-      ));
+      await _mealsRepository.addMeal(
+        NewMealInput(
+          name: current.name,
+          source: current.source,
+          baseCalories: current.baseCalories,
+          baseProtein: current.baseProtein,
+          baseCarbs: current.baseCarbs,
+          baseFat: current.baseFat,
+          portionRatio: current.portionRatio,
+          shareMode: current.shareMode,
+          mealTime: _mealTime,
+          dishes: current.dishes,
+          aiHint: current.hint,
+          originalInput: current.originalText,
+        ),
+      );
       await ref.read(summaryControllerProvider.notifier).refresh();
       clear();
       return true;
@@ -202,11 +230,11 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
   void showError(String message) => state = RecordError(message, draft: _draft);
 
   RecordDraft? get _draft => switch (state) {
-        RecordResult(:final draft) => draft,
-        RecordError(:final draft) => draft,
-        RecordAnalyzing(:final draft) => draft,
-        _ => null,
-      };
+    RecordResult(:final draft) => draft,
+    RecordError(:final draft) => draft,
+    RecordAnalyzing(:final draft) => draft,
+    _ => null,
+  };
 
   String get _mealTime {
     final now = DateTime.now();
@@ -223,7 +251,9 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
     if (error is NetworkException) return '网络连接失败，请检查网络';
     if (error is ApiException && error.statusCode == 413) return '图片太大，请重新选择';
     if (error is ApiException && error.statusCode == 415) return '暂不支持这张图片格式';
-    if (error is ApiException && error.statusCode == 503) return 'AI 服务暂时不可用，请稍后重试';
+    if (error is ApiException && error.statusCode == 503) {
+      return 'AI 服务暂时不可用，请稍后重试';
+    }
     if (error is ApiException && error.statusCode == 502) return '识别失败，请重新尝试';
     if (error is ServerException) return 'AI 服务暂时不可用，请稍后重试';
     return 'AI 估算失败，请稍后重试';
@@ -232,11 +262,11 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
 
 extension RecordStateCompatibility on RecordResult {
   MealAiResult get result => MealAiResult(
-        name: draft.name,
-        calories: draft.baseCalories,
-        protein: draft.baseProtein,
-        carbs: draft.baseCarbs,
-        fat: draft.baseFat,
-        dishes: draft.dishes.map((dish) => dish.name).toList(growable: false),
-      );
+    name: draft.name,
+    calories: draft.baseCalories,
+    protein: draft.baseProtein,
+    carbs: draft.baseCarbs,
+    fat: draft.baseFat,
+    dishes: draft.dishes.map((dish) => dish.name).toList(growable: false),
+  );
 }
