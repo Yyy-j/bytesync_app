@@ -21,7 +21,7 @@ class AppConfig {
   /// Base URL of the FastAPI backend.
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://stable-retreat-textbook-futures.trycloudflare.com',
+    defaultValue: 'https://yyynas.tail935349.ts.net',
   );
 
   /// Network timeouts, in milliseconds.
