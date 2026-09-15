@@ -232,8 +232,8 @@ class _ResultView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            '识别结果',
+          Text(
+            draft.source == MealSource.manual ? '手动记录' : '识别完成',
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 18),
@@ -591,6 +591,9 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     setState(() => _saving = false);
     if (ok) {
       ref.read(selectedRecordImagePathProvider.notifier).state = null;
+      _inputController.clear();
+      _clearManual();
+      setState(() => _manualExpanded = false);
       _snack('已记录');
       ref.read(homeTabIndexProvider.notifier).state = 0;
     }
@@ -674,150 +677,192 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: FocusScope.of(context).unfocus,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 34, 24, 40),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '拍一餐',
-              style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '饭前拍一下，轻轻记录这一餐',
-              style: TextStyle(
-                fontSize: 15,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 46),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkInput
-                          : AppColors.primary.withValues(alpha: 0.055),
-                      borderRadius: BorderRadius.circular(17),
-                      border: Border.all(color: accent.withValues(alpha: 0.32)),
-                    ),
-                    alignment: Alignment.center,
-                    child: TextField(
-                      key: const ValueKey('record-unified-input'),
-                      controller: _inputController,
-                      maxLines: 1,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: inputFilled ? (_) => _analyzeText() : null,
-                      decoration: const InputDecoration(
-                        hintText: '描述食物，或拍照前补充说明',
-                        filled: false,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const verticalPadding = 74.0;
+          final minContentHeight = constraints.maxHeight > verticalPadding
+              ? constraints.maxHeight - verticalPadding
+              : 0.0;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 34, 24, 40),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: minContentHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '拍一餐',
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '饭前拍一下，轻轻记录这一餐',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? AppColors.darkInput
+                                        : AppColors.primary.withValues(
+                                            alpha: 0.055,
+                                          ),
+                                    borderRadius: BorderRadius.circular(17),
+                                    border: Border.all(
+                                      color: accent.withValues(alpha: 0.32),
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: TextField(
+                                    key: const ValueKey('record-unified-input'),
+                                    controller: _inputController,
+                                    maxLines: 1,
+                                    maxLength: 80,
+                                    textInputAction: TextInputAction.send,
+                                    onSubmitted: inputFilled
+                                        ? (_) => _analyzeText()
+                                        : null,
+                                    decoration: const InputDecoration(
+                                      hintText: '描述食物，或拍照前补充说明',
+                                      counterText: '',
+                                      filled: false,
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Opacity(
+                                opacity: inputFilled ? 1 : 0.32,
+                                child: Semantics(
+                                  button: true,
+                                  enabled: inputFilled,
+                                  label: '发送文字描述',
+                                  child: IconButton(
+                                    key: const ValueKey('record-send-button'),
+                                    onPressed: inputFilled
+                                        ? _analyzeText
+                                        : null,
+                                    style: IconButton.styleFrom(
+                                      fixedSize: const Size(50, 50),
+                                      padding: const EdgeInsets.all(13),
+                                      backgroundColor: accent.withValues(
+                                        alpha: 0.12,
+                                      ),
+                                      shape: const CircleBorder(),
+                                    ),
+                                    icon: SvgPicture.asset(
+                                      isDark
+                                          ? 'svg/send-blue.svg'
+                                          : 'svg/send-green.svg',
+                                      key: ValueKey(
+                                        isDark
+                                            ? 'record-send-blue-svg'
+                                            : 'record-send-green-svg',
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (error != null) ...[
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                error,
+                                key: const ValueKey('record-idle-error'),
+                                style: TextStyle(
+                                  color: theme.colorScheme.error,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 42),
+                          InkWell(
+                            key: const ValueKey('record-camera-button'),
+                            onTap: _showImageSourceSheet,
+                            customBorder: const CircleBorder(),
+                            child: SizedBox(
+                              width: 108,
+                              height: 108,
+                              child: SvgPicture.asset(
+                                isDark
+                                    ? 'svg/add-blue.svg'
+                                    : 'svg/add-green.svg',
+                                key: ValueKey(
+                                  isDark
+                                      ? 'record-add-blue-svg'
+                                      : 'record-add-green-svg',
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            '拍一餐',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 26),
+                          TextButton(
+                            key: const ValueKey('record-manual-toggle'),
+                            onPressed: () => setState(
+                              () => _manualExpanded = !_manualExpanded,
+                            ),
+                            child: Text(_manualExpanded ? '收起' : '手动记录一餐'),
+                          ),
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 180),
+                            alignment: Alignment.topCenter,
+                            child: _manualExpanded
+                                ? _ManualForm(
+                                    nameController: _nameController,
+                                    caloriesController: _caloriesController,
+                                    proteinController: _proteinController,
+                                    carbsController: _carbsController,
+                                    fatController: _fatController,
+                                    onGenerate: _createManualDraft,
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    _YesterdaySection(
+                      meals: ref.watch(yesterdayMealsProvider),
+                      onSelected: _fillManualFromMeal,
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Opacity(
-                  opacity: inputFilled ? 1 : 0.32,
-                  child: Semantics(
-                    button: true,
-                    enabled: inputFilled,
-                    label: '发送文字描述',
-                    child: IconButton(
-                      key: const ValueKey('record-send-button'),
-                      onPressed: inputFilled ? _analyzeText : null,
-                      style: IconButton.styleFrom(
-                        fixedSize: const Size(50, 50),
-                        padding: const EdgeInsets.all(13),
-                        backgroundColor: accent.withValues(alpha: 0.12),
-                        shape: const CircleBorder(),
-                      ),
-                      icon: SvgPicture.asset(
-                        isDark ? 'svg/send-blue.svg' : 'svg/send-green.svg',
-                        key: ValueKey(
-                          isDark
-                              ? 'record-send-blue-svg'
-                              : 'record-send-green-svg',
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (error != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                error,
-                key: const ValueKey('record-idle-error'),
-                style: TextStyle(color: theme.colorScheme.error, fontSize: 13),
-              ),
-            ],
-            const SizedBox(height: 52),
-            Center(
-              child: Column(
-                children: [
-                  InkWell(
-                    key: const ValueKey('record-camera-button'),
-                    onTap: _showImageSourceSheet,
-                    customBorder: const CircleBorder(),
-                    child: SizedBox(
-                      width: 108,
-                      height: 108,
-                      child: SvgPicture.asset(
-                        isDark ? 'svg/add-blue.svg' : 'svg/add-green.svg',
-                        key: ValueKey(
-                          isDark
-                              ? 'record-add-blue-svg'
-                              : 'record-add-green-svg',
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    '拍一餐',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                ],
               ),
             ),
-            const SizedBox(height: 46),
-            Center(
-              child: TextButton(
-                key: const ValueKey('record-manual-toggle'),
-                onPressed: () =>
-                    setState(() => _manualExpanded = !_manualExpanded),
-                child: Text(_manualExpanded ? '收起' : '手动记录一餐'),
-              ),
-            ),
-            AnimatedSize(
-              duration: const Duration(milliseconds: 180),
-              alignment: Alignment.topCenter,
-              child: _manualExpanded
-                  ? _ManualForm(
-                      nameController: _nameController,
-                      caloriesController: _caloriesController,
-                      proteinController: _proteinController,
-                      carbsController: _carbsController,
-                      fatController: _fatController,
-                      onGenerate: _createManualDraft,
-                    )
-                  : const SizedBox.shrink(),
-            ),
-            const SizedBox(height: 28),
-            _YesterdaySection(
-              meals: ref.watch(yesterdayMealsProvider),
-              onSelected: _fillManualFromMeal,
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

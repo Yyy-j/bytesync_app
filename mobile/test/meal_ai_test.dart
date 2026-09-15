@@ -6,8 +6,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bytesync/features/meals/data/meal_ai_repository.dart';
 import 'package:bytesync/features/meals/data/meals_providers.dart';
+import 'package:bytesync/features/meals/data/meals_repository.dart';
 import 'package:bytesync/features/meals/domain/meal.dart';
 import 'package:bytesync/features/meals/domain/meal_ai_result.dart';
+import 'package:bytesync/features/meals/domain/meal_patch.dart';
 import 'package:bytesync/features/meals/domain/meal_share_mode.dart';
 import 'package:bytesync/features/meals/domain/meal_source.dart';
 import 'package:bytesync/features/meals/presentation/add_meal_page.dart';
@@ -15,6 +17,8 @@ import 'package:bytesync/features/meals/presentation/record_controller.dart';
 import 'package:bytesync/features/pair/domain/pair.dart';
 import 'package:bytesync/features/pair/domain/pair_state.dart';
 import 'package:bytesync/features/pair/presentation/pair_controller.dart';
+import 'package:bytesync/features/summary/domain/daily_summary.dart';
+import 'package:bytesync/features/summary/presentation/summary_controller.dart';
 
 const _result = MealAiResult(
   name: '牛肉面套餐',
@@ -61,6 +65,76 @@ class _PendingMealAiRepository implements MealAiRepository {
   @override
   Future<MealAiResult> analyzeText(String text) => result.future;
 }
+
+class _SavingMealsRepository implements MealsRepository {
+  _SavingMealsRepository({this.saveError});
+
+  final Object? saveError;
+  NewMealInput? savedInput;
+
+  @override
+  Future<Meal> addMeal(NewMealInput input) async {
+    if (saveError != null) throw saveError!;
+    savedInput = input;
+    return _meal(name: input.name, source: input.source);
+  }
+
+  @override
+  Future<void> deleteMeal(String id) => throw UnimplementedError();
+
+  @override
+  Future<Meal> getMealById(String id) => throw UnimplementedError();
+
+  @override
+  Future<List<Meal>> getMealsForDate(DateTime date) =>
+      throw UnimplementedError();
+
+  @override
+  Future<List<Meal>> getMealsForReuse({
+    required DateTime date,
+    int limit = 3,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<List<Meal>> getRecentMealsForReuse({int limit = 3}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Meal> updateMeal(String id, MealPatch patch) =>
+      throw UnimplementedError();
+}
+
+class _FixedSummaryController extends SummaryController {
+  @override
+  SummaryState build() => SummaryLoaded(DailySummary.empty(DateTime(2026)));
+
+  @override
+  Future<void> refresh() async {}
+}
+
+Meal _meal({String name = '牛肉面套餐', MealSource source = MealSource.ai}) => Meal(
+  id: 'meal-1',
+  pairId: 'pair-1',
+  userId: 'self-1',
+  sharedMealId: null,
+  name: name,
+  source: source,
+  baseCalories: 650,
+  baseProtein: 32,
+  baseCarbs: 78,
+  baseFat: 22,
+  calories: 650,
+  protein: 32,
+  carbs: 78,
+  fat: 22,
+  portionRatio: 1,
+  shareRatio: 1,
+  shareMode: MealShareMode.solo,
+  mealDate: DateTime(2026, 9, 15),
+  mealTime: '12:00',
+  createdAt: DateTime(2026, 9, 15),
+  updatedAt: DateTime(2026, 9, 15),
+);
 
 class _FixedPairController extends PairController {
   _FixedPairController({required this.withPartner});
@@ -216,6 +290,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('record-unified-input')), findsNothing);
+    expect(find.text('识别完成'), findsOneWidget);
     expect(find.text('菜品：牛肉面、煎蛋'), findsOneWidget);
     expect(find.text('AI 估算，仅供参考'), findsOneWidget);
     expect(find.text('只记录给我'), findsOneWidget);
@@ -377,6 +452,7 @@ void main() {
     await tester.pump();
 
     expect(container.read(selectedRecordImagePathProvider), isNull);
+    expect(find.text('手动记录'), findsOneWidget);
   });
 
   testWidgets('idle is minimal and manual form starts collapsed', (
@@ -399,6 +475,11 @@ void main() {
     expect(find.text('记录饮食'), findsNothing);
     expect(find.text('AI 识别'), findsNothing);
     expect(find.byKey(const ValueKey('record-manual-form')), findsNothing);
+    final input = tester.widget<TextField>(
+      find.byKey(const ValueKey('record-unified-input')),
+    );
+    expect(input.maxLength, 80);
+    expect(input.decoration?.counterText, '');
 
     await tester.tap(find.text('手动记录一餐'));
     await tester.pumpAndSettle();
@@ -507,5 +588,105 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('record-add-blue-svg')), findsOneWidget);
     expect(find.byKey(const ValueKey('record-send-blue-svg')), findsOneWidget);
+  });
+
+  testWidgets('successful image save returns to a fresh empty idle page', (
+    tester,
+  ) async {
+    final aiRepository = _FakeImageMealAiRepository();
+    final mealsRepository = _SavingMealsRepository();
+    final container = ProviderContainer(
+      overrides: [
+        mealAiRepositoryProvider.overrideWithValue(aiRepository),
+        mealsRepositoryProvider.overrideWithValue(mealsRepository),
+        yesterdayMealsProvider.overrideWith((ref) async => []),
+        pairControllerProvider.overrideWith(
+          () => _FixedPairController(withPartner: false),
+        ),
+        summaryControllerProvider.overrideWith(_FixedSummaryController.new),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+
+    final inputFinder = find.byKey(const ValueKey('record-unified-input'));
+    await tester.enterText(inputFinder, '米饭只有半碗');
+    container.read(selectedRecordImagePathProvider.notifier).state =
+        '/tmp/meal.jpg';
+    await container
+        .read(recordControllerProvider.notifier)
+        .analyzeImage('/tmp/meal.jpg', hint: '米饭只有半碗');
+    await tester.pumpAndSettle();
+
+    expect(find.text('识别完成'), findsOneWidget);
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('record-save-button')),
+    );
+    await tester.tap(find.byKey(const ValueKey('record-save-button')));
+    await tester.pumpAndSettle();
+
+    expect(container.read(recordControllerProvider), isA<RecordIdle>());
+    expect(container.read(selectedRecordImagePathProvider), isNull);
+    expect(mealsRepository.savedInput?.aiHint, '米饭只有半碗');
+    final idleInput = tester.widget<TextField>(inputFinder);
+    expect(idleInput.controller?.text, isEmpty);
+  });
+
+  testWidgets('failed image save keeps hint image and draft', (tester) async {
+    final container = ProviderContainer(
+      overrides: [
+        mealAiRepositoryProvider.overrideWithValue(
+          _FakeImageMealAiRepository(),
+        ),
+        mealsRepositoryProvider.overrideWithValue(
+          _SavingMealsRepository(saveError: Exception('save failed')),
+        ),
+        yesterdayMealsProvider.overrideWith((ref) async => []),
+        pairControllerProvider.overrideWith(
+          () => _FixedPairController(withPartner: false),
+        ),
+        summaryControllerProvider.overrideWith(_FixedSummaryController.new),
+      ],
+    );
+    addTearDown(container.dispose);
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: AddMealPage()),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('record-unified-input')),
+      '少油少盐',
+    );
+    container.read(selectedRecordImagePathProvider.notifier).state =
+        '/tmp/meal.jpg';
+    await container
+        .read(recordControllerProvider.notifier)
+        .analyzeImage('/tmp/meal.jpg', hint: '少油少盐');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('record-save-button')),
+    );
+    await tester.tap(find.byKey(const ValueKey('record-save-button')));
+    await tester.pumpAndSettle();
+
+    final failedState = container.read(recordControllerProvider);
+    expect(failedState, isA<RecordError>());
+    expect((failedState as RecordError).draft, isNotNull);
+    expect(container.read(selectedRecordImagePathProvider), '/tmp/meal.jpg');
+
+    container.read(recordControllerProvider.notifier).clear();
+    await tester.pump();
+    final idleInput = tester.widget<TextField>(
+      find.byKey(const ValueKey('record-unified-input')),
+    );
+    expect(idleInput.controller?.text, '少油少盐');
   });
 }
