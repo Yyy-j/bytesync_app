@@ -113,6 +113,7 @@ class _SummaryBody extends ConsumerWidget {
           slice: summary.selfSlice,
           goals: summary.selfGoals,
           darkValueColor: _SummaryDarkColors.blue,
+          lightNameColor: AppColors.protein,
         ),
         if (summary.partnerSlice != null && summary.partnerGoals != null) ...[
           SizedBox(height: AppSpacing.md),
@@ -122,6 +123,7 @@ class _SummaryBody extends ConsumerWidget {
             slice: summary.partnerSlice!,
             goals: summary.partnerGoals!,
             darkValueColor: _SummaryDarkColors.purple,
+            lightNameColor: AppColors.fat,
           ),
         ],
         SizedBox(height: AppSpacing.xl),
@@ -541,6 +543,7 @@ class _NutritionCard extends StatelessWidget {
     required this.slice,
     required this.goals,
     required this.darkValueColor,
+    required this.lightNameColor,
   });
 
   final String title;
@@ -548,6 +551,7 @@ class _NutritionCard extends StatelessWidget {
   final UserDailySlice slice;
   final DailyGoals goals;
   final Color darkValueColor;
+  final Color lightNameColor;
 
   @override
   Widget build(BuildContext context) {
@@ -578,8 +582,23 @@ class _NutritionCard extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Flexible(
-                child: Text(
-                  appL10n.todayIntakeCalories(name, slice.calories.round()),
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: name),
+                      TextSpan(
+                        text: ' ${slice.calories.round()}',
+                        style: TextStyle(
+                          color: isDark
+                              ? darkValueColor
+                              : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                    style: TextStyle(
+                      color: isDark ? darkValueColor : lightNameColor,
+                    ),
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
