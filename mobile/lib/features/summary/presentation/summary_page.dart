@@ -558,7 +558,9 @@ class _NutritionCard extends StatelessWidget {
         : theme.colorScheme.onSurfaceVariant;
     return AppCard(
       backgroundColor: isDark ? _SummaryDarkColors.background : null,
-      borderColor: isDark ? _SummaryDarkColors.blue : null,
+      borderColor: isDark
+          ? _SummaryDarkColors.blue
+          : AppColors.lightScreenBorder,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

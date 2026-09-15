@@ -10,6 +10,7 @@ class AppColors {
   static const primary = Color(0xFF62B5E5);
   static const primaryLight = Color(0xFFE8F5FC);
   static const primaryDark = Color(0xFF3D91BE);
+  static const lightScreenBorder = Color(0xFF9BB8C9);
 
   // ── Functional ──
   static const success = Color(0xFF27AE60);
@@ -27,10 +28,10 @@ class AppColors {
   static const border = Color(0xFFEDEDED);
 
   // ── Macro nutrients (low saturation, restrained) ──
-  static const protein = Color(0xFF6DBF8A);
+  static const protein = Color(0xFF62B5E5);
   static const carbs = Color(0xFFF0C274);
   static const fat = Color(0xFFE8A0A0);
-  static const proteinBg = Color(0xFFEDF7F1);
+  static const proteinBg = Color(0xFFEAF6FC);
   static const carbsBg = Color(0xFFFEF8EC);
   static const fatBg = Color(0xFFFDF0F0);
 

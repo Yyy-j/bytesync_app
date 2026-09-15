@@ -10,16 +10,14 @@ class BiteSyncScreenFrame extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final color = isDark ? AppColors.darkPrimary : AppColors.primary;
+    final color = isDark ? AppColors.darkPrimary : AppColors.lightScreenBorder;
     return Stack(
       fit: StackFit.expand,
       children: [
         child,
         Positioned.fill(
           child: IgnorePointer(
-            child: CustomPaint(
-              painter: _ScreenFramePainter(color),
-            ),
+            child: CustomPaint(painter: _ScreenFramePainter(color)),
           ),
         ),
       ],
