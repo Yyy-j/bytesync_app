@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 /// Design tokens ported from the BiteSync WeChat mini-program
 /// (`miniprogram/styles/variables.wxss`), so the Flutter app keeps the same
-/// soft-green, card-based health look.
+/// soft-blue, card-based health look.
 class AppColors {
   const AppColors._();
 
-  // ── Primary (soft green) ──
-  static const primary = Color(0xFF6FCF97);
-  static const primaryLight = Color(0xFFE8F8EF);
-  static const primaryDark = Color(0xFF4BAE78);
+  // ── Primary (soft blue) ──
+  static const primary = Color(0xFF62B5E5);
+  static const primaryLight = Color(0xFFE8F5FC);
+  static const primaryDark = Color(0xFF3D91BE);
 
   // ── Functional ──
   static const success = Color(0xFF27AE60);
@@ -323,7 +323,9 @@ ThemeData buildDarkTheme() {
       ),
       checkColor: const WidgetStatePropertyAll(Colors.black),
     ),
-    radioTheme: RadioThemeData(fillColor: const WidgetStatePropertyAll(primary)),
+    radioTheme: RadioThemeData(
+      fillColor: const WidgetStatePropertyAll(primary),
+    ),
     sliderTheme: base.sliderTheme.copyWith(
       activeTrackColor: primary,
       thumbColor: primary,
