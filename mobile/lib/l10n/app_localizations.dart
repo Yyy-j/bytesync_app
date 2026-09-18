@@ -913,7 +913,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordYesterdayPrompt.
   ///
   /// In zh, this message translates to:
-  /// **'昨天也吃了？'**
+  /// **'今天也吃了？'**
   String get recordYesterdayPrompt;
 
   /// No description provided for @recordAdd.

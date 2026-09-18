@@ -8,6 +8,7 @@ import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/bitesync_bottom_sheet.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../domain/training_day.dart';
 import '../domain/training_duration.dart';
@@ -322,10 +323,9 @@ class _ExerciseCard extends StatelessWidget {
   }
 
   Future<void> _openCheckInSheet(BuildContext context) async {
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showBiteSyncModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
       builder: (_) => _CheckInSheet(exercise: exercise),
     );
     if (saved == true && context.mounted) {
@@ -338,10 +338,9 @@ class _ExerciseCard extends StatelessWidget {
     BuildContext context,
     TrainingSetDetail detail,
   ) async {
-    final saved = await showModalBottomSheet<bool>(
+    final saved = await showBiteSyncModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
       builder: (_) => _SetEditSheet(exercise: exercise, detail: detail),
     );
     if (saved == true && context.mounted) {

@@ -6,6 +6,7 @@ import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/bitesync_bottom_sheet.dart';
 import '../../../shared/widgets/macro_bar.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../meals/domain/meal.dart';
@@ -96,6 +97,15 @@ class _SummaryBody extends ConsumerWidget {
         ? _SummaryDarkColors.secondaryText
         : theme.colorScheme.onSurfaceVariant;
     final managementState = ref.watch(mealManagementControllerProvider);
+    final sortedMeals = [...summary.meals]
+      ..sort((left, right) {
+        final leftIsCurrentUser = left.userId == summary.selfSlice.userId;
+        final rightIsCurrentUser = right.userId == summary.selfSlice.userId;
+        if (leftIsCurrentUser != rightIsCurrentUser) {
+          return leftIsCurrentUser ? -1 : 1;
+        }
+        return _mealSortTime(right).compareTo(_mealSortTime(left));
+      });
     return ListView(
       // Ensures pull-to-refresh works even when content is short (empty
       // state) by always allowing scroll.
@@ -140,7 +150,7 @@ class _SummaryBody extends ConsumerWidget {
             child: EmptyView(message: appL10n.todayEmpty),
           )
         else
-          ...summary.meals.map(
+          ...sortedMeals.map(
             (meal) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.md),
               child: _MealListItem(
@@ -167,6 +177,24 @@ class _SummaryBody extends ConsumerWidget {
   }
 }
 
+DateTime _mealSortTime(Meal meal) {
+  final timeParts = meal.mealTime.split(':');
+  if (timeParts.length >= 2) {
+    final hour = int.tryParse(timeParts[0]);
+    final minute = int.tryParse(timeParts[1]);
+    if (hour != null && minute != null) {
+      return DateTime(
+        meal.mealDate.year,
+        meal.mealDate.month,
+        meal.mealDate.day,
+        hour,
+        minute,
+      );
+    }
+  }
+  return meal.updatedAt;
+}
+
 enum _MealAction { portion, edit, refine, delete }
 
 Future<void> _showMealActions(
@@ -174,7 +202,7 @@ Future<void> _showMealActions(
   WidgetRef ref,
   Meal meal,
 ) async {
-  final action = await showModalBottomSheet<_MealAction>(
+  final action = await showBiteSyncModalBottomSheet<_MealAction>(
     context: context,
     showDragHandle: true,
     builder: (sheetContext) => SafeArea(
@@ -259,7 +287,7 @@ Future<void> _showMealActions(
 }
 
 Future<double?> _showPortionPicker(BuildContext context, Meal meal) {
-  return showModalBottomSheet<double>(
+  return showBiteSyncModalBottomSheet<double>(
     context: context,
     showDragHandle: true,
     builder: (sheetContext) => SafeArea(
@@ -310,7 +338,7 @@ Future<_MealEditValues?> _showMealEditSheet(
   final fat = TextEditingController(text: '${meal.baseFat}');
   String? error;
 
-  final values = await showModalBottomSheet<_MealEditValues>(
+  final values = await showBiteSyncModalBottomSheet<_MealEditValues>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
@@ -413,7 +441,7 @@ Future<_MealEditValues?> _showMealEditSheet(
 Future<String?> _showRefineSheet(BuildContext context) async {
   final hint = TextEditingController();
   String? error;
-  final value = await showModalBottomSheet<String>(
+  final value = await showBiteSyncModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
@@ -732,16 +760,19 @@ class _MealListItem extends StatelessWidget {
                 label: appL10n.todayProteinGrams(meal.protein.round()),
                 color: AppColors.protein,
                 bg: AppColors.proteinBg,
+                darkColor: _SummaryDarkColors.blue,
               ),
               _MacroTag(
                 label: appL10n.todayCarbsGrams(meal.carbs.round()),
                 color: AppColors.carbs,
                 bg: AppColors.carbsBg,
+                darkColor: _SummaryDarkColors.purple,
               ),
               _MacroTag(
                 label: appL10n.todayFatGrams(meal.fat.round()),
                 color: AppColors.fat,
                 bg: AppColors.fatBg,
+                darkColor: _SummaryDarkColors.pink,
               ),
             ],
           ),
@@ -752,11 +783,17 @@ class _MealListItem extends StatelessWidget {
 }
 
 class _MacroTag extends StatelessWidget {
-  const _MacroTag({required this.label, required this.color, required this.bg});
+  const _MacroTag({
+    required this.label,
+    required this.color,
+    required this.bg,
+    required this.darkColor,
+  });
 
   final String label;
   final Color color;
   final Color bg;
+  final Color darkColor;
 
   @override
   Widget build(BuildContext context) {
@@ -768,15 +805,12 @@ class _MacroTag extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: isDark ? theme.colorScheme.surfaceContainerHighest : bg,
+        color: isDark ? darkColor.withValues(alpha: 0.14) : bg,
         borderRadius: BorderRadius.circular(AppRadius.full),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 11,
-          color: isDark ? theme.colorScheme.onSurface : color,
-        ),
+        style: TextStyle(fontSize: 11, color: isDark ? darkColor : color),
       ),
     );
   }

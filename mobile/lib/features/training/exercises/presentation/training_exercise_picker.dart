@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/bitesync_bottom_sheet.dart';
 import '../../domain/training_duration.dart';
 import '../../domain/training_exercise_item.dart';
 import '../data/fixed_training_exercises.dart';
@@ -354,12 +355,12 @@ class _TrainingExercisePickerState
   }
 
   Future<void> _createCustomExercise(BuildContext context) async {
-    final input = await showModalBottomSheet<TrainingCustomExerciseInput>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) => const _CustomExerciseEditorSheet(),
-    );
+    final input =
+        await showBiteSyncModalBottomSheet<TrainingCustomExerciseInput>(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => const _CustomExerciseEditorSheet(),
+        );
     if (input == null || !context.mounted) return;
     final result = await ref
         .read(trainingCustomExerciseControllerProvider.notifier)
@@ -377,12 +378,12 @@ class _TrainingExercisePickerState
     BuildContext context,
     TrainingCustomExercise exercise,
   ) async {
-    final input = await showModalBottomSheet<TrainingCustomExerciseInput>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) => _CustomExerciseEditorSheet(initial: exercise),
-    );
+    final input =
+        await showBiteSyncModalBottomSheet<TrainingCustomExerciseInput>(
+          context: context,
+          isScrollControlled: true,
+          builder: (_) => _CustomExerciseEditorSheet(initial: exercise),
+        );
     if (input == null || !context.mounted) return;
     final result = await ref
         .read(trainingCustomExerciseControllerProvider.notifier)

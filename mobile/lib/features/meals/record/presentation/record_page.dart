@@ -540,22 +540,25 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     FocusScope.of(context).unfocus();
     final source = await showCupertinoModalPopup<ImageSource>(
       context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: Text(appL10n.recordTakeMeal),
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, ImageSource.camera),
-            child: Text(appL10n.recordTakePhoto),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+        child: CupertinoActionSheet(
+          title: Text(appL10n.recordTakeMeal),
+          actions: [
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, ImageSource.camera),
+              child: Text(appL10n.recordTakePhoto),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, ImageSource.gallery),
+              child: Text(appL10n.recordChooseGallery),
+            ),
+          ],
+          cancelButton: CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.pop(context),
+            child: Text(appL10n.commonCancel),
           ),
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, ImageSource.gallery),
-            child: Text(appL10n.recordChooseGallery),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          isDefaultAction: true,
-          onPressed: () => Navigator.pop(context),
-          child: Text(appL10n.commonCancel),
         ),
       ),
     );
@@ -677,6 +680,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     final selectedImagePath = ref.watch(selectedRecordImagePathProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: switch (state) {
           RecordAnalyzing(:final kind) => _LoadingView(kind: kind),
@@ -897,13 +901,22 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                             duration: const Duration(milliseconds: 180),
                             alignment: Alignment.topCenter,
                             child: _manualExpanded
-                                ? _ManualForm(
-                                    nameController: _nameController,
-                                    caloriesController: _caloriesController,
-                                    proteinController: _proteinController,
-                                    carbsController: _carbsController,
-                                    fatController: _fatController,
-                                    onGenerate: _createManualDraft,
+                                ? ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxHeight:
+                                          MediaQuery.sizeOf(context).height *
+                                          0.4,
+                                    ),
+                                    child: SingleChildScrollView(
+                                      child: _ManualForm(
+                                        nameController: _nameController,
+                                        caloriesController: _caloriesController,
+                                        proteinController: _proteinController,
+                                        carbsController: _carbsController,
+                                        fatController: _fatController,
+                                        onGenerate: _createManualDraft,
+                                      ),
+                                    ),
                                   )
                                 : const SizedBox.shrink(),
                           ),

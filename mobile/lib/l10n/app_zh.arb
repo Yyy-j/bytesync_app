@@ -147,7 +147,7 @@
   "recordCarbohydrates": "碳水化合物",
   "recordZeroGrams": "0 克",
   "recordGenerate": "生成记录",
-  "recordYesterdayPrompt": "昨天也吃了？",
+  "recordYesterdayPrompt": "今天也吃了？",
   "recordAdd": "添加",
   "recordRecognitionComplete": "识别完成",
   "recordMacroSummary": "蛋白质 {protein}g  ·  碳水 {carbs}g  ·  脂肪 {fat}g",

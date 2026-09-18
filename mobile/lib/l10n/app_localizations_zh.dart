@@ -441,7 +441,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordGenerate => '生成记录';
 
   @override
-  String get recordYesterdayPrompt => '昨天也吃了？';
+  String get recordYesterdayPrompt => '今天也吃了？';
 
   @override
   String get recordAdd => '添加';

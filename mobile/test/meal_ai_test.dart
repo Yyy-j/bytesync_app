@@ -545,7 +545,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('昨天也吃了？'), findsOneWidget);
+    expect(find.text('今天也吃了？'), findsOneWidget);
     await tester.tap(find.text('添加'));
     await tester.pumpAndSettle();
 

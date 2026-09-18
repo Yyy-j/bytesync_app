@@ -4,6 +4,7 @@ import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_card.dart';
+import '../../../../shared/widgets/bitesync_bottom_sheet.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../domain/training_duration.dart';
 import '../../domain/training_exercise_item.dart';
@@ -161,15 +162,15 @@ class _TemplateBody extends ConsumerWidget {
     int dayIndex,
     int order,
   ) async {
-    final selection = await showModalBottomSheet<TrainingExercisePickerResult>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (sheetContext) => SizedBox(
-        height: MediaQuery.sizeOf(sheetContext).height * 0.88,
-        child: const TrainingExercisePicker(),
-      ),
-    );
+    final selection =
+        await showBiteSyncModalBottomSheet<TrainingExercisePickerResult>(
+          context: context,
+          isScrollControlled: true,
+          builder: (sheetContext) => SizedBox(
+            height: MediaQuery.sizeOf(sheetContext).height * 0.88,
+            child: const TrainingExercisePicker(),
+          ),
+        );
     if (selection == null || !context.mounted) return;
 
     final controller = ref.read(trainingTemplateControllerProvider.notifier);
@@ -198,10 +199,9 @@ class _TemplateBody extends ConsumerWidget {
     int dayIndex,
     TrainingExerciseItem? exercise,
   ) async {
-    final result = await showModalBottomSheet<TrainingExerciseItem>(
+    final result = await showBiteSyncModalBottomSheet<TrainingExerciseItem>(
       context: context,
       isScrollControlled: true,
-      useSafeArea: true,
       builder: (_) => _ExerciseEditorSheet(
         initial: exercise,
         newItemId: exercise == null
