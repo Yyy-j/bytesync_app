@@ -43,34 +43,129 @@ final summaryControllerProvider =
 /// real repository is in use.
 class SummaryController extends Notifier<SummaryState> {
   late final SummaryRepository _repository;
+  DateTime selectedDate = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+    DateTime.now().day,
+  );
+  DateTime focusedMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  final Map<DateTime, MonthlySummary> _monthlyCache = {};
+  bool dailyLoading = false;
+  String? dailyError;
+  bool monthlyLoading = false;
+  String? monthlyError;
+  MonthlySummary? get monthlySummary => _monthlyCache[_monthKey(focusedMonth)];
 
   @override
   SummaryState build() {
     _repository = ref.watch(summaryRepositoryProvider);
-    _load(showLoading: true);
+    selectedDate = _dateOnly(DateTime.now());
+    focusedMonth = DateTime(selectedDate.year, selectedDate.month);
+    _loadInitial();
     return const SummaryLoading();
   }
 
-  DateTime get _today {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, now.day);
+  Future<void> _loadInitial() async {
+    await Future.wait([
+      _loadDaily(showLoading: true),
+      _loadMonthly(focusedMonth),
+    ]);
   }
 
-  Future<void> _load({required bool showLoading}) async {
+  Future<void> _loadDaily({required bool showLoading}) async {
     if (showLoading) state = const SummaryLoading();
+    dailyLoading = true;
+    dailyError = null;
+    _notify();
     try {
-      final summary = await _repository.getDailySummary(_today);
+      final summary = await _repository.getDailySummary(selectedDate);
       state = summary.mealCount == 0
           ? SummaryEmpty(summary)
           : SummaryLoaded(summary);
     } catch (e) {
-      state = SummaryFailure(
-        e is ApiException ? e.message : appL10n.todayLoadFailed,
-      );
+      final message = e is ApiException ? e.message : appL10n.todayLoadFailed;
+      if (state is SummaryLoaded || state is SummaryEmpty) {
+        dailyError = message;
+        _notify();
+      } else {
+        state = SummaryFailure(message);
+      }
+    } finally {
+      dailyLoading = false;
+      _notify();
     }
   }
 
-  /// Refreshes in place so a meal mutation only disables its own card while
-  /// the server remains the source of truth for the replacement summary.
-  Future<void> refresh() => _load(showLoading: false);
+  Future<void> _loadMonthly(DateTime month, {bool force = false}) async {
+    final key = _monthKey(month);
+    if (!force && _monthlyCache.containsKey(key)) {
+      monthlyError = null;
+      return;
+    }
+    monthlyLoading = true;
+    monthlyError = null;
+    _notify();
+    try {
+      _monthlyCache[key] = await _repository.getMonthlySummary(month);
+    } catch (error) {
+      monthlyError = error is ApiException
+          ? error.message
+          : appL10n.todayLoadFailed;
+    } finally {
+      monthlyLoading = false;
+      _notify();
+    }
+  }
+
+  Future<void> selectDate(DateTime date) async {
+    final next = _dateOnly(date);
+    selectedDate = next;
+    if (next.month != focusedMonth.month || next.year != focusedMonth.year) {
+      focusedMonth = DateTime(next.year, next.month);
+      await _loadMonthly(focusedMonth);
+    }
+    await _loadDaily(showLoading: false);
+  }
+
+  Future<void> changeMonth(DateTime month) async {
+    final next = DateTime(month.year, month.month);
+    focusedMonth = next;
+    if (selectedDate.year != next.year || selectedDate.month != next.month) {
+      selectedDate = DateTime(next.year, next.month, 1);
+      await Future.wait([_loadMonthly(next), _loadDaily(showLoading: false)]);
+      return;
+    }
+    await _loadMonthly(next);
+  }
+
+  Future<void> goToToday() async {
+    final today = _dateOnly(DateTime.now());
+    focusedMonth = DateTime(today.year, today.month);
+    selectedDate = today;
+    await Future.wait([
+      _loadMonthly(focusedMonth),
+      _loadDaily(showLoading: false),
+    ]);
+  }
+
+  Future<void> refresh() async {
+    _monthlyCache.remove(_monthKey(selectedDate));
+    await Future.wait([
+      _loadDaily(showLoading: false),
+      _loadMonthly(focusedMonth, force: true),
+    ]);
+  }
+
+  void _notify() {
+    if (state is SummaryLoaded) {
+      state = SummaryLoaded((state as SummaryLoaded).summary);
+    } else if (state is SummaryEmpty) {
+      state = SummaryEmpty((state as SummaryEmpty).summary);
+    }
+  }
+
+  static DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+  static DateTime _monthKey(DateTime value) =>
+      DateTime(value.year, value.month);
 }

@@ -27,4 +27,17 @@ class RemoteSummaryRepository implements SummaryRepository {
       throw _errorMapper.map(e);
     }
   }
+
+  @override
+  Future<MonthlySummary> getMonthlySummary(DateTime month) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        ApiEndpoints.summaryMonthly,
+        queryParameters: {'month': DateFormat('yyyy-MM').format(month)},
+      );
+      return MonthlySummary.fromJson(response.data!);
+    } catch (e) {
+      throw _errorMapper.map(e);
+    }
+  }
 }

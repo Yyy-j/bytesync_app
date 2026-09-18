@@ -301,6 +301,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get todayDateFormat => 'yyyy年M月d日 EEEE';
 
   @override
+  String get todayMonthFormat => 'yyyy年M月';
+
+  @override
+  String get todayWeekdays => '一|二|三|四|五|六|日';
+
+  @override
+  String get todayBackToToday => '回到今天';
+
+  @override
+  String get todayPreviousMonth => '上个月';
+
+  @override
+  String get todayNextMonth => '下个月';
+
+  @override
   String get todayMyIntake => '我的今日摄入';
 
   @override

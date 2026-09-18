@@ -658,6 +658,36 @@ abstract class AppLocalizations {
   /// **'yyyy年M月d日 EEEE'**
   String get todayDateFormat;
 
+  /// No description provided for @todayMonthFormat.
+  ///
+  /// In zh, this message translates to:
+  /// **'yyyy年M月'**
+  String get todayMonthFormat;
+
+  /// No description provided for @todayWeekdays.
+  ///
+  /// In zh, this message translates to:
+  /// **'一|二|三|四|五|六|日'**
+  String get todayWeekdays;
+
+  /// No description provided for @todayBackToToday.
+  ///
+  /// In zh, this message translates to:
+  /// **'回到今天'**
+  String get todayBackToToday;
+
+  /// No description provided for @todayPreviousMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'上个月'**
+  String get todayPreviousMonth;
+
+  /// No description provided for @todayNextMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'下个月'**
+  String get todayNextMonth;
+
   /// No description provided for @todayMyIntake.
   ///
   /// In zh, this message translates to:

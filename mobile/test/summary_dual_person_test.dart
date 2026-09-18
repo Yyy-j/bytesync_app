@@ -117,14 +117,17 @@ void main() {
     );
     await tester.pump();
 
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pump();
     expect(find.text('我 1250'), findsOneWidget);
-    expect(find.text('/ 2000 kcal'), findsOneWidget);
+    expect(find.text('1250 / 2000 kcal'), findsOneWidget);
     expect(find.text('Harper 980'), findsOneWidget);
-    expect(find.text('/ 1800 kcal'), findsOneWidget);
+    expect(find.text('980 / 1800 kcal'), findsOneWidget);
     expect(find.text('2230'), findsNothing);
-    await tester.scrollUntilVisible(find.text('鸡胸肉沙拉'), 300);
-    expect(find.text('我'), findsOneWidget);
-    expect(find.text('Harper'), findsOneWidget);
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pump();
+    expect(find.text('我'), findsNWidgets(2));
+    expect(find.text('Harper'), findsNWidgets(2));
     expect(find.byTooltip('管理鸡胸肉沙拉'), findsOneWidget);
     expect(find.byTooltip('管理意大利面'), findsNothing);
 
@@ -137,8 +140,7 @@ void main() {
     final baseCaloriesField = tester.widget<TextField>(
       find.byWidgetPredicate(
         (widget) =>
-            widget is TextField &&
-            widget.decoration?.labelText == '基础卡路里',
+            widget is TextField && widget.decoration?.labelText == '基础卡路里',
       ),
     );
     expect(baseCaloriesField.controller?.text, '840');

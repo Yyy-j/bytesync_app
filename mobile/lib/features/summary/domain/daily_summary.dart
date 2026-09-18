@@ -95,6 +95,94 @@ class DailySummary {
   final DailyGoals? partnerGoals;
 }
 
+class MonthlySummary {
+  const MonthlySummary({required this.month, required this.days});
+
+  factory MonthlySummary.fromJson(Map<String, dynamic> json) {
+    final rawDays = json['days'] ?? json['daily_summaries'] ?? json['data'];
+    if (rawDays is! List) {
+      throw const FormatException('Monthly summary days are missing');
+    }
+    final monthValue = json['month'] as String?;
+    final parsedMonth = monthValue == null
+        ? DateTime.now()
+        : DateTime.parse('$monthValue-01');
+    final days = <DateTime, MonthlyDaySummary>{};
+    for (final value in rawDays) {
+      if (value is! Map<String, dynamic>) {
+        throw const FormatException('Monthly summary day is malformed');
+      }
+      final day = MonthlyDaySummary.fromJson(value);
+      days[DateTime(day.date.year, day.date.month, day.date.day)] = day;
+    }
+    return MonthlySummary(
+      month: DateTime(parsedMonth.year, parsedMonth.month),
+      days: days,
+    );
+  }
+
+  final DateTime month;
+  final Map<DateTime, MonthlyDaySummary> days;
+
+  MonthlyDaySummary? dayAt(DateTime date) =>
+      days[DateTime(date.year, date.month, date.day)];
+}
+
+class MonthlyDaySummary {
+  const MonthlyDaySummary({
+    required this.date,
+    required this.selfCalories,
+    required this.selfCalorieGoal,
+    this.partnerCalories,
+    this.partnerCalorieGoal,
+  });
+
+  factory MonthlyDaySummary.fromJson(Map<String, dynamic> json) {
+    final date = DateTime.parse(json['date'] as String);
+    final self = json['self_slice'] is Map<String, dynamic>
+        ? json['self_slice'] as Map<String, dynamic>
+        : json['self'] is Map<String, dynamic>
+        ? json['self'] as Map<String, dynamic>
+        : const <String, dynamic>{};
+    final partner = json['partner_slice'] is Map<String, dynamic>
+        ? json['partner_slice'] as Map<String, dynamic>
+        : json['partner'] is Map<String, dynamic>
+        ? json['partner'] as Map<String, dynamic>
+        : null;
+    final selfGoals = json['self_goals'] is Map<String, dynamic>
+        ? json['self_goals'] as Map<String, dynamic>
+        : const <String, dynamic>{};
+    final partnerGoals = json['partner_goals'] is Map<String, dynamic>
+        ? json['partner_goals'] as Map<String, dynamic>
+        : null;
+    return MonthlyDaySummary(
+      date: date,
+      selfCalories: _number(self['calories'] ?? json['self_calories']),
+      selfCalorieGoal: _number(
+        selfGoals['calorie_goal'] ?? json['self_calorie_goal'],
+        fallback: 2000,
+      ),
+      partnerCalories: partner == null
+          ? _nullableNumber(json['partner_calories'])
+          : _nullableNumber(partner['calories']),
+      partnerCalorieGoal: partner == null
+          ? _nullableNumber(json['partner_calorie_goal'])
+          : _nullableNumber(partnerGoals?['calorie_goal']),
+    );
+  }
+
+  final DateTime date;
+  final num selfCalories;
+  final num selfCalorieGoal;
+  final num? partnerCalories;
+  final num? partnerCalorieGoal;
+
+  static num _number(Object? value, {num fallback = 0}) =>
+      value is num ? value : fallback;
+
+  static num? _nullableNumber(Object? value) => value is num ? value : null;
+}
+
 class UserDailySlice {
   const UserDailySlice({
     required this.userId,

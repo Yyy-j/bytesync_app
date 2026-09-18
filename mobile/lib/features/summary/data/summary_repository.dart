@@ -5,4 +5,6 @@ import '../domain/daily_summary.dart';
 /// backend.
 abstract interface class SummaryRepository {
   Future<DailySummary> getDailySummary(DateTime date);
+
+  Future<MonthlySummary> getMonthlySummary(DateTime month);
 }

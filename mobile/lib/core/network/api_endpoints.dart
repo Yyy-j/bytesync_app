@@ -32,6 +32,7 @@ class ApiEndpoints {
 
   // ── Summary ───────────────────────────────────────────
   static const String summaryDaily = '/summary/daily';
+  static const String summaryMonthly = '/summary/monthly';
 
   // ── Training ──────────────────────────────────────────
   static const String trainingCustomExercises = '/training/exercises/custom';
@@ -43,8 +44,7 @@ class ApiEndpoints {
   static const String trainingTemplate = '/training/template';
   static const String trainingWeeks = '/training/weeks';
   static const String trainingWeeksCurrent = '/training/weeks/current';
-  static const String trainingWeeksCurrentSync =
-      '/training/weeks/current/sync';
+  static const String trainingWeeksCurrentSync = '/training/weeks/current/sync';
   static String trainingWeekById(String weekId) =>
       '/training/weeks/${Uri.encodeComponent(weekId)}';
   static String trainingItemSets(String weekId, String itemId) =>
@@ -53,6 +53,5 @@ class ApiEndpoints {
     String weekId,
     String itemId,
     String requestId,
-  ) =>
-      '${trainingItemSets(weekId, itemId)}/${Uri.encodeComponent(requestId)}';
+  ) => '${trainingItemSets(weekId, itemId)}/${Uri.encodeComponent(requestId)}';
 }

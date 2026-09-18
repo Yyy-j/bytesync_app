@@ -7,7 +7,6 @@ import 'package:bytesync/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/bitesync_bottom_sheet.dart';
-import '../../../shared/widgets/macro_bar.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../meals/domain/meal.dart';
 import '../../meals/domain/meal_source.dart';
@@ -23,10 +22,8 @@ class _SummaryDarkColors {
   static const purple = Color(0xFF934BFB);
   static const pink = Color(0xFFFC49B5);
   static const progressTrack = Color(0xFF1B2028);
-  static const divider = Color(0xFF24262B);
   static const primaryText = Color(0xFFFFFFFF);
   static const secondaryText = Color(0xFFB8B8BF);
-  static const calorieGoalText = Color(0xFFC7C7CD);
 }
 
 /// Today's per-person nutrition overview and pair meal list.
@@ -93,6 +90,7 @@ class _SummaryBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final controller = ref.read(summaryControllerProvider.notifier);
     final secondaryTextColor = isDark
         ? _SummaryDarkColors.secondaryText
         : theme.colorScheme.onSurfaceVariant;
@@ -112,57 +110,66 @@ class _SummaryBody extends ConsumerWidget {
       physics: AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.all(AppSpacing.pagePadding),
       children: [
+        _Calendar(
+          focusedMonth: controller.focusedMonth,
+          selectedDate: controller.selectedDate,
+          monthly: controller.monthlySummary,
+          loading: controller.monthlyLoading,
+          error: controller.monthlyError,
+          partnerName: summary.partnerSlice?.displayName,
+          onDateSelected: controller.selectDate,
+          onMonthChanged: controller.changeMonth,
+          onToday: controller.goToToday,
+          onRetry: () => controller.changeMonth(controller.focusedMonth),
+        ),
+        SizedBox(height: AppSpacing.lg),
         Text(
           DateFormat(appL10n.todayDateFormat, 'zh_CN').format(summary.date),
           style: TextStyle(fontSize: 13, color: secondaryTextColor),
         ),
-        SizedBox(height: AppSpacing.md),
-        _NutritionCard(
-          title: appL10n.todayMyIntake,
-          name: appL10n.todayMe,
-          slice: summary.selfSlice,
-          goals: summary.selfGoals,
-          valueColor: isDark ? _SummaryDarkColors.blue : AppColors.protein,
-        ),
-        if (summary.partnerSlice != null && summary.partnerGoals != null) ...[
-          SizedBox(height: AppSpacing.md),
-          _NutritionCard(
-            title: appL10n.todayPartnerIntake,
-            name: summary.partnerSlice!.displayName,
-            slice: summary.partnerSlice!,
-            goals: summary.partnerGoals!,
-            valueColor: isDark ? _SummaryDarkColors.pink : AppColors.fat,
-          ),
-        ],
-        SizedBox(height: AppSpacing.xl),
-        Text(
-          appL10n.todayRecords,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: secondaryTextColor,
-          ),
-        ),
-        SizedBox(height: AppSpacing.md),
-        if (emptyState || summary.meals.isEmpty)
-          Padding(
-            padding: EdgeInsets.only(top: AppSpacing.xl),
-            child: EmptyView(message: appL10n.todayEmpty),
+        SizedBox(height: AppSpacing.sm),
+        if (controller.dailyLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+            child: Center(child: CircularProgressIndicator()),
           )
-        else
-          ...sortedMeals.map(
-            (meal) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: _MealListItem(
-                meal: meal,
-                ownerName: _ownerName(meal),
-                busy: managementState.isBusy(meal.id),
-                onManage: meal.userId == summary.selfSlice.userId
-                    ? () => _showMealActions(context, ref, meal)
-                    : null,
-              ),
+        else if (controller.dailyError != null)
+          ErrorView(
+            message: controller.dailyError!,
+            onRetry: controller.refresh,
+          )
+        else ...[
+          _SummaryCards(summary: summary),
+          SizedBox(height: AppSpacing.xl),
+          Text(
+            appL10n.todayRecords,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: secondaryTextColor,
             ),
           ),
+          SizedBox(height: AppSpacing.md),
+          if (emptyState || summary.meals.isEmpty)
+            Padding(
+              padding: EdgeInsets.only(top: AppSpacing.xl),
+              child: EmptyView(message: appL10n.todayEmpty),
+            )
+          else
+            ...sortedMeals.map(
+              (meal) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: _MealListItem(
+                  meal: meal,
+                  ownerName: _ownerName(meal),
+                  busy: managementState.isBusy(meal.id),
+                  onManage: meal.userId == summary.selfSlice.userId
+                      ? () => _showMealActions(context, ref, meal)
+                      : null,
+                ),
+              ),
+            ),
+        ],
       ],
     );
   }
@@ -174,6 +181,422 @@ class _SummaryBody extends ConsumerWidget {
       return partner.displayName;
     }
     return appL10n.commonMember;
+  }
+}
+
+class _Calendar extends StatelessWidget {
+  const _Calendar({
+    required this.focusedMonth,
+    required this.selectedDate,
+    required this.monthly,
+    required this.loading,
+    required this.error,
+    required this.partnerName,
+    required this.onDateSelected,
+    required this.onMonthChanged,
+    required this.onToday,
+    required this.onRetry,
+  });
+
+  final DateTime focusedMonth;
+  final DateTime selectedDate;
+  final MonthlySummary? monthly;
+  final bool loading;
+  final String? error;
+  final String? partnerName;
+  final ValueChanged<DateTime> onDateSelected;
+  final ValueChanged<DateTime> onMonthChanged;
+  final VoidCallback onToday;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final selfColor = isDark ? _SummaryDarkColors.blue : AppColors.protein;
+    final partnerColor = isDark ? _SummaryDarkColors.pink : AppColors.fat;
+    final first = DateTime(focusedMonth.year, focusedMonth.month, 1);
+    final days = DateTime(focusedMonth.year, focusedMonth.month + 1, 0).day;
+    final leading = first.weekday - 1;
+    final cells = <DateTime?>[
+      ...List<DateTime?>.filled(leading, null),
+      for (var day = 1; day <= days; day++)
+        DateTime(focusedMonth.year, focusedMonth.month, day),
+    ];
+    while (cells.length % 7 != 0) {
+      cells.add(null);
+    }
+    return Column(
+      children: [
+        Row(
+          children: [
+            IconButton(
+              tooltip: appL10n.todayPreviousMonth,
+              onPressed: () => onMonthChanged(
+                DateTime(focusedMonth.year, focusedMonth.month - 1),
+              ),
+              icon: const Icon(Icons.chevron_left),
+            ),
+            Expanded(
+              child: Text(
+                DateFormat(
+                  appL10n.todayMonthFormat,
+                  'zh_CN',
+                ).format(focusedMonth),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+            IconButton(
+              tooltip: appL10n.todayNextMonth,
+              onPressed: () => onMonthChanged(
+                DateTime(focusedMonth.year, focusedMonth.month + 1),
+              ),
+              icon: const Icon(Icons.chevron_right),
+            ),
+          ],
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: onToday,
+            child: Text(appL10n.todayBackToToday),
+          ),
+        ),
+        if (error != null)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(error!, style: TextStyle(color: theme.colorScheme.error)),
+              TextButton(onPressed: onRetry, child: Text(appL10n.commonRetry)),
+            ],
+          ),
+        if (loading) const LinearProgressIndicator(minHeight: 2),
+        Row(
+          children: [
+            for (final label in appL10n.todayWeekdays.split('|'))
+              Expanded(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: cells.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7,
+            childAspectRatio: 0.78,
+          ),
+          itemBuilder: (context, index) {
+            final date = cells[index];
+            if (date == null) return const SizedBox.shrink();
+            final day = monthly?.dayAt(date);
+            final selected = _sameDate(date, selectedDate);
+            final today = _sameDate(date, DateTime.now());
+            return _CalendarCell(
+              date: date,
+              selected: selected,
+              today: today,
+              selfColor: selfColor,
+              partnerColor: partnerColor,
+              selfProgress: _progress(day?.selfCalories, day?.selfCalorieGoal),
+              partnerProgress: partnerName == null
+                  ? null
+                  : _progress(day?.partnerCalories, day?.partnerCalorieGoal),
+              onTap: () => onDateSelected(date),
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _LegendDot(color: selfColor, label: appL10n.todayMe),
+            if (partnerName != null) ...[
+              const SizedBox(width: AppSpacing.lg),
+              _LegendDot(color: partnerColor, label: partnerName!),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  static bool _sameDate(DateTime left, DateTime right) =>
+      left.year == right.year &&
+      left.month == right.month &&
+      left.day == right.day;
+
+  static double _progress(num? value, num? goal) {
+    if (value == null || goal == null || goal <= 0) return 0;
+    return (value / goal).clamp(0, 1).toDouble();
+  }
+}
+
+class _CalendarCell extends StatelessWidget {
+  const _CalendarCell({
+    required this.date,
+    required this.selected,
+    required this.today,
+    required this.selfColor,
+    required this.partnerColor,
+    required this.selfProgress,
+    required this.partnerProgress,
+    required this.onTap,
+  });
+
+  final DateTime date;
+  final bool selected;
+  final bool today;
+  final Color selfColor;
+  final Color partnerColor;
+  final double selfProgress;
+  final double? partnerProgress;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.sm),
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: selected
+                ? theme.colorScheme.primary.withValues(alpha: 0.12)
+                : null,
+            border: Border.all(
+              color: selected
+                  ? theme.colorScheme.primary
+                  : today
+                  ? theme.colorScheme.outline
+                  : Colors.transparent,
+            ),
+            borderRadius: BorderRadius.circular(AppRadius.sm),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('${date.day}', style: const TextStyle(fontSize: 13)),
+              const SizedBox(height: 5),
+              _ProgressLine(value: selfProgress, color: selfColor),
+              if (partnerProgress != null) ...[
+                const SizedBox(height: 3),
+                _ProgressLine(value: partnerProgress!, color: partnerColor),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProgressLine extends StatelessWidget {
+  const _ProgressLine({required this.value, required this.color});
+
+  final double value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.full),
+      child: LinearProgressIndicator(
+        value: value,
+        minHeight: 2,
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+        valueColor: AlwaysStoppedAnimation<Color>(color),
+      ),
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  const _LegendDot({required this.color, required this.label});
+
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.circle, size: 8, color: color),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+}
+
+class _SummaryCards extends StatelessWidget {
+  const _SummaryCards({required this.summary});
+
+  final DailySummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: _CompactNutritionCard(
+            name: appL10n.todayMe,
+            slice: summary.selfSlice,
+            goals: summary.selfGoals,
+            valueColor: Theme.of(context).brightness == Brightness.dark
+                ? _SummaryDarkColors.blue
+                : AppColors.protein,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        if (summary.partnerSlice != null && summary.partnerGoals != null)
+          Expanded(
+            child: _CompactNutritionCard(
+              name: summary.partnerSlice!.displayName,
+              slice: summary.partnerSlice!,
+              goals: summary.partnerGoals!,
+              valueColor: Theme.of(context).brightness == Brightness.dark
+                  ? _SummaryDarkColors.pink
+                  : AppColors.fat,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _CompactNutritionCard extends StatelessWidget {
+  const _CompactNutritionCard({
+    required this.name,
+    required this.slice,
+    required this.goals,
+    required this.valueColor,
+  });
+
+  final String name;
+  final UserDailySlice slice;
+  final DailyGoals goals;
+  final Color valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final track = isDark ? _SummaryDarkColors.progressTrack : AppColors.border;
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      backgroundColor: isDark ? _SummaryDarkColors.background : null,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$name ${slice.calories.round()}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: valueColor, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: '${slice.calories.round()} ',
+                    style: TextStyle(color: valueColor),
+                  ),
+                  TextSpan(
+                    text: appL10n.todayCalorieGoal(goals.calorieGoal.round()),
+                  ),
+                ],
+              ),
+              maxLines: 1,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _CompactMacro(
+            label: appL10n.commonProtein,
+            value: slice.protein,
+            goal: goals.proteinGoal,
+            color: isDark ? _SummaryDarkColors.blue : AppColors.protein,
+            track: track,
+          ),
+          _CompactMacro(
+            label: appL10n.macroCarbs,
+            value: slice.carbs,
+            goal: goals.carbsGoal,
+            color: isDark ? _SummaryDarkColors.purple : AppColors.carbs,
+            track: track,
+          ),
+          _CompactMacro(
+            label: appL10n.commonFat,
+            value: slice.fat,
+            goal: goals.fatGoal,
+            color: isDark ? _SummaryDarkColors.pink : AppColors.fat,
+            track: track,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactMacro extends StatelessWidget {
+  const _CompactMacro({
+    required this.label,
+    required this.value,
+    required this.goal,
+    required this.color,
+    required this.track,
+  });
+
+  final String label;
+  final num value;
+  final num goal;
+  final Color color;
+  final Color track;
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = goal <= 0 ? 0.0 : (value / goal).clamp(0, 1).toDouble();
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label ${value.round()} / ${goal.round()}g',
+            style: const TextStyle(fontSize: 11),
+          ),
+          const SizedBox(height: 3),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadius.full),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 4,
+              backgroundColor: track,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -557,112 +980,6 @@ class _MealEditField extends StatelessWidget {
             ? const TextInputType.numberWithOptions(decimal: true)
             : null,
         decoration: InputDecoration(labelText: label),
-      ),
-    );
-  }
-}
-
-class _NutritionCard extends StatelessWidget {
-  const _NutritionCard({
-    required this.title,
-    required this.name,
-    required this.slice,
-    required this.goals,
-    required this.valueColor,
-  });
-
-  final String title;
-  final String name;
-  final UserDailySlice slice;
-  final DailyGoals goals;
-  final Color valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final secondaryTextColor = isDark
-        ? _SummaryDarkColors.secondaryText
-        : theme.colorScheme.onSurfaceVariant;
-    return AppCard(
-      backgroundColor: isDark ? _SummaryDarkColors.background : null,
-      borderColor: isDark
-          ? _SummaryDarkColors.blue
-          : AppColors.lightScreenBorder,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: secondaryTextColor,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                child: Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(text: name),
-                      TextSpan(text: ' ${slice.calories.round()}'),
-                    ],
-                    style: TextStyle(color: valueColor),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                appL10n.todayCalorieGoal(goals.calorieGoal.round()),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isDark
-                      ? _SummaryDarkColors.calorieGoalText
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Divider(
-            height: 1,
-            color: isDark ? _SummaryDarkColors.divider : theme.dividerColor,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          MacroBar(
-            protein: slice.protein,
-            proteinGoal: goals.proteinGoal,
-            carbs: slice.carbs,
-            carbsGoal: goals.carbsGoal,
-            fat: slice.fat,
-            fatGoal: goals.fatGoal,
-            proteinFillColor: isDark
-                ? _SummaryDarkColors.blue
-                : AppColors.protein,
-            carbsFillColor: isDark
-                ? _SummaryDarkColors.purple
-                : AppColors.carbs,
-            fatFillColor: isDark ? _SummaryDarkColors.pink : AppColors.fat,
-            proteinTrackColor: isDark
-                ? _SummaryDarkColors.progressTrack
-                : AppColors.proteinBg,
-            carbsTrackColor: isDark
-                ? _SummaryDarkColors.progressTrack
-                : AppColors.carbsBg,
-            fatTrackColor: isDark
-                ? _SummaryDarkColors.progressTrack
-                : AppColors.fatBg,
-            textColor: isDark ? _SummaryDarkColors.secondaryText : null,
-          ),
-        ],
       ),
     );
   }
