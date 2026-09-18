@@ -16,6 +16,22 @@ class _FixedSummaryController extends SummaryController {
   final DailySummary summary;
 
   @override
+  MonthlySummary? get monthlySummary => MonthlySummary(
+    month: focusedMonth,
+    self: const MonthlyMember(
+      userId: 'self-1',
+      displayName: 'Self',
+      calorieGoal: 2000,
+    ),
+    partner: const MonthlyMember(
+      userId: 'partner-1',
+      displayName: 'Harper',
+      calorieGoal: 1800,
+    ),
+    days: const {},
+  );
+
+  @override
   SummaryState build() => SummaryLoaded(summary);
 }
 

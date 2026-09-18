@@ -116,7 +116,6 @@ class _SummaryBody extends ConsumerWidget {
           monthly: controller.monthlySummary,
           loading: controller.monthlyLoading,
           error: controller.monthlyError,
-          partnerName: summary.partnerSlice?.displayName,
           onDateSelected: controller.selectDate,
           onMonthChanged: controller.changeMonth,
           onToday: controller.goToToday,
@@ -191,7 +190,6 @@ class _Calendar extends StatelessWidget {
     required this.monthly,
     required this.loading,
     required this.error,
-    required this.partnerName,
     required this.onDateSelected,
     required this.onMonthChanged,
     required this.onToday,
@@ -203,7 +201,6 @@ class _Calendar extends StatelessWidget {
   final MonthlySummary? monthly;
   final bool loading;
   final String? error;
-  final String? partnerName;
   final ValueChanged<DateTime> onDateSelected;
   final ValueChanged<DateTime> onMonthChanged;
   final VoidCallback onToday;
@@ -215,6 +212,7 @@ class _Calendar extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final selfColor = isDark ? _SummaryDarkColors.blue : AppColors.protein;
     final partnerColor = isDark ? _SummaryDarkColors.pink : AppColors.fat;
+    final partnerName = monthly?.partner?.displayName;
     final first = DateTime(focusedMonth.year, focusedMonth.month, 1);
     final days = DateTime(focusedMonth.year, focusedMonth.month + 1, 0).day;
     final leading = first.weekday - 1;
@@ -308,10 +306,13 @@ class _Calendar extends StatelessWidget {
               today: today,
               selfColor: selfColor,
               partnerColor: partnerColor,
-              selfProgress: _progress(day?.selfCalories, day?.selfCalorieGoal),
-              partnerProgress: partnerName == null
+                selfProgress: _progress(day?.selfCalories, monthly?.self.calorieGoal),
+                partnerProgress: monthly?.partner == null
                   ? null
-                  : _progress(day?.partnerCalories, day?.partnerCalorieGoal),
+                  : _progress(
+                    day?.partnerCalories,
+                    monthly?.partner?.calorieGoal,
+                  ),
               onTap: () => onDateSelected(date),
             );
           },
@@ -323,7 +324,7 @@ class _Calendar extends StatelessWidget {
             _LegendDot(color: selfColor, label: appL10n.todayMe),
             if (partnerName != null) ...[
               const SizedBox(width: AppSpacing.lg),
-              _LegendDot(color: partnerColor, label: partnerName!),
+              _LegendDot(color: partnerColor, label: partnerName),
             ],
           ],
         ),
