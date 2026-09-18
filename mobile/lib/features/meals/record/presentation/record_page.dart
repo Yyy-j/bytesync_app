@@ -856,46 +856,51 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                   ),
                 ),
                 Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      InkWell(
-                        key: ValueKey('record-camera-button'),
-                        onTap: _showImageSourceSheet,
-                        customBorder: CircleBorder(),
-                        child: SizedBox(
-                          width: 108,
-                          height: 108,
-                          child: SvgPicture.asset(
-                            isDark ? 'svg/add-blue.svg' : 'svg/add-green.svg',
-                            key: ValueKey(
-                              isDark
-                                  ? 'record-add-blue-svg'
-                                  : 'record-add-green-svg',
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        InkWell(
+                          key: ValueKey('record-camera-button'),
+                          onTap: _showImageSourceSheet,
+                          customBorder: CircleBorder(),
+                          child: SizedBox(
+                            width: 108,
+                            height: 108,
+                            child: SvgPicture.asset(
+                              isDark ? 'svg/add-blue.svg' : 'svg/add-green.svg',
+                              key: ValueKey(
+                                isDark
+                                    ? 'record-add-blue-svg'
+                                    : 'record-add-green-svg',
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        appL10n.recordTakeMeal,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                        SizedBox(height: 8),
+                        Text(
+                          appL10n.recordTakeMeal,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                      ),
-                      SizedBox(height: 4),
-                      TextButton(
-                        key: ValueKey('record-manual-toggle'),
-                        onPressed: () =>
-                            setState(() => _manualExpanded = !_manualExpanded),
-                        child: Text(
-                          _manualExpanded
-                              ? appL10n.recordCollapse
-                              : appL10n.recordManualMeal,
+                        SizedBox(height: 4),
+                        TextButton(
+                          key: ValueKey('record-manual-toggle'),
+                          onPressed: () => setState(
+                            () => _manualExpanded = !_manualExpanded,
+                          ),
+                          child: Text(
+                            _manualExpanded
+                                ? appL10n.recordCollapse
+                                : appL10n.recordManualMeal,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 Expanded(
