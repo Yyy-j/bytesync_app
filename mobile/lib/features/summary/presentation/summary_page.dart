@@ -26,6 +26,11 @@ class _SummaryDarkColors {
   static const secondaryText = Color(0xFFB8B8BF);
 }
 
+Color _summaryContentCardBorder(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? AppColors.darkContentCardBorder
+    : AppColors.lightContentCardBorder;
+
 /// Today's per-person nutrition overview and pair meal list.
 class SummaryPage extends ConsumerWidget {
   const SummaryPage({super.key});
@@ -501,6 +506,7 @@ class _CompactNutritionCard extends StatelessWidget {
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       backgroundColor: isDark ? _SummaryDarkColors.background : null,
+      borderColor: _summaryContentCardBorder(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1006,6 +1012,7 @@ class _MealListItem extends StatelessWidget {
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.md),
       backgroundColor: isDark ? _SummaryDarkColors.background : null,
+      borderColor: _summaryContentCardBorder(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

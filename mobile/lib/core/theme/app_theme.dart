@@ -26,6 +26,7 @@ class AppColors {
   static const background = Color(0xFFF7F8F6);
   static const cardBackground = Color(0xFFFFFFFF);
   static const border = Color(0xFFEDEDED);
+  static const lightContentCardBorder = Color(0xFFD8E1E7);
 
   // ── Macro nutrients (low saturation, restrained) ──
   static const protein = Color(0xFF62B5E5);
@@ -40,6 +41,7 @@ class AppColors {
   static const darkCard = Color(0xFF0D0D0D);
   static const darkSurface = Color(0xFF121212);
   static const darkInput = Color(0xFF101010);
+  static const darkContentCardBorder = Color(0xFF263642);
 }
 
 /// Spacing scale, ported 1:1 (rpx / 2 == logical px at the mini-program's
