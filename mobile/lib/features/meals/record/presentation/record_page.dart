@@ -737,200 +737,186 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       onTap: FocusScope.of(context).unfocus,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          const verticalPadding = 74.0;
-          final minContentHeight = constraints.maxHeight > verticalPadding
-              ? constraints.maxHeight - verticalPadding
-              : 0.0;
-          return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(24, 34, 24, 40),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: minContentHeight),
-              child: IntrinsicHeight(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      appL10n.recordTakeMeal,
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      appL10n.recordHeroSubtitle,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(24, 34, 24, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  appL10n.recordTakeMeal,
+                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  appL10n.recordHeroSubtitle,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                Flexible(
+                  fit: FlexFit.loose,
+                  flex: 3,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? AppColors.darkInput
-                                        : AppColors.primary.withValues(
-                                            alpha: 0.055,
-                                          ),
-                                    borderRadius: BorderRadius.circular(17),
-                                    border: Border.all(
-                                      color: accent.withValues(alpha: 0.32),
-                                    ),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: TextField(
-                                    key: ValueKey('record-unified-input'),
-                                    controller: _inputController,
-                                    maxLines: 1,
-                                    maxLength: 80,
-                                    textInputAction: TextInputAction.send,
-                                    onSubmitted: inputFilled
-                                        ? (_) => _analyzeText()
-                                        : null,
-                                    decoration: InputDecoration(
-                                      hintText: appL10n.recordDescriptionHint,
-                                      counterText: '',
-                                      filled: false,
-                                      border: InputBorder.none,
-                                      enabledBorder: InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        horizontal: 16,
+                          Expanded(
+                            child: Container(
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: isDark
+                                    ? AppColors.darkInput
+                                    : AppColors.primary.withValues(
+                                        alpha: 0.055,
                                       ),
-                                    ),
-                                  ),
+                                borderRadius: BorderRadius.circular(17),
+                                border: Border.all(
+                                  color: accent.withValues(alpha: 0.32),
                                 ),
                               ),
-                              SizedBox(width: 10),
-                              Opacity(
-                                opacity: inputFilled ? 1 : 0.32,
-                                child: Semantics(
-                                  button: true,
-                                  enabled: inputFilled,
-                                  label: appL10n.recordSendDescription,
-                                  child: IconButton(
-                                    key: ValueKey('record-send-button'),
-                                    onPressed: inputFilled
-                                        ? _analyzeText
-                                        : null,
-                                    style: IconButton.styleFrom(
-                                      fixedSize: Size(50, 50),
-                                      padding: EdgeInsets.all(13),
-                                      backgroundColor: accent.withValues(
-                                        alpha: 0.12,
-                                      ),
-                                      shape: CircleBorder(),
-                                    ),
-                                    icon: SvgPicture.asset(
-                                      isDark
-                                          ? 'svg/send-blue.svg'
-                                          : 'svg/send-green.svg',
-                                      key: ValueKey(
-                                        isDark
-                                            ? 'record-send-blue-svg'
-                                            : 'record-send-green-svg',
-                                      ),
-                                    ),
+                              alignment: Alignment.center,
+                              child: TextField(
+                                key: ValueKey('record-unified-input'),
+                                controller: _inputController,
+                                maxLines: 1,
+                                maxLength: 80,
+                                textInputAction: TextInputAction.send,
+                                onSubmitted: inputFilled
+                                    ? (_) => _analyzeText()
+                                    : null,
+                                decoration: InputDecoration(
+                                  hintText: appL10n.recordDescriptionHint,
+                                  counterText: '',
+                                  filled: false,
+                                  border: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
                                   ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          if (error != null) ...[
-                            SizedBox(height: 10),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                error,
-                                key: ValueKey('record-idle-error'),
-                                style: TextStyle(
-                                  color: theme.colorScheme.error,
-                                  fontSize: 13,
                                 ),
                               ),
                             ),
-                          ],
-                          SizedBox(height: 42),
-                          InkWell(
-                            key: ValueKey('record-camera-button'),
-                            onTap: _showImageSourceSheet,
-                            customBorder: CircleBorder(),
-                            child: SizedBox(
-                              width: 108,
-                              height: 108,
-                              child: SvgPicture.asset(
-                                isDark
-                                    ? 'svg/add-blue.svg'
-                                    : 'svg/add-green.svg',
-                                key: ValueKey(
+                          ),
+                          SizedBox(width: 10),
+                          Opacity(
+                            opacity: inputFilled ? 1 : 0.32,
+                            child: Semantics(
+                              button: true,
+                              enabled: inputFilled,
+                              label: appL10n.recordSendDescription,
+                              child: IconButton(
+                                key: ValueKey('record-send-button'),
+                                onPressed: inputFilled ? _analyzeText : null,
+                                style: IconButton.styleFrom(
+                                  fixedSize: Size(50, 50),
+                                  padding: EdgeInsets.all(13),
+                                  backgroundColor: accent.withValues(
+                                    alpha: 0.12,
+                                  ),
+                                  shape: CircleBorder(),
+                                ),
+                                icon: SvgPicture.asset(
                                   isDark
-                                      ? 'record-add-blue-svg'
-                                      : 'record-add-green-svg',
+                                      ? 'svg/send-blue.svg'
+                                      : 'svg/send-green.svg',
+                                  key: ValueKey(
+                                    isDark
+                                        ? 'record-send-blue-svg'
+                                        : 'record-send-green-svg',
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            appL10n.recordTakeMeal,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          SizedBox(height: 26),
-                          TextButton(
-                            key: ValueKey('record-manual-toggle'),
-                            onPressed: () => setState(
-                              () => _manualExpanded = !_manualExpanded,
-                            ),
-                            child: Text(
-                              _manualExpanded
-                                  ? appL10n.recordCollapse
-                                  : appL10n.recordManualMeal,
-                            ),
-                          ),
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 180),
-                            alignment: Alignment.topCenter,
-                            child: _manualExpanded
-                                ? ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      maxHeight:
-                                          MediaQuery.sizeOf(context).height *
-                                          0.4,
-                                    ),
-                                    child: SingleChildScrollView(
-                                      child: _ManualForm(
-                                        nameController: _nameController,
-                                        caloriesController: _caloriesController,
-                                        proteinController: _proteinController,
-                                        carbsController: _carbsController,
-                                        fatController: _fatController,
-                                        onGenerate: _createManualDraft,
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
                           ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 28),
-                    _YesterdaySection(
-                      meals: ref.watch(yesterdayMealsProvider),
-                      onSelected: _fillManualFromMeal,
-                    ),
-                  ],
+                      if (error != null) ...[
+                        SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            error,
+                            key: ValueKey('record-idle-error'),
+                            style: TextStyle(
+                              color: theme.colorScheme.error,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                      SizedBox(height: error == null ? 24 : 12),
+                      InkWell(
+                        key: ValueKey('record-camera-button'),
+                        onTap: _showImageSourceSheet,
+                        customBorder: CircleBorder(),
+                        child: SizedBox(
+                          width: 108,
+                          height: 108,
+                          child: SvgPicture.asset(
+                            isDark ? 'svg/add-blue.svg' : 'svg/add-green.svg',
+                            key: ValueKey(
+                              isDark
+                                  ? 'record-add-blue-svg'
+                                  : 'record-add-green-svg',
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        appL10n.recordTakeMeal,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: error == null ? 16 : 8),
+                      TextButton(
+                        key: ValueKey('record-manual-toggle'),
+                        onPressed: () =>
+                            setState(() => _manualExpanded = !_manualExpanded),
+                        child: Text(
+                          _manualExpanded
+                              ? appL10n.recordCollapse
+                              : appL10n.recordManualMeal,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                Expanded(
+                  flex: 2,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 40),
+                    child: Column(
+                      children: [
+                        if (_manualExpanded)
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 180),
+                            alignment: Alignment.topCenter,
+                            child: _ManualForm(
+                              nameController: _nameController,
+                              caloriesController: _caloriesController,
+                              proteinController: _proteinController,
+                              carbsController: _carbsController,
+                              fatController: _fatController,
+                              onGenerate: _createManualDraft,
+                            ),
+                          ),
+                        const SizedBox(height: 28),
+                        _YesterdaySection(
+                          meals: ref.watch(yesterdayMealsProvider),
+                          onSelected: _fillManualFromMeal,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },
