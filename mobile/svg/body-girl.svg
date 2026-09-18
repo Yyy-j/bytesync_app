@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+
+<defs>
+  <linearGradient id="peach" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#FFD8C9"/>
+    <stop offset="55%" stop-color="#FFB7A2"/>
+    <stop offset="100%" stop-color="#FF8F7E"/>
+  </linearGradient>
+  <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#D9F0FF"/>
+    <stop offset="55%" stop-color="#8CCBFF"/>
+    <stop offset="100%" stop-color="#5FA8FF"/>
+  </linearGradient>
+  <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#B9F2CE"/>
+    <stop offset="100%" stop-color="#6FCF97"/>
+  </linearGradient>
+  <linearGradient id="heart" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#FF8C9A"/>
+    <stop offset="100%" stop-color="#FF4F6D"/>
+  </linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.12"/>
+  </filter>
+</defs>
+
+<text x="256" y="58" text-anchor="middle"
+        font-family="Arial Rounded MT Bold, Arial, sans-serif" font-size="40"
+        font-weight="700" fill="#2A2D34" stroke="white" stroke-width="10"
+        paint-order="stroke fill" stroke-linejoin="round">Hydrate!</text>
+<g filter="url(#shadow)">
+  <path d="M 230 175.0
+           C 160.0 175.0, 140.0 250.0, 158.0 308.0
+           C 170.0 348.0, 200.0 352.0, 222.0 326.0
+           C 240.0 352.0, 279.0 348.0, 292.0 308.0
+           C 315.0 250.0, 295.0 175.0, 230 175.0 Z"
+        fill="white" stroke="white" stroke-width="18.0" stroke-linejoin="round"/>
+  <path d="M 230 175.0
+           C 160.0 175.0, 140.0 250.0, 158.0 308.0
+           C 170.0 348.0, 200.0 352.0, 222.0 326.0
+           C 240.0 352.0, 279.0 348.0, 292.0 308.0
+           C 315.0 250.0, 295.0 175.0, 230 175.0 Z"
+        fill="url(#peach)"/>
+  
+<ellipse cx="202.0" cy="252.0" rx="7.0" ry="10.0" fill="#161616"/>
+<path d="M 247.0 251.0 q 10.0 -9.0 20.0 0" stroke="#161616" stroke-width="7.0" stroke-linecap="round" fill="none"/>
+<path d="M 227.0 269.0 q 13.0 16.0 28.0 0 q -12.0 24.0 -28.0 0z" fill="#D94A42"/>
+<ellipse cx="181.0" cy="272.0" rx="16.0" ry="10.0" fill="#FF7E82" opacity="0.45"/>
+<ellipse cx="279.0" cy="272.0" rx="16.0" ry="10.0" fill="#FF7E82" opacity="0.35"/>
+
+</g>
+<g transform="translate(330 245) rotate(-18)">
+<rect x="-24" y="-65" width="48" height="130" rx="20" fill="#CFEFFF" stroke="#7EC7FF" stroke-width="6"/>
+<rect x="-18" y="-78" width="36" height="18" rx="7" fill="#5FA8FF"/>
+<path d="M-16 -18 h32" stroke="#8FD3FF" stroke-width="6"/>
+</g>
+<circle cx="390" cy="178" r="10" fill="#6DCBFF"/><circle cx="410" cy="158" r="7" fill="#6DCBFF"/>
+</svg>

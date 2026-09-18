@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+
+<defs>
+  <linearGradient id="peach" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#FFD8C9"/>
+    <stop offset="55%" stop-color="#FFB7A2"/>
+    <stop offset="100%" stop-color="#FF8F7E"/>
+  </linearGradient>
+  <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#D9F0FF"/>
+    <stop offset="55%" stop-color="#8CCBFF"/>
+    <stop offset="100%" stop-color="#5FA8FF"/>
+  </linearGradient>
+  <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#B9F2CE"/>
+    <stop offset="100%" stop-color="#6FCF97"/>
+  </linearGradient>
+  <linearGradient id="heart" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#FF8C9A"/>
+    <stop offset="100%" stop-color="#FF4F6D"/>
+  </linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000000" flood-opacity="0.12"/>
+  </filter>
+</defs>
+
+
+<g filter="url(#shadow)">
+  <path d="M 256 172.25
+           C 182.5 172.25, 161.5 251.0, 180.39999999999998 311.9
+           C 193.0 353.9, 224.5 358.1, 247.6 330.8
+           C 266.5 358.1, 307.45 353.9, 321.1 311.9
+           C 345.25 251.0, 324.25 172.25, 256 172.25 Z"
+        fill="white" stroke="white" stroke-width="18.900000000000002" stroke-linejoin="round"/>
+  <path d="M 256 172.25
+           C 182.5 172.25, 161.5 251.0, 180.39999999999998 311.9
+           C 193.0 353.9, 224.5 358.1, 247.6 330.8
+           C 266.5 358.1, 307.45 353.9, 321.1 311.9
+           C 345.25 251.0, 324.25 172.25, 256 172.25 Z"
+        fill="url(#blue)"/>
+  
+<ellipse cx="226.6" cy="253.1" rx="7.3500000000000005" ry="10.5" fill="#161616"/>
+<path d="M 273.85 252.04999999999998 q 10.5 -9.450000000000001 21.0 0" stroke="#161616" stroke-width="7.3500000000000005" stroke-linecap="round" fill="none"/>
+<path d="M 252.85 270.95 q 13.65 16.8 29.400000000000002 0 q -12.600000000000001 25.200000000000003 -29.400000000000002 0z" fill="#D94A42"/>
+<ellipse cx="204.55" cy="274.1" rx="16.8" ry="10.5" fill="#FF7E82" opacity="0.45"/>
+<ellipse cx="307.45" cy="274.1" rx="16.8" ry="10.5" fill="#FF7E82" opacity="0.35"/>
+
+</g>
+
+<g>
+  <ellipse cx="258" cy="302" rx="55.099999999999994" ry="18.05" fill="#F4F5F7"/>
+  <path d="M 205.75 302 Q 258 370.4 310.25 302 Z" fill="#FFFFFF" stroke="#E9EBEF" stroke-width="3.8"/>
+  <circle cx="236.15" cy="294.4" r="15.2" fill="#67B84C"/>
+  <circle cx="262.75" cy="288.7" r="16.15" fill="#8ED34E"/>
+  <circle cx="286.5" cy="296.3" r="12.35" fill="#F04D3F"/>
+  <circle cx="256.1" cy="304.85" r="13.299999999999999" fill="#5AAE46"/>
+</g>
+</svg>
