@@ -247,7 +247,7 @@ void main() {
 
     expect(find.textContaining('pair-1'), findsNothing);
     expect(find.text('ABC123'), findsOneWidget);
-    expect(find.text('等待搭档加入'), findsOneWidget);
+    expect(find.text('等待Ta加入'), findsOneWidget);
     expect(find.text('我的信息'), findsOneWidget);
     expect(find.byTooltip('退出登录'), findsOneWidget);
     expect(find.text('创建配对'), findsNothing);
@@ -270,7 +270,7 @@ void main() {
     await _settle(tester);
 
     expect(find.text('ABC123'), findsOneWidget);
-    expect(find.text('等待搭档加入'), findsOneWidget);
+    expect(find.text('等待Ta加入'), findsOneWidget);
   });
 
   testWidgets('PairConnected 双成员显示已完成配对和双方成员', (tester) async {

@@ -379,13 +379,13 @@ abstract class AppLocalizations {
   /// No description provided for @pairTitle.
   ///
   /// In zh, this message translates to:
-  /// **'与搭档配对'**
+  /// **'与Ta配对'**
   String get pairTitle;
 
   /// No description provided for @pairIntro.
   ///
   /// In zh, this message translates to:
-  /// **'先创建一个配对，或输入搭档发来的邀请码。'**
+  /// **'先创建一个配对，或输入Ta发来的邀请码。'**
   String get pairIntro;
 
   /// No description provided for @pairCurrentDetailsHint.
@@ -421,7 +421,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairWaitingForPartner.
   ///
   /// In zh, this message translates to:
-  /// **'等待搭档加入'**
+  /// **'等待Ta加入'**
   String get pairWaitingForPartner;
 
   /// No description provided for @pairConnected.
@@ -439,7 +439,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairPartnerInfo.
   ///
   /// In zh, this message translates to:
-  /// **'搭档信息'**
+  /// **'Ta信息'**
   String get pairPartnerInfo;
 
   /// No description provided for @pairEnterHome.
@@ -547,13 +547,13 @@ abstract class AppLocalizations {
   /// No description provided for @profilePairing.
   ///
   /// In zh, this message translates to:
-  /// **'搭档与配对'**
+  /// **'Ta与配对'**
   String get profilePairing;
 
   /// No description provided for @profilePairWaiting.
   ///
   /// In zh, this message translates to:
-  /// **'已创建配对，等待搭档加入'**
+  /// **'已创建配对，等待Ta加入'**
   String get profilePairWaiting;
 
   /// No description provided for @profilePairedWith.
@@ -673,7 +673,7 @@ abstract class AppLocalizations {
   /// No description provided for @todayPartnerIntake.
   ///
   /// In zh, this message translates to:
-  /// **'搭档今日摄入'**
+  /// **'Ta今日摄入'**
   String get todayPartnerIntake;
 
   /// No description provided for @todayRecords.

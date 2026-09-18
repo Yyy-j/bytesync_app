@@ -112,8 +112,7 @@ class _SummaryBody extends ConsumerWidget {
           name: appL10n.todayMe,
           slice: summary.selfSlice,
           goals: summary.selfGoals,
-          darkValueColor: _SummaryDarkColors.blue,
-          lightNameColor: AppColors.protein,
+          valueColor: isDark ? _SummaryDarkColors.blue : AppColors.protein,
         ),
         if (summary.partnerSlice != null && summary.partnerGoals != null) ...[
           SizedBox(height: AppSpacing.md),
@@ -122,8 +121,7 @@ class _SummaryBody extends ConsumerWidget {
             name: summary.partnerSlice!.displayName,
             slice: summary.partnerSlice!,
             goals: summary.partnerGoals!,
-            darkValueColor: _SummaryDarkColors.purple,
-            lightNameColor: AppColors.fat,
+            valueColor: isDark ? _SummaryDarkColors.pink : AppColors.fat,
           ),
         ],
         SizedBox(height: AppSpacing.xl),
@@ -542,16 +540,14 @@ class _NutritionCard extends StatelessWidget {
     required this.name,
     required this.slice,
     required this.goals,
-    required this.darkValueColor,
-    required this.lightNameColor,
+    required this.valueColor,
   });
 
   final String title;
   final String name;
   final UserDailySlice slice;
   final DailyGoals goals;
-  final Color darkValueColor;
-  final Color lightNameColor;
+  final Color valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -586,28 +582,13 @@ class _NutritionCard extends StatelessWidget {
                   TextSpan(
                     children: [
                       TextSpan(text: name),
-                      TextSpan(
-                        text: ' ${slice.calories.round()}',
-                        style: TextStyle(
-                          color: isDark
-                              ? darkValueColor
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
+                      TextSpan(text: ' ${slice.calories.round()}'),
                     ],
-                    style: TextStyle(
-                      color: isDark ? darkValueColor : lightNameColor,
-                    ),
+                    style: TextStyle(color: valueColor),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? darkValueColor
-                        : theme.colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
                 ),
               ),
               const SizedBox(width: 4),

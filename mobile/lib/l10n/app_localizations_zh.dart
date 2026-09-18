@@ -158,10 +158,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorCannotSaveNow => '当前无法保存，请稍后重试';
 
   @override
-  String get pairTitle => '与搭档配对';
+  String get pairTitle => '与Ta配对';
 
   @override
-  String get pairIntro => '先创建一个配对，或输入搭档发来的邀请码。';
+  String get pairIntro => '先创建一个配对，或输入Ta发来的邀请码。';
 
   @override
   String get pairCurrentDetailsHint => '查看当前配对详情。';
@@ -179,7 +179,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairInviteCodeCopied => '邀请码已复制';
 
   @override
-  String get pairWaitingForPartner => '等待搭档加入';
+  String get pairWaitingForPartner => '等待Ta加入';
 
   @override
   String get pairConnected => '已完成配对';
@@ -188,7 +188,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairMyInfo => '我的信息';
 
   @override
-  String get pairPartnerInfo => '搭档信息';
+  String get pairPartnerInfo => 'Ta信息';
 
   @override
   String get pairEnterHome => '进入主页';
@@ -242,10 +242,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileTrainingPlan => '训练计划';
 
   @override
-  String get profilePairing => '搭档与配对';
+  String get profilePairing => 'Ta与配对';
 
   @override
-  String get profilePairWaiting => '已创建配对，等待搭档加入';
+  String get profilePairWaiting => '已创建配对，等待Ta加入';
 
   @override
   String profilePairedWith(String partnerName) {
@@ -307,7 +307,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get todayMe => '我';
 
   @override
-  String get todayPartnerIntake => '搭档今日摄入';
+  String get todayPartnerIntake => 'Ta今日摄入';
 
   @override
   String get todayRecords => '今日记录';
