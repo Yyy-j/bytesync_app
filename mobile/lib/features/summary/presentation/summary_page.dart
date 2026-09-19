@@ -229,8 +229,13 @@ class _Calendar extends StatelessWidget {
     while (cells.length % 7 != 0) {
       cells.add(null);
     }
-    return Column(
-      children: [
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        border: Border.all(color: _summaryContentCardBorder(context)),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+      ),
+      child: Column(
+        children: [
         Row(
           children: [
             IconButton(
@@ -333,7 +338,8 @@ class _Calendar extends StatelessWidget {
             ],
           ],
         ),
-      ],
+        ],
+      ),
     );
   }
 
