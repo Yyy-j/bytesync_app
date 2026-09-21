@@ -28,6 +28,11 @@ class AppConfig {
   static const int connectTimeoutMs = 10000;
   static const int receiveTimeoutMs = 10000;
 
+  /// AI recognition may make a second upstream request when Gemini's
+  /// primary model is temporarily overloaded, so it needs a wider response
+  /// window than ordinary API calls.
+  static const int aiReceiveTimeoutMs = 70000;
+
   /// Google OAuth client id used by `google_sign_in`.
   ///
   /// Empty by default: fill in via `--dart-define=GOOGLE_CLIENT_ID=...`

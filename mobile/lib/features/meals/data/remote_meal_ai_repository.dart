@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/dio_error_mapper.dart';
 import '../domain/meal_ai_result.dart';
@@ -7,7 +8,8 @@ import 'dto/meal_ai_dto.dart';
 import 'mappers/meal_ai_mapper.dart';
 import 'meal_ai_repository.dart';
 
-class RemoteMealAiRepository implements MealAiRepository, MealImageAiRepository {
+class RemoteMealAiRepository
+    implements MealAiRepository, MealImageAiRepository {
   RemoteMealAiRepository(this._dio, this._errorMapper);
 
   final Dio _dio;
@@ -19,6 +21,7 @@ class RemoteMealAiRepository implements MealAiRepository, MealImageAiRepository 
       final response = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.analyzeMealText,
         data: {'text': text},
+        options: _aiRequestOptions,
       );
       return MealAiMapper.fromDto(MealAiResultDto.fromJson(response.data!));
     } catch (error) {
@@ -36,10 +39,15 @@ class RemoteMealAiRepository implements MealAiRepository, MealImageAiRepository 
       final response = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.analyzeMealImage,
         data: formData,
+        options: _aiRequestOptions,
       );
       return MealAiMapper.fromDto(MealAiResultDto.fromJson(response.data!));
     } catch (error) {
       throw _errorMapper.map(error);
     }
   }
+
+  Options get _aiRequestOptions => Options(
+    receiveTimeout: const Duration(milliseconds: AppConfig.aiReceiveTimeoutMs),
+  );
 }
