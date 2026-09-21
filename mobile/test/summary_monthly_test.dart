@@ -73,6 +73,8 @@ Future<void> _pumpSummaryPage(
     ),
   );
   await tester.pump();
+  await tester.tap(find.byTooltip('展开日历'));
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -86,11 +88,7 @@ void main() {
       'self': {'calorie_goal': 2000},
       'partner': {'display_name': 'hh', 'calorie_goal': 1700},
       'days': [
-        {
-          'date': '2026-09-15',
-          'self_calories': 385,
-          'partner_calories': 2532,
-        },
+        {'date': '2026-09-15', 'self_calories': 385, 'partner_calories': 2532},
       ],
     });
 
@@ -115,11 +113,7 @@ void main() {
       'self': {'calorie_goal': 2000},
       'partner': null,
       'days': [
-        {
-          'date': '2026-09-15',
-          'self_calories': 385,
-          'partner_calories': null,
-        },
+        {'date': '2026-09-15', 'self_calories': 385, 'partner_calories': null},
       ],
     });
 
@@ -135,11 +129,7 @@ void main() {
       'self': {'calorie_goal': 2000},
       'partner': null,
       'days': [
-        {
-          'date': '2026-09-15',
-          'self_calories': 385,
-          'partner_calories': null,
-        },
+        {'date': '2026-09-15', 'self_calories': 385, 'partner_calories': null},
       ],
     });
 
@@ -153,6 +143,50 @@ void main() {
     );
   });
 
+  testWidgets('Today Calendar starts collapsed and toggles smoothly', (
+    tester,
+  ) async {
+    final summary = MonthlySummary.fromJson({
+      'month': '2026-09',
+      'self': {'calorie_goal': 2000},
+      'partner': null,
+      'days': [
+        {'date': '2026-09-15', 'self_calories': 385, 'partner_calories': null},
+      ],
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          summaryControllerProvider.overrideWith(
+            () => _FixedSummaryController(summary),
+          ),
+        ],
+        child: const MaterialApp(home: SummaryPage()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byTooltip('展开日历'), findsOneWidget);
+    expect(find.byTooltip('收起日历'), findsNothing);
+
+    await tester.tap(find.byTooltip('展开日历'));
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(find.byTooltip('收起日历'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('收起日历'));
+    await tester.pump(const Duration(milliseconds: 160));
+    expect(find.byTooltip('展开日历'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('展开日历'));
+    await tester.pump(const Duration(milliseconds: 40));
+    await tester.tap(find.byTooltip('收起日历'));
+    await tester.pump(const Duration(milliseconds: 40));
+    await tester.tap(find.byTooltip('展开日历'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('收起日历'), findsOneWidget);
+  });
+
   testWidgets('Calendar uses monthly goals and clamps partner progress', (
     tester,
   ) async {
@@ -161,11 +195,7 @@ void main() {
       'self': {'calorie_goal': 2000},
       'partner': {'display_name': 'hh', 'calorie_goal': 1700},
       'days': [
-        {
-          'date': '2026-09-17',
-          'self_calories': 385,
-          'partner_calories': 2532,
-        },
+        {'date': '2026-09-17', 'self_calories': 385, 'partner_calories': 2532},
       ],
     });
 

@@ -32,11 +32,18 @@ Color _summaryContentCardBorder(BuildContext context) =>
     : AppColors.lightContentCardBorder;
 
 /// Today's per-person nutrition overview and pair meal list.
-class SummaryPage extends ConsumerWidget {
+class SummaryPage extends ConsumerStatefulWidget {
   const SummaryPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SummaryPage> createState() => _SummaryPageState();
+}
+
+class _SummaryPageState extends ConsumerState<SummaryPage> {
+  bool _calendarExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final state = ref.watch(summaryControllerProvider);
@@ -46,6 +53,25 @@ class SummaryPage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(appL10n.navToday),
         actions: [
+          IconButton(
+            tooltip: _calendarExpanded ? '收起日历' : '展开日历',
+            onPressed: () {
+              setState(() => _calendarExpanded = !_calendarExpanded);
+            },
+            icon: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(scale: animation, child: child),
+              ),
+              child: Icon(
+                _calendarExpanded
+                    ? Icons.calendar_month
+                    : Icons.calendar_month_outlined,
+                key: ValueKey(_calendarExpanded),
+              ),
+            ),
+          ),
           IconButton(
             tooltip: appL10n.profileNutritionGoals,
             icon: Icon(Icons.track_changes_outlined),
@@ -73,10 +99,12 @@ class SummaryPage extends ConsumerWidget {
             SummaryEmpty(:final summary) => _SummaryBody(
               summary: summary,
               emptyState: true,
+              calendarExpanded: _calendarExpanded,
             ),
             SummaryLoaded(:final summary) => _SummaryBody(
               summary: summary,
               emptyState: false,
+              calendarExpanded: _calendarExpanded,
             ),
           },
         ),
@@ -86,10 +114,15 @@ class SummaryPage extends ConsumerWidget {
 }
 
 class _SummaryBody extends ConsumerWidget {
-  const _SummaryBody({required this.summary, required this.emptyState});
+  const _SummaryBody({
+    required this.summary,
+    required this.emptyState,
+    required this.calendarExpanded,
+  });
 
   final DailySummary summary;
   final bool emptyState;
+  final bool calendarExpanded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -115,16 +148,19 @@ class _SummaryBody extends ConsumerWidget {
       physics: AlwaysScrollableScrollPhysics(),
       padding: EdgeInsets.all(AppSpacing.pagePadding),
       children: [
-        _Calendar(
-          focusedMonth: controller.focusedMonth,
-          selectedDate: controller.selectedDate,
-          monthly: controller.monthlySummary,
-          loading: controller.monthlyLoading,
-          error: controller.monthlyError,
-          onDateSelected: controller.selectDate,
-          onMonthChanged: controller.changeMonth,
-          onToday: controller.goToToday,
-          onRetry: () => controller.changeMonth(controller.focusedMonth),
+        _CalendarExpansion(
+          expanded: calendarExpanded,
+          child: _Calendar(
+            focusedMonth: controller.focusedMonth,
+            selectedDate: controller.selectedDate,
+            monthly: controller.monthlySummary,
+            loading: controller.monthlyLoading,
+            error: controller.monthlyError,
+            onDateSelected: controller.selectDate,
+            onMonthChanged: controller.changeMonth,
+            onToday: controller.goToToday,
+            onRetry: () => controller.changeMonth(controller.focusedMonth),
+          ),
         ),
         SizedBox(height: AppSpacing.lg),
         Text(
@@ -188,6 +224,69 @@ class _SummaryBody extends ConsumerWidget {
   }
 }
 
+class _CalendarExpansion extends StatefulWidget {
+  const _CalendarExpansion({required this.expanded, required this.child});
+
+  final bool expanded;
+  final Widget child;
+
+  @override
+  State<_CalendarExpansion> createState() => _CalendarExpansionState();
+}
+
+class _CalendarExpansionState extends State<_CalendarExpansion>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final CurvedAnimation _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+      value: widget.expanded ? 1 : 0,
+    );
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOutCubic,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _CalendarExpansion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.expanded == widget.expanded) return;
+    if (widget.expanded) {
+      _controller.forward();
+    } else {
+      _controller.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _animation.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) => ClipRect(
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: _animation.value,
+          child: child,
+        ),
+      ),
+      child: widget.child,
+    );
+  }
+}
+
 class _Calendar extends StatelessWidget {
   const _Calendar({
     required this.focusedMonth,
@@ -236,108 +335,114 @@ class _Calendar extends StatelessWidget {
       ),
       child: Column(
         children: [
-        Row(
-          children: [
-            IconButton(
-              tooltip: appL10n.todayPreviousMonth,
-              onPressed: () => onMonthChanged(
-                DateTime(focusedMonth.year, focusedMonth.month - 1),
+          Row(
+            children: [
+              IconButton(
+                tooltip: appL10n.todayPreviousMonth,
+                onPressed: () => onMonthChanged(
+                  DateTime(focusedMonth.year, focusedMonth.month - 1),
+                ),
+                icon: const Icon(Icons.chevron_left),
               ),
-              icon: const Icon(Icons.chevron_left),
-            ),
-            Expanded(
-              child: Text(
-                DateFormat(
-                  appL10n.todayMonthFormat,
-                  'zh_CN',
-                ).format(focusedMonth),
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+              Expanded(
+                child: Text(
+                  DateFormat(
+                    appL10n.todayMonthFormat,
+                    'zh_CN',
+                  ).format(focusedMonth),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
-            IconButton(
-              tooltip: appL10n.todayNextMonth,
-              onPressed: () => onMonthChanged(
-                DateTime(focusedMonth.year, focusedMonth.month + 1),
+              IconButton(
+                tooltip: appL10n.todayNextMonth,
+                onPressed: () => onMonthChanged(
+                  DateTime(focusedMonth.year, focusedMonth.month + 1),
+                ),
+                icon: const Icon(Icons.chevron_right),
               ),
-              icon: const Icon(Icons.chevron_right),
-            ),
-          ],
-        ),
-        Align(
-          alignment: Alignment.centerRight,
-          child: TextButton(
-            onPressed: onToday,
-            child: Text(appL10n.todayBackToToday),
+            ],
           ),
-        ),
-        if (error != null)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: onToday,
+              child: Text(appL10n.todayBackToToday),
+            ),
+          ),
+          if (error != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(error!, style: TextStyle(color: theme.colorScheme.error)),
+                TextButton(
+                  onPressed: onRetry,
+                  child: Text(appL10n.commonRetry),
+                ),
+              ],
+            ),
+          if (loading) const LinearProgressIndicator(minHeight: 2),
+          Row(
+            children: [
+              for (final label in appL10n.todayWeekdays.split('|'))
+                Expanded(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: cells.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              childAspectRatio: 0.78,
+            ),
+            itemBuilder: (context, index) {
+              final date = cells[index];
+              if (date == null) return const SizedBox.shrink();
+              final day = monthly?.dayAt(date);
+              final selected = _sameDate(date, selectedDate);
+              final today = _sameDate(date, DateTime.now());
+              return _CalendarCell(
+                date: date,
+                selected: selected,
+                today: today,
+                selfColor: selfColor,
+                partnerColor: partnerColor,
+                selfProgress: _progress(
+                  day?.selfCalories,
+                  monthly?.self.calorieGoal,
+                ),
+                partnerProgress: monthly?.partner == null
+                    ? null
+                    : _progress(
+                        day?.partnerCalories,
+                        monthly?.partner?.calorieGoal,
+                      ),
+                onTap: () => onDateSelected(date),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(error!, style: TextStyle(color: theme.colorScheme.error)),
-              TextButton(onPressed: onRetry, child: Text(appL10n.commonRetry)),
+              _LegendDot(color: selfColor, label: appL10n.todayMe),
+              if (partnerName != null) ...[
+                const SizedBox(width: AppSpacing.lg),
+                _LegendDot(color: partnerColor, label: partnerName),
+              ],
             ],
           ),
-        if (loading) const LinearProgressIndicator(minHeight: 2),
-        Row(
-          children: [
-            for (final label in appL10n.todayWeekdays.split('|'))
-              Expanded(
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: cells.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 7,
-            childAspectRatio: 0.78,
-          ),
-          itemBuilder: (context, index) {
-            final date = cells[index];
-            if (date == null) return const SizedBox.shrink();
-            final day = monthly?.dayAt(date);
-            final selected = _sameDate(date, selectedDate);
-            final today = _sameDate(date, DateTime.now());
-            return _CalendarCell(
-              date: date,
-              selected: selected,
-              today: today,
-              selfColor: selfColor,
-              partnerColor: partnerColor,
-                selfProgress: _progress(day?.selfCalories, monthly?.self.calorieGoal),
-                partnerProgress: monthly?.partner == null
-                  ? null
-                  : _progress(
-                    day?.partnerCalories,
-                    monthly?.partner?.calorieGoal,
-                  ),
-              onTap: () => onDateSelected(date),
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _LegendDot(color: selfColor, label: appL10n.todayMe),
-            if (partnerName != null) ...[
-              const SizedBox(width: AppSpacing.lg),
-              _LegendDot(color: partnerColor, label: partnerName),
-            ],
-          ],
-        ),
         ],
       ),
     );
