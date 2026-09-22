@@ -654,13 +654,10 @@ class _CompactNutritionCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Transform.translate(
-                offset: const Offset(0, 14),
-                child: SizedBox(
-                  width: 60,
-                  height: 60,
-                  child: SvgPicture.asset(characterAsset, fit: BoxFit.contain),
-                ),
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: SvgPicture.asset(characterAsset, fit: BoxFit.contain),
               ),
             ],
           ),
@@ -1254,55 +1251,55 @@ class _MealListItem extends StatelessWidget {
                         : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _MacroTag(
-                              label: appL10n.todayProteinGrams(
-                                meal.protein.round(),
-                              ),
-                              color: AppColors.protein,
-                              bg: AppColors.proteinBg,
-                              darkColor: _SummaryDarkColors.blue,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            _MacroTag(
-                              label: appL10n.todayCarbsGrams(meal.carbs.round()),
-                              color: AppColors.carbs,
-                              bg: AppColors.carbsBg,
-                              darkColor: _SummaryDarkColors.purple,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            _MacroTag(
-                              label: appL10n.todayFatGrams(meal.fat.round()),
-                              color: AppColors.fat,
-                              bg: AppColors.fatBg,
-                              darkColor: _SummaryDarkColors.pink,
-                            ),
-                          ],
+                const SizedBox(height: AppSpacing.xs),
+                Padding(
+                  padding: const EdgeInsets.only(right: 80),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _MacroTag(
+                          label: appL10n.todayProteinGrams(
+                            meal.protein.round(),
+                          ),
+                          color: AppColors.protein,
+                          bg: AppColors.proteinBg,
+                          darkColor: _SummaryDarkColors.blue,
                         ),
-                      ),
+                        const SizedBox(width: AppSpacing.sm),
+                        _MacroTag(
+                          label: appL10n.todayCarbsGrams(meal.carbs.round()),
+                          color: AppColors.carbs,
+                          bg: AppColors.carbsBg,
+                          darkColor: _SummaryDarkColors.purple,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        _MacroTag(
+                          label: appL10n.todayFatGrams(meal.fat.round()),
+                          color: AppColors.fat,
+                          bg: AppColors.fatBg,
+                          darkColor: _SummaryDarkColors.pink,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    SizedBox(
-                      width: 72,
-                      height: 72,
-                      child: SvgPicture.asset(
-                        characterAsset,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+                const SizedBox(height: 28),
               ],
+            ),
+          ),
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: SizedBox(
+              width: 72,
+              height: 72,
+              child: SvgPicture.asset(
+                characterAsset,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
         ],

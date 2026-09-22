@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -831,35 +830,6 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     super.dispose();
   }
 
-  Future<void> _showImageSourceSheet() async {
-    FocusScope.of(context).unfocus();
-    final source = await showCupertinoModalPopup<ImageSource>(
-      context: context,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        child: CupertinoActionSheet(
-          title: Text(appL10n.recordTakeMeal),
-          actions: [
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(context, ImageSource.camera),
-              child: Text(appL10n.recordTakePhoto),
-            ),
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(context, ImageSource.gallery),
-              child: Text(appL10n.recordChooseGallery),
-            ),
-          ],
-          cancelButton: CupertinoActionSheetAction(
-            isDefaultAction: true,
-            onPressed: () => Navigator.pop(context),
-            child: Text(appL10n.commonCancel),
-          ),
-        ),
-      ),
-    );
-    if (source != null && mounted) await _pickImage(source);
-  }
-
   Future<void> _pickImage(ImageSource source) async {
     final image = await _imagePicker.pickImage(
       source: source,
@@ -1067,12 +1037,12 @@ class _RecordPageState extends ConsumerState<RecordPage> {
               error: error,
               showCameraShortcut: _showCameraShortcut,
               onSubmit: _analyzeText,
-              onCamera: _showImageSourceSheet,
+              onCamera: () => _pickImage(ImageSource.camera),
             ),
           ),
           SliverToBoxAdapter(
             child: _CameraSection(
-              onCamera: _showImageSourceSheet,
+              onCamera: () => _pickImage(ImageSource.camera),
               onManual: _showManualSheet,
               onGallery: () => _pickImage(ImageSource.gallery),
             ),
