@@ -9,6 +9,7 @@ import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../app/home_shell.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/bitesync_bottom_sheet.dart';
 import '../../../pair/domain/pair_state.dart';
 import '../../../pair/presentation/pair_controller.dart';
 import '../../domain/meal.dart';
@@ -167,50 +168,41 @@ class _YesterdaySection extends StatelessWidget {
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 10),
-          Container(
-            decoration: BoxDecoration(
-              color: theme.brightness == Brightness.dark
-                  ? AppColors.darkCard
-                  : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: theme.dividerColor),
-            ),
-            child: Column(
-              children: [
-                for (var index = 0; index < visible.length; index++) ...[
-                  Padding(
-                    padding: EdgeInsets.fromLTRB(16, 13, 10, 13),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            visible[index].name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Text(
-                          appL10n.commonCaloriesValue(
-                            _value(visible[index].calories),
-                          ),
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        TextButton(
-                          onPressed: () => onSelected(visible[index]),
-                          child: Text(appL10n.recordAdd),
-                        ),
-                      ],
+          for (var index = 0; index < visible.length; index++) ...[
+            InkWell(
+              onTap: () => onSelected(visible[index]),
+              borderRadius: BorderRadius.circular(10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        visible[index].name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  if (index != visible.length - 1)
-                    Divider(height: 1, color: theme.dividerColor),
-                ],
-              ],
+                    Text(
+                      appL10n.commonCaloriesValue(
+                        _value(visible[index].calories),
+                      ),
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: appL10n.recordAdd,
+                      onPressed: () => onSelected(visible[index]),
+                      icon: const Icon(Icons.add, size: 20),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
+            if (index != visible.length - 1)
+              Divider(height: 1, color: theme.dividerColor),
+          ],
         ],
       );
     },
@@ -500,6 +492,301 @@ class _ChoiceRow<T> extends StatelessWidget {
 String _value(num value) =>
     value % 1 == 0 ? value.toInt().toString() : value.toStringAsFixed(1);
 
+class _CameraSection extends StatelessWidget {
+  const _CameraSection({
+    required this.onCamera,
+    required this.onManual,
+    required this.onGallery,
+  });
+
+  final VoidCallback onCamera;
+  final VoidCallback onManual;
+  final VoidCallback onGallery;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            key: const ValueKey('record-camera-button'),
+            onTap: onCamera,
+            customBorder: const CircleBorder(),
+            child: SizedBox(
+              width: 108,
+              height: 108,
+              child: SvgPicture.asset(
+                isDark ? 'svg/add-blue.svg' : 'svg/add-green.svg',
+                key: ValueKey(
+                  isDark ? 'record-add-blue-svg' : 'record-add-green-svg',
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            appL10n.recordTakeMeal,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton.icon(
+                key: const ValueKey('record-manual-toggle'),
+                onPressed: onManual,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: Text(appL10n.recordManualMeal),
+              ),
+              TextButton.icon(
+                key: const ValueKey('record-gallery-button'),
+                onPressed: onGallery,
+                icon: const Icon(Icons.photo_library_outlined, size: 18),
+                label: Text(appL10n.recordChooseGallery),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RecordHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _RecordHeaderDelegate({
+    required this.controller,
+    required this.inputFilled,
+    required this.error,
+    required this.showCameraShortcut,
+    required this.onSubmit,
+    required this.onCamera,
+  });
+
+  final TextEditingController controller;
+  final bool inputFilled;
+  final String? error;
+  final bool showCameraShortcut;
+  final VoidCallback onSubmit;
+  final VoidCallback onCamera;
+
+  bool get hasError => error != null;
+
+  @override
+  double get minExtent => hasError ? 104 : 80;
+
+  @override
+  double get maxExtent => hasError ? 192 : 170;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final progress = (shrinkOffset / (maxExtent - minExtent)).clamp(0.0, 1.0);
+    return _RecordIdleHeader(
+      controller: controller,
+      inputFilled: inputFilled,
+      error: error,
+      collapseProgress: progress,
+      showCameraShortcut: showCameraShortcut,
+      onSubmit: onSubmit,
+      onCamera: onCamera,
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _RecordHeaderDelegate oldDelegate) {
+    return controller != oldDelegate.controller ||
+        inputFilled != oldDelegate.inputFilled ||
+        error != oldDelegate.error ||
+        showCameraShortcut != oldDelegate.showCameraShortcut;
+  }
+}
+
+class _RecordIdleHeader extends StatelessWidget {
+  const _RecordIdleHeader({
+    required this.controller,
+    required this.inputFilled,
+    required this.error,
+    required this.collapseProgress,
+    required this.showCameraShortcut,
+    required this.onSubmit,
+    required this.onCamera,
+  });
+
+  final TextEditingController controller;
+  final bool inputFilled;
+  final String? error;
+  final double collapseProgress;
+  final bool showCameraShortcut;
+  final VoidCallback onSubmit;
+  final VoidCallback onCamera;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = isDark ? AppColors.darkPrimary : AppColors.primary;
+    final titleOpacity = 1 - collapseProgress;
+    final titleHeight = 62 * titleOpacity;
+    final inputGap = 14 - (8 * collapseProgress);
+    final dividerOpacity = 0.02 + (0.18 * collapseProgress);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.scaffoldBackgroundColor,
+        border: Border(
+          bottom: BorderSide(
+            color: theme.dividerColor.withValues(alpha: dividerOpacity),
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            SizedBox(
+              height: titleHeight,
+              child: ClipRect(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Opacity(
+                    opacity: titleOpacity,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          appL10n.recordTakeMeal,
+                          style: const TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          appL10n.recordHeroSubtitle,
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: inputGap),
+            Row(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  width: showCameraShortcut ? 40 : 0,
+                  child: ClipRect(
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 180),
+                      opacity: showCameraShortcut ? 1 : 0,
+                      child: IconButton(
+                        key: const ValueKey('record-camera-shortcut'),
+                        tooltip: appL10n.recordTakeMeal,
+                        onPressed: onCamera,
+                        icon: const Icon(Icons.camera_alt_outlined),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.darkInput
+                          : AppColors.primary.withValues(alpha: 0.055),
+                      borderRadius: BorderRadius.circular(17),
+                      border: Border.all(
+                        color: accent.withValues(alpha: 0.32),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: TextField(
+                      key: const ValueKey('record-unified-input'),
+                      controller: controller,
+                      maxLines: 1,
+                      maxLength: 80,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: inputFilled ? (_) => onSubmit() : null,
+                      decoration: InputDecoration(
+                        hintText: appL10n.recordDescriptionHint,
+                        counterText: '',
+                        filled: false,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Opacity(
+                  opacity: inputFilled ? 1 : 0.32,
+                  child: Semantics(
+                    button: true,
+                    enabled: inputFilled,
+                    label: appL10n.recordSendDescription,
+                    child: IconButton(
+                      key: const ValueKey('record-send-button'),
+                      onPressed: inputFilled ? onSubmit : null,
+                      style: IconButton.styleFrom(
+                        fixedSize: const Size(50, 50),
+                        padding: const EdgeInsets.all(13),
+                        backgroundColor: accent.withValues(alpha: 0.12),
+                        shape: const CircleBorder(),
+                      ),
+                      icon: SvgPicture.asset(
+                        isDark ? 'svg/send-blue.svg' : 'svg/send-green.svg',
+                        key: ValueKey(
+                          isDark
+                              ? 'record-send-blue-svg'
+                              : 'record-send-green-svg',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (error != null)
+              SizedBox(
+                height: 22,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    error!,
+                    key: const ValueKey('record-idle-error'),
+                    style: TextStyle(
+                      color: theme.colorScheme.error,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _RecordPageState extends ConsumerState<RecordPage> {
   final _inputController = TextEditingController();
   final _nameController = TextEditingController();
@@ -507,22 +794,35 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   final _proteinController = TextEditingController();
   final _carbsController = TextEditingController();
   final _fatController = TextEditingController();
+  late final ScrollController _scrollController;
   late final ImagePicker _imagePicker;
-  bool _manualExpanded = false;
+  bool _showCameraShortcut = false;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
     _imagePicker = widget.imagePicker ?? ImagePicker();
+    _scrollController = ScrollController()..addListener(_handleScroll);
     _inputController.addListener(_refreshInputState);
   }
 
   void _refreshInputState() => setState(() {});
 
+  void _handleScroll() {
+    if (!_scrollController.hasClients) return;
+    final shouldShow = _scrollController.offset > 280;
+    if (shouldShow != _showCameraShortcut && mounted) {
+      setState(() => _showCameraShortcut = shouldShow);
+    }
+  }
+
   @override
   void dispose() {
     _inputController.removeListener(_refreshInputState);
+    _scrollController
+      ..removeListener(_handleScroll)
+      ..dispose();
     for (final controller in [
       _inputController,
       _nameController,
@@ -598,11 +898,11 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     if (success && mounted) _inputController.clear();
   }
 
-  void _createManualDraft() {
+  bool _createManualDraft() {
     final calories = num.tryParse(_caloriesController.text.trim());
     if (calories == null || calories <= 0) {
       _snack(appL10n.recordCaloriesMustBePositive);
-      return;
+      return false;
     }
     ref.read(selectedRecordImagePathProvider.notifier).state = null;
     ref
@@ -617,7 +917,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
           fat: _number(_fatController.text),
         );
     _clearManual();
-    setState(() => _manualExpanded = false);
+      return true;
   }
 
   void _fillManualFromMeal(Meal meal) {
@@ -626,8 +926,8 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     _proteinController.text = _value(meal.protein);
     _carbsController.text = _value(meal.carbs);
     _fatController.text = _value(meal.fat);
-    setState(() => _manualExpanded = true);
     _snack(appL10n.recordYesterdayFilled);
+    _showManualSheet();
   }
 
   num _number(String value) => num.tryParse(value.trim()) ?? 0;
@@ -650,7 +950,6 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       ref.read(selectedRecordImagePathProvider.notifier).state = null;
       _inputController.clear();
       _clearManual();
-      setState(() => _manualExpanded = false);
       _snack(appL10n.recordSaved);
       ref.read(homeTabIndexProvider.notifier).state = 0;
     }
@@ -671,6 +970,37 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   void _snack(String message) =>
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(message)));
+
+  Future<void> _showManualSheet() async {
+    await showBiteSyncModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            MediaQuery.viewInsetsOf(sheetContext).bottom + AppSpacing.lg,
+          ),
+          child: _ManualForm(
+            nameController: _nameController,
+            caloriesController: _caloriesController,
+            proteinController: _proteinController,
+            carbsController: _carbsController,
+            fatController: _fatController,
+            onGenerate: () {
+              if (_createManualDraft()) {
+                Navigator.pop(sheetContext);
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -728,212 +1058,40 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   );
 
   Widget _buildIdle({String? error}) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final accent = isDark ? AppColors.darkPrimary : AppColors.primary;
-    final inputFilled = _inputController.text.trim().isNotEmpty;
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: FocusScope.of(context).unfocus,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 34),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          appL10n.recordTakeMeal,
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          appL10n.recordHeroSubtitle,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        SizedBox(height: error == null ? 16 : 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 56,
-                                decoration: BoxDecoration(
-                                  color: isDark
-                                      ? AppColors.darkInput
-                                      : AppColors.primary.withValues(
-                                          alpha: 0.055,
-                                        ),
-                                  borderRadius: BorderRadius.circular(17),
-                                  border: Border.all(
-                                    color: accent.withValues(alpha: 0.32),
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                                child: TextField(
-                                  key: ValueKey('record-unified-input'),
-                                  controller: _inputController,
-                                  maxLines: 1,
-                                  maxLength: 80,
-                                  textInputAction: TextInputAction.send,
-                                  onSubmitted: inputFilled
-                                      ? (_) => _analyzeText()
-                                      : null,
-                                  decoration: InputDecoration(
-                                    hintText: appL10n.recordDescriptionHint,
-                                    counterText: '',
-                                    filled: false,
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 10),
-                            Opacity(
-                              opacity: inputFilled ? 1 : 0.32,
-                              child: Semantics(
-                                button: true,
-                                enabled: inputFilled,
-                                label: appL10n.recordSendDescription,
-                                child: IconButton(
-                                  key: ValueKey('record-send-button'),
-                                  onPressed: inputFilled ? _analyzeText : null,
-                                  style: IconButton.styleFrom(
-                                    fixedSize: Size(50, 50),
-                                    padding: EdgeInsets.all(13),
-                                    backgroundColor: accent.withValues(
-                                      alpha: 0.12,
-                                    ),
-                                    shape: CircleBorder(),
-                                  ),
-                                  icon: SvgPicture.asset(
-                                    isDark
-                                        ? 'svg/send-blue.svg'
-                                        : 'svg/send-green.svg',
-                                    key: ValueKey(
-                                      isDark
-                                          ? 'record-send-blue-svg'
-                                          : 'record-send-green-svg',
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (error != null) ...[
-                          SizedBox(height: 4),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              error,
-                              key: ValueKey('record-idle-error'),
-                              style: TextStyle(
-                                color: theme.colorScheme.error,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        InkWell(
-                          key: ValueKey('record-camera-button'),
-                          onTap: _showImageSourceSheet,
-                          customBorder: CircleBorder(),
-                          child: SizedBox(
-                            width: 108,
-                            height: 108,
-                            child: SvgPicture.asset(
-                              isDark ? 'svg/add-blue.svg' : 'svg/add-green.svg',
-                              key: ValueKey(
-                                isDark
-                                    ? 'record-add-blue-svg'
-                                    : 'record-add-green-svg',
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          appL10n.recordTakeMeal,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        TextButton(
-                          key: ValueKey('record-manual-toggle'),
-                          onPressed: () => setState(
-                            () => _manualExpanded = !_manualExpanded,
-                          ),
-                          child: Text(
-                            _manualExpanded
-                                ? appL10n.recordCollapse
-                                : appL10n.recordManualMeal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.only(bottom: 40),
-                    child: Column(
-                      children: [
-                        if (_manualExpanded)
-                          AnimatedSize(
-                            duration: const Duration(milliseconds: 180),
-                            alignment: Alignment.topCenter,
-                            child: _ManualForm(
-                              nameController: _nameController,
-                              caloriesController: _caloriesController,
-                              proteinController: _proteinController,
-                              carbsController: _carbsController,
-                              fatController: _fatController,
-                              onGenerate: _createManualDraft,
-                            ),
-                          ),
-                        const SizedBox(height: 28),
-                        _YesterdaySection(
-                          meals: ref.watch(yesterdayMealsProvider),
-                          onSelected: _fillManualFromMeal,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverPersistentHeader(
+            pinned: true,
+            delegate: _RecordHeaderDelegate(
+              controller: _inputController,
+              inputFilled: _inputController.text.trim().isNotEmpty,
+              error: error,
+              showCameraShortcut: _showCameraShortcut,
+              onSubmit: _analyzeText,
+              onCamera: _showImageSourceSheet,
             ),
-          );
-        },
+          ),
+          SliverToBoxAdapter(
+            child: _CameraSection(
+              onCamera: _showImageSourceSheet,
+              onManual: _showManualSheet,
+              onGallery: () => _pickImage(ImageSource.gallery),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+              child: _YesterdaySection(
+                meals: ref.watch(yesterdayMealsProvider),
+                onSelected: _fillManualFromMeal,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
