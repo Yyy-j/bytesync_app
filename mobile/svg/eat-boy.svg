@@ -24,10 +24,6 @@
   </filter>
 </defs>
 
-<text x="256" y="58" text-anchor="middle"
-        font-family="Arial Rounded MT Bold, Arial, sans-serif" font-size="42"
-        font-weight="700" fill="#2A2D34" stroke="white" stroke-width="10"
-        paint-order="stroke fill" stroke-linejoin="round">Good!</text>
 <g filter="url(#shadow)">
   <path d="M 255 150.25
            C 181.5 150.25, 160.5 229.0, 179.39999999999998 289.9
