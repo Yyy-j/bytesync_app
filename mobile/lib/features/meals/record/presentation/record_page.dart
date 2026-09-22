@@ -507,7 +507,7 @@ class _CameraSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 30, 24, 24),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -516,8 +516,8 @@ class _CameraSection extends StatelessWidget {
             onTap: onCamera,
             customBorder: const CircleBorder(),
             child: SizedBox(
-              width: 108,
-              height: 108,
+              width: 96,
+              height: 96,
               child: SvgPicture.asset(
                 isDark ? 'svg/add-blue.svg' : 'svg/add-green.svg',
                 key: ValueKey(
@@ -632,8 +632,9 @@ class _RecordIdleHeader extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final accent = isDark ? AppColors.darkPrimary : AppColors.primary;
     final titleOpacity = 1 - collapseProgress;
-    final titleHeight = 62 * titleOpacity;
-    final inputGap = 14 - (8 * collapseProgress);
+    final titleHeight = 72 * titleOpacity;
+    final topPadding = 18 * titleOpacity;
+    final inputGap = 14 - (6 * collapseProgress);
     final dividerOpacity = 0.02 + (0.18 * collapseProgress);
 
     return DecoratedBox(
@@ -646,75 +647,68 @@ class _RecordIdleHeader extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
+        padding: EdgeInsets.fromLTRB(24, topPadding, 24, 10),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SizedBox(
               height: titleHeight,
-              child: ClipRect(
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Opacity(
-                    opacity: titleOpacity,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          appL10n.recordTakeMeal,
-                          style: const TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          appL10n.recordHeroSubtitle,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+              child: Opacity(
+                opacity: titleOpacity,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      appL10n.recordTakeMeal,
+                      style: const TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Text(
+                      appL10n.recordHeroSubtitle,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
             SizedBox(height: inputGap),
-            Row(
-              children: [
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOutCubic,
-                  width: showCameraShortcut ? 40 : 0,
-                  child: ClipRect(
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 180),
-                      opacity: showCameraShortcut ? 1 : 0,
-                      child: IconButton(
-                        key: const ValueKey('record-camera-shortcut'),
-                        tooltip: appL10n.recordTakeMeal,
-                        onPressed: onCamera,
-                        icon: const Icon(Icons.camera_alt_outlined),
+            Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkInput
+                    : AppColors.primary.withValues(alpha: 0.055),
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(color: accent.withValues(alpha: 0.32)),
+              ),
+              child: Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
+                    width: showCameraShortcut ? 40 : 0,
+                    child: ClipRect(
+                      child: AnimatedOpacity(
+                        duration: const Duration(milliseconds: 180),
+                        opacity: showCameraShortcut ? 1 : 0,
+                        child: IconButton(
+                          key: const ValueKey('record-camera-shortcut'),
+                          tooltip: appL10n.recordTakeMeal,
+                          onPressed: onCamera,
+                          icon: const Icon(Icons.camera_alt_outlined),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: Container(
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? AppColors.darkInput
-                          : AppColors.primary.withValues(alpha: 0.055),
-                      borderRadius: BorderRadius.circular(17),
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.32),
-                      ),
-                    ),
-                    alignment: Alignment.center,
+                  Expanded(
                     child: TextField(
                       key: const ValueKey('record-unified-input'),
                       controller: controller,
@@ -735,35 +729,36 @@ class _RecordIdleHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Opacity(
-                  opacity: inputFilled ? 1 : 0.32,
-                  child: Semantics(
-                    button: true,
-                    enabled: inputFilled,
-                    label: appL10n.recordSendDescription,
-                    child: IconButton(
-                      key: const ValueKey('record-send-button'),
-                      onPressed: inputFilled ? onSubmit : null,
-                      style: IconButton.styleFrom(
-                        fixedSize: const Size(50, 50),
-                        padding: const EdgeInsets.all(13),
-                        backgroundColor: accent.withValues(alpha: 0.12),
-                        shape: const CircleBorder(),
-                      ),
-                      icon: SvgPicture.asset(
-                        isDark ? 'svg/send-blue.svg' : 'svg/send-green.svg',
-                        key: ValueKey(
+                  Opacity(
+                    opacity: inputFilled ? 1 : 0.32,
+                    child: Semantics(
+                      button: true,
+                      enabled: inputFilled,
+                      label: appL10n.recordSendDescription,
+                      child: IconButton(
+                        key: const ValueKey('record-send-button'),
+                        onPressed: inputFilled ? onSubmit : null,
+                        style: IconButton.styleFrom(
+                          fixedSize: const Size(50, 50),
+                          padding: const EdgeInsets.all(13),
+                          foregroundColor: accent,
+                          shape: const CircleBorder(),
+                        ),
+                        icon: SvgPicture.asset(
                           isDark
-                              ? 'record-send-blue-svg'
-                              : 'record-send-green-svg',
+                              ? 'svg/send-blue.svg'
+                              : 'svg/send-green.svg',
+                          key: ValueKey(
+                            isDark
+                                ? 'record-send-blue-svg'
+                                : 'record-send-green-svg',
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
             if (error != null)
               SizedBox(
