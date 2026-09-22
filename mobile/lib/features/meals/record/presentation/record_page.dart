@@ -757,7 +757,7 @@ class _RecordIdleHeader extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
             ),
             if (error != null)
