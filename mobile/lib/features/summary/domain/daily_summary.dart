@@ -133,9 +133,7 @@ class MonthlySummary {
     return MonthlySummary(
       month: DateTime(parsedMonth.year, parsedMonth.month),
       self: MonthlyMember.fromJson(rawSelf),
-      partner: rawPartner == null
-          ? null
-          : MonthlyMember.fromJson(rawPartner),
+      partner: rawPartner == null ? null : MonthlyMember.fromJson(rawPartner),
       days: days,
     );
   }
@@ -167,7 +165,7 @@ class MonthlyMember {
       displayName:
           json['display_name'] as String? ?? appL10n.commonUnnamedMember,
       calorieGoal: calorieGoal,
-        character: UserCharacter.fromWire(json['character']),
+      character: UserCharacter.fromWire(json['character']),
     );
   }
 
@@ -223,7 +221,8 @@ class UserDailySlice {
       calories = 0,
       protein = 0,
       carbs = 0,
-      fat = 0;
+      fat = 0,
+      character = UserCharacter.boy;
 
   factory UserDailySlice.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const UserDailySlice.empty();
@@ -235,7 +234,7 @@ class UserDailySlice {
       protein: json['protein'] as num? ?? 0,
       carbs: json['carbs'] as num? ?? 0,
       fat: json['fat'] as num? ?? 0,
-        character: UserCharacter.fromWire(json['character']),
+      character: UserCharacter.fromWire(json['character']),
     );
   }
 
