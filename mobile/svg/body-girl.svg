@@ -24,10 +24,6 @@
   </filter>
 </defs>
 
-<text x="256" y="58" text-anchor="middle"
-        font-family="Arial Rounded MT Bold, Arial, sans-serif" font-size="40"
-        font-weight="700" fill="#2A2D34" stroke="white" stroke-width="10"
-        paint-order="stroke fill" stroke-linejoin="round">Hydrate!</text>
 <g filter="url(#shadow)">
   <path d="M 230 175.0
            C 160.0 175.0, 140.0 250.0, 158.0 308.0
