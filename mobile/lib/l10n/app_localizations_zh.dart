@@ -224,6 +224,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileDisplayName => '用户显示名';
 
   @override
+  String get profileCharacter => '我的形象';
+
+  @override
+  String get characterPageTitle => '我的形象';
+
+  @override
+  String get characterSave => '保存';
+
+  @override
+  String get characterSaved => '形象已更新';
+
+  @override
+  String get characterSaveFailed => '形象保存失败，请重试';
+
+  @override
   String get profileSave => '保存资料';
 
   @override
@@ -769,6 +784,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trainingEditFailed => '修改失败，请检查网络后重试';
+
+  @override
+  String get trainingDeleteSet => '删除这组记录';
+
+  @override
+  String get trainingDeleteSetTitle => '删除这组训练记录？';
+
+  @override
+  String get trainingDeleteSetDescription => '删除后，本组打卡数据将被移除。';
+
+  @override
+  String get trainingDeleteSetSuccess => '训练记录已删除';
+
+  @override
+  String get trainingDeleteSetFailed => '删除失败，请检查网络后重试';
 
   @override
   String get trainingTemplateDescription => '设置每周固定训练。保存模板后，可由你决定是否同步到本周。';

@@ -9,6 +9,7 @@ import 'package:bytesync/features/summary/data/summary_repository.dart';
 import 'package:bytesync/features/summary/domain/daily_summary.dart';
 import 'package:bytesync/features/summary/presentation/summary_controller.dart';
 import 'package:bytesync/features/summary/presentation/summary_page.dart';
+import 'package:bytesync/features/profile/domain/user_character.dart';
 
 class _FakeSummaryRepository implements SummaryRepository {
   int monthlyCalls = 0;
@@ -82,11 +83,44 @@ void main() {
     await initializeDateFormatting('zh_CN');
   });
 
+  test('daily JSON parses self and partner characters', () {
+    final summary = DailySummary.fromJson({
+      'date': '2026-09-15',
+      'calories': 638,
+      'protein': 50,
+      'carbs': 70,
+      'fat': 20,
+      'meal_count': 0,
+      'meals': [],
+      'self_slice': {
+        'user_id': 'self-1',
+        'display_name': 'Me',
+        'character': 'girl',
+        'calories': 385,
+      },
+      'partner_slice': {
+        'user_id': 'partner-1',
+        'display_name': 'hh',
+        'character': 'boy',
+        'calories': 253,
+      },
+      'self_goals': {'calorie_goal': 2000},
+      'partner_goals': {'calorie_goal': 1700},
+    });
+
+    expect(summary.selfSlice.character, UserCharacter.girl);
+    expect(summary.partnerSlice?.character, UserCharacter.boy);
+  });
+
   test('monthly JSON parses goals and calories from the backend contract', () {
     final summary = MonthlySummary.fromJson({
       'month': '2026-09',
-      'self': {'calorie_goal': 2000},
-      'partner': {'display_name': 'hh', 'calorie_goal': 1700},
+      'self': {'calorie_goal': 2000, 'character': 'girl'},
+      'partner': {
+        'display_name': 'hh',
+        'calorie_goal': 1700,
+        'character': 'boy',
+      },
       'days': [
         {'date': '2026-09-15', 'self_calories': 385, 'partner_calories': 2532},
       ],
@@ -95,6 +129,8 @@ void main() {
     final day = summary.dayAt(DateTime(2026, 9, 15));
     expect(summary.self.calorieGoal, 2000);
     expect(summary.partner?.calorieGoal, 1700);
+    expect(summary.self.character, UserCharacter.girl);
+    expect(summary.partner?.character, UserCharacter.boy);
     expect(day?.selfCalories, 385);
     expect(day?.partnerCalories, 2532);
     expect(

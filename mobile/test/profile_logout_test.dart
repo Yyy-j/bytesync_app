@@ -8,6 +8,7 @@ import 'package:bytesync/core/storage/secure_storage_service.dart';
 import 'package:bytesync/features/auth/data/google_auth_client.dart';
 import 'package:bytesync/features/auth/data/remote_auth_repository.dart';
 import 'package:bytesync/features/profile/data/dto/user_profile_dto.dart';
+import 'package:bytesync/features/profile/domain/user_character.dart';
 
 class _MemorySecureStorage extends SecureStorageService {
   String? accessToken;
@@ -49,13 +50,28 @@ void main() {
       'email': 'one@example.com',
       'provider': 'google',
       'display_name': 'One',
+      'character': 'girl',
       'goals': {'calories': 2000, 'protein': 90, 'carbs': 250, 'fat': 60},
     }).toDomain();
     expect(profile.displayName, 'One');
+    expect(profile.character, UserCharacter.girl);
     expect(
       const UpdateUserProfileRequestDto(displayName: 'New Name').toJson(),
       {'display_name': 'New Name'},
     );
+    expect(
+      const UpdateUserCharacterRequestDto(UserCharacter.girl).toJson(),
+      {'character': 'girl'},
+    );
+    final legacyProfile = UserProfileDto.fromJson({
+      'id': 'user-2',
+      'email': null,
+      'provider': 'google',
+      'display_name': null,
+      'character': 'unknown',
+      'goals': {'calories': 2000, 'protein': 90, 'carbs': 250, 'fat': 60},
+    }).toDomain();
+    expect(legacyProfile.character, UserCharacter.boy);
   });
 
   test('logout clears the locally persisted JWT', () async {

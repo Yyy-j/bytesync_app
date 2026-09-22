@@ -149,6 +149,13 @@ class _FakeTrainingRepository implements TrainingRepository {
     required String requestId,
     required TrainingSetDetailPatch patch,
   }) => throw UnimplementedError();
+
+  @override
+  Future<void> deleteSetDetail({
+    required String weekId,
+    required String itemId,
+    required String requestId,
+  }) => throw UnimplementedError();
 }
 
 void main() {

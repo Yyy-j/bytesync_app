@@ -17,6 +17,9 @@ class _FakeTrainingRepository implements TrainingRepository {
   String? updatedItemId;
   String? updatedRequestId;
   TrainingSetDetailPatch? updatedPatch;
+  String? deletedWeekId;
+  String? deletedItemId;
+  String? deletedRequestId;
 
   @override
   Future<List<TrainingCustomExercise>> getCustomExercises() =>
@@ -58,6 +61,17 @@ class _FakeTrainingRepository implements TrainingRepository {
       completedSets: 1,
       setDetail: _detail(),
     );
+  }
+
+  @override
+  Future<void> deleteSetDetail({
+    required String weekId,
+    required String itemId,
+    required String requestId,
+  }) async {
+    deletedWeekId = weekId;
+    deletedItemId = itemId;
+    deletedRequestId = requestId;
   }
 
   @override
@@ -210,5 +224,30 @@ void main() {
     expect(repository.updatedRequestId, 'request-1');
     expect(repository.updatedPatch, same(patch));
     expect(repository.currentWeekCalls, callsBeforeUpdate + 1);
+  });
+
+  test('set delete uses public weekId and preserves selected day', () async {
+    final repository = _FakeTrainingRepository();
+    final container = ProviderContainer(
+      overrides: [
+        trainingRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+    final controller = container.read(trainingControllerProvider.notifier);
+    await controller.refresh();
+
+    final outcome = await controller.deleteSetDetail(
+      itemId: 'item-1',
+      requestId: 'request-1',
+    );
+
+    expect(outcome.isSuccess, isTrue);
+    expect(repository.deletedWeekId, '2026-W38');
+    expect(repository.deletedItemId, 'item-1');
+    expect(repository.deletedRequestId, 'request-1');
+    final state = container.read(trainingControllerProvider);
+    expect(state, isA<TrainingReady>());
+    expect((state as TrainingReady).selectedDayIndex, 0);
   });
 }

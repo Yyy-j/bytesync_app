@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
@@ -66,7 +67,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             children: [
               Row(
                 children: [
-                  CircleAvatar(radius: 28, child: Icon(Icons.person_outline)),
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: SvgPicture.asset(
+                        profile.character.bodyAsset,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
                   SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
@@ -150,6 +167,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             children: [
               ListTile(
                 contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.face_retouching_natural_outlined),
+                title: Text(appL10n.profileCharacter),
+                trailing: Icon(Icons.chevron_right),
+                onTap: _openCharacterPage,
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.flag_outlined),
                 title: Text(appL10n.profileNutritionGoals),
                 trailing: Icon(Icons.chevron_right),
@@ -218,6 +242,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     if (mounted) {
       _snack(result.isSuccess ? appL10n.profileSaved : result.errorMessage!);
     }
+  }
+
+  Future<void> _openCharacterPage() async {
+    final saved = await context.push<bool>('/profile/character');
+    if (saved == true && mounted) _snack(appL10n.characterSaved);
   }
 
   void _snack(String message) {

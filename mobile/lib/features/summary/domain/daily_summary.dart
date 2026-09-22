@@ -3,6 +3,7 @@ import 'package:bytesync/l10n/l10n.dart';
 import '../../meals/domain/meal.dart';
 import '../../meals/data/mappers/meal_mapper.dart';
 import '../../meals/data/dto/meal_dto.dart';
+import '../../profile/domain/user_character.dart';
 
 /// Aggregated nutrition totals for a single day, plus the list of meals
 /// that make it up — mirrors the backend's planned `GET /summary/daily`
@@ -153,6 +154,7 @@ class MonthlyMember {
     required this.userId,
     required this.displayName,
     required this.calorieGoal,
+    this.character = UserCharacter.boy,
   });
 
   factory MonthlyMember.fromJson(Map<String, dynamic> json) {
@@ -165,12 +167,14 @@ class MonthlyMember {
       displayName:
           json['display_name'] as String? ?? appL10n.commonUnnamedMember,
       calorieGoal: calorieGoal,
+        character: UserCharacter.fromWire(json['character']),
     );
   }
 
   final String userId;
   final String displayName;
   final num calorieGoal;
+  final UserCharacter character;
 }
 
 class MonthlyDaySummary {
@@ -210,6 +214,7 @@ class UserDailySlice {
     required this.protein,
     required this.carbs,
     required this.fat,
+    this.character = UserCharacter.boy,
   });
 
   const UserDailySlice.empty()
@@ -230,6 +235,7 @@ class UserDailySlice {
       protein: json['protein'] as num? ?? 0,
       carbs: json['carbs'] as num? ?? 0,
       fat: json['fat'] as num? ?? 0,
+        character: UserCharacter.fromWire(json['character']),
     );
   }
 
@@ -242,6 +248,7 @@ class UserDailySlice {
   final num protein;
   final num carbs;
   final num fat;
+  final UserCharacter character;
 }
 
 /// Daily nutrition goals returned under `self_goals` / `partner_goals` by

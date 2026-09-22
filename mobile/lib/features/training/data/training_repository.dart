@@ -42,4 +42,10 @@ abstract interface class TrainingRepository {
     required String requestId,
     required TrainingSetDetailPatch patch,
   });
+
+  Future<void> deleteSetDetail({
+    required String weekId,
+    required String itemId,
+    required String requestId,
+  });
 }

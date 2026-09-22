@@ -508,6 +508,36 @@ abstract class AppLocalizations {
   /// **'用户显示名'**
   String get profileDisplayName;
 
+  /// No description provided for @profileCharacter.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的形象'**
+  String get profileCharacter;
+
+  /// No description provided for @characterPageTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'我的形象'**
+  String get characterPageTitle;
+
+  /// No description provided for @characterSave.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get characterSave;
+
+  /// No description provided for @characterSaved.
+  ///
+  /// In zh, this message translates to:
+  /// **'形象已更新'**
+  String get characterSaved;
+
+  /// No description provided for @characterSaveFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'形象保存失败，请重试'**
+  String get characterSaveFailed;
+
   /// No description provided for @profileSave.
   ///
   /// In zh, this message translates to:
@@ -1513,6 +1543,36 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'修改失败，请检查网络后重试'**
   String get trainingEditFailed;
+
+  /// No description provided for @trainingDeleteSet.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除这组记录'**
+  String get trainingDeleteSet;
+
+  /// No description provided for @trainingDeleteSetTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除这组训练记录？'**
+  String get trainingDeleteSetTitle;
+
+  /// No description provided for @trainingDeleteSetDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除后，本组打卡数据将被移除。'**
+  String get trainingDeleteSetDescription;
+
+  /// No description provided for @trainingDeleteSetSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'训练记录已删除'**
+  String get trainingDeleteSetSuccess;
+
+  /// No description provided for @trainingDeleteSetFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除失败，请检查网络后重试'**
+  String get trainingDeleteSetFailed;
 
   /// No description provided for @trainingTemplateDescription.
   ///

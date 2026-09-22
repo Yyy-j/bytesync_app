@@ -1,3 +1,4 @@
+import '../domain/user_character.dart';
 import '../domain/user_profile.dart';
 
 abstract interface class UserRepository {
@@ -6,4 +7,6 @@ abstract interface class UserRepository {
   Future<UserProfile> updateNutritionGoals(NutritionGoals goals);
 
   Future<UserProfile> updateProfile({required String? displayName});
+
+  Future<UserProfile> updateCharacter(UserCharacter character);
 }

@@ -1,4 +1,5 @@
 import '../../../../core/network/api_exception.dart';
+import '../../domain/user_character.dart';
 import '../../domain/user_profile.dart';
 
 class NutritionGoalsDto {
@@ -42,6 +43,7 @@ class UserProfileDto {
     required this.provider,
     required this.displayName,
     required this.goals,
+    required this.character,
   });
 
   factory UserProfileDto.fromJson(Map<String, dynamic> json) {
@@ -54,6 +56,7 @@ class UserProfileDto {
         goals: NutritionGoalsDto.fromJson(
           json['goals'] as Map<String, dynamic>,
         ),
+        character: UserCharacter.fromWire(json['character']),
       );
     } on TypeError catch (error) {
       throw MalformedResponseException('用户资料数据解析失败: $error');
@@ -65,6 +68,7 @@ class UserProfileDto {
   final String provider;
   final String? displayName;
   final NutritionGoalsDto goals;
+  final UserCharacter character;
 
   UserProfile toDomain() => UserProfile(
     id: id,
@@ -72,6 +76,7 @@ class UserProfileDto {
     provider: provider,
     displayName: displayName,
     goals: goals.toDomain(),
+    character: character,
   );
 }
 
@@ -96,4 +101,12 @@ class UpdateUserProfileRequestDto {
   final String? displayName;
 
   Map<String, dynamic> toJson() => {'display_name': displayName};
+}
+
+class UpdateUserCharacterRequestDto {
+  const UpdateUserCharacterRequestDto(this.character);
+
+  final UserCharacter character;
+
+  Map<String, dynamic> toJson() => {'character': character.toWire()};
 }

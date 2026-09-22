@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
+import '../../summary/presentation/summary_controller.dart';
 import '../data/user_providers.dart';
 import '../data/user_repository.dart';
+import '../domain/user_character.dart';
 import '../domain/user_profile.dart';
 
 sealed class ProfileState {
@@ -74,6 +76,25 @@ class ProfileController extends AutoDisposeNotifier<ProfileState> {
       state = ProfileReady(profile: current.profile);
       return ProfileSaveResult.failure(
         _message(error, appL10n.profileSaveFailed),
+      );
+    }
+  }
+
+  Future<ProfileSaveResult> saveCharacter(UserCharacter character) async {
+    final current = state;
+    if (current is! ProfileReady || current.saving) {
+      return ProfileSaveResult.failure(appL10n.errorCannotSaveNow);
+    }
+    state = ProfileReady(profile: current.profile, saving: true);
+    try {
+      final profile = await _repository.updateCharacter(character);
+      state = ProfileReady(profile: profile);
+      await ref.read(summaryControllerProvider.notifier).refresh();
+      return const ProfileSaveResult.success();
+    } catch (error) {
+      state = ProfileReady(profile: current.profile);
+      return ProfileSaveResult.failure(
+        _message(error, appL10n.characterSaveFailed),
       );
     }
   }

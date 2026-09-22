@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/dio_error_mapper.dart';
+import '../domain/user_character.dart';
 import '../domain/user_profile.dart';
 import 'dto/user_profile_dto.dart';
 import 'user_repository.dart';
@@ -43,6 +44,19 @@ class RemoteUserRepository implements UserRepository {
       final response = await _dio.patch<Map<String, dynamic>>(
         ApiEndpoints.usersMe,
         data: UpdateUserProfileRequestDto(displayName: displayName).toJson(),
+      );
+      return UserProfileDto.fromJson(response.data!).toDomain();
+    } catch (error) {
+      throw _errorMapper.map(error);
+    }
+  }
+
+  @override
+  Future<UserProfile> updateCharacter(UserCharacter character) async {
+    try {
+      final response = await _dio.patch<Map<String, dynamic>>(
+        ApiEndpoints.usersMe,
+        data: UpdateUserCharacterRequestDto(character).toJson(),
       );
       return UserProfileDto.fromJson(response.data!).toDomain();
     } catch (error) {

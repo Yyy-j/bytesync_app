@@ -12,6 +12,7 @@ import '../../../shared/widgets/state_views.dart';
 import '../../meals/domain/meal.dart';
 import '../../meals/domain/meal_source.dart';
 import '../../meals/presentation/meal_management_controller.dart';
+import '../../profile/domain/user_character.dart';
 import '../domain/daily_summary.dart';
 import 'summary_controller.dart';
 
@@ -203,9 +204,7 @@ class _SummaryBody extends ConsumerWidget {
                 child: _MealListItem(
                   meal: meal,
                   ownerName: _ownerName(meal),
-                  characterAsset: meal.userId == summary.selfSlice.userId
-                      ? 'svg/eat-boy.svg'
-                      : 'svg/eat-girl.svg',
+                  characterAsset: _mealCharacter(meal).eatAsset,
                   busy: managementState.isBusy(meal.id),
                   onManage: meal.userId == summary.selfSlice.userId
                       ? () => _showMealActions(context, ref, meal)
@@ -225,6 +224,17 @@ class _SummaryBody extends ConsumerWidget {
       return partner.displayName;
     }
     return appL10n.commonMember;
+  }
+
+  UserCharacter _mealCharacter(Meal meal) {
+    if (meal.userId == summary.selfSlice.userId) {
+      return summary.selfSlice.character;
+    }
+    final partner = summary.partnerSlice;
+    if (partner != null && meal.userId == partner.userId) {
+      return partner.character;
+    }
+    return UserCharacter.boy;
   }
 }
 
@@ -579,7 +589,7 @@ class _SummaryCards extends StatelessWidget {
             name: appL10n.todayMe,
             slice: summary.selfSlice,
             goals: summary.selfGoals,
-            characterAsset: 'svg/body-boy.svg',
+            characterAsset: summary.selfSlice.character.bodyAsset,
             valueColor: Theme.of(context).brightness == Brightness.dark
                 ? _SummaryDarkColors.blue
                 : AppColors.protein,
@@ -592,7 +602,7 @@ class _SummaryCards extends StatelessWidget {
               name: summary.partnerSlice!.displayName,
               slice: summary.partnerSlice!,
               goals: summary.partnerGoals!,
-              characterAsset: 'svg/body-girl.svg',
+              characterAsset: summary.partnerSlice!.character.bodyAsset,
               valueColor: Theme.of(context).brightness == Brightness.dark
                   ? _SummaryDarkColors.pink
                   : AppColors.fat,

@@ -1,3 +1,5 @@
+import 'user_character.dart';
+
 class NutritionGoals {
   const NutritionGoals({
     required this.calories,
@@ -19,6 +21,7 @@ class UserProfile {
     required this.provider,
     required this.displayName,
     required this.goals,
+    this.character = UserCharacter.boy,
   });
 
   final String id;
@@ -26,4 +29,5 @@ class UserProfile {
   final String provider;
   final String? displayName;
   final NutritionGoals goals;
+  final UserCharacter character;
 }

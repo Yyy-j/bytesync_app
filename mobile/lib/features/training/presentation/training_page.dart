@@ -121,16 +121,9 @@ class _TrainingBody extends ConsumerWidget {
               child: EmptyView(message: appL10n.trainingDayEmpty, icon: '🏋️'),
             )
           else
-            ...selectedDay.exercises.map(
-              (exercise) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _ExerciseCard(
-                  exercise: exercise,
-                  videoUrl: exercise.exerciseId == null
-                      ? null
-                      : videos[exercise.exerciseId]?.videoUrl,
-                ),
-              ),
+            _AnimatedExerciseList(
+              exercises: _orderedExercises(selectedDay.exercises),
+              videos: videos,
             ),
         ],
       ),
@@ -145,6 +138,136 @@ class _TrainingBody extends ConsumerWidget {
             DateFormat(appL10n.trainingMonthDayFormat).format(date),
           );
     return '${_weekdayNames[dayIndex]}$dateText';
+  }
+}
+
+bool _isExerciseCompleted(TrainingExerciseItem exercise) {
+  return exercise.targetSets > 0 &&
+      exercise.completedSets >= exercise.targetSets;
+}
+
+List<TrainingExerciseItem> _orderedExercises(
+  List<TrainingExerciseItem> exercises,
+) {
+  return [
+    ...exercises.where((exercise) => !_isExerciseCompleted(exercise)),
+    ...exercises.where(_isExerciseCompleted),
+  ];
+}
+
+class _AnimatedExerciseList extends StatefulWidget {
+  const _AnimatedExerciseList({required this.exercises, required this.videos});
+
+  final List<TrainingExerciseItem> exercises;
+  final Map<String, TrainingExerciseVideo> videos;
+
+  @override
+  State<_AnimatedExerciseList> createState() => _AnimatedExerciseListState();
+}
+
+class _AnimatedExerciseListState extends State<_AnimatedExerciseList> {
+  final Map<String, GlobalKey> _measurementKeys = {};
+  final Map<String, double> _heights = {};
+  bool _hasMeasuredAll = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncMeasurementKeys();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedExerciseList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _syncMeasurementKeys();
+  }
+
+  void _syncMeasurementKeys() {
+    final ids = widget.exercises.map((exercise) => exercise.itemId).toSet();
+    _measurementKeys.removeWhere((id, _) => !ids.contains(id));
+    _heights.removeWhere((id, _) => !ids.contains(id));
+    for (final id in ids) {
+      _measurementKeys.putIfAbsent(id, () => GlobalKey());
+    }
+    _hasMeasuredAll = ids.every(_heights.containsKey);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _captureHeights());
+  }
+
+  void _captureHeights() {
+    if (!mounted) return;
+    var changed = false;
+    for (final exercise in widget.exercises) {
+      final renderObject =
+          _measurementKeys[exercise.itemId]?.currentContext?.findRenderObject();
+      if (renderObject is! RenderBox || !renderObject.hasSize) continue;
+      final height = renderObject.size.height;
+        if ((height - (_heights[exercise.itemId] ?? 0)).abs() > 0.5) {
+        _heights[exercise.itemId] = height;
+        changed = true;
+      }
+    }
+    final measuredAll = widget.exercises.every(
+      (exercise) => _heights.containsKey(exercise.itemId),
+    );
+    if (changed || measuredAll != _hasMeasuredAll) {
+      setState(() => _hasMeasuredAll = measuredAll);
+    }
+  }
+
+  Widget _exerciseCard(TrainingExerciseItem exercise) {
+    return SizedBox(
+      key: _measurementKeys[exercise.itemId],
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+        child: _ExerciseCard(
+          key: ValueKey(exercise.itemId),
+          exercise: exercise,
+          videoUrl: exercise.exerciseId == null
+              ? null
+              : widget.videos[exercise.exerciseId]?.videoUrl,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_hasMeasuredAll) {
+      return Column(
+        children: widget.exercises.map(_exerciseCard).toList(growable: false),
+      );
+    }
+
+    var top = 0.0;
+    final positionedCards = <Widget>[];
+    for (final exercise in widget.exercises) {
+      final height = _heights[exercise.itemId] ?? 0;
+      positionedCards.add(
+        AnimatedPositioned(
+          key: ValueKey(exercise.itemId),
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeInOutCubic,
+          top: top,
+          left: 0,
+          right: 0,
+          child: _exerciseCard(exercise),
+        ),
+      );
+      top += height;
+    }
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOutCubic,
+      alignment: Alignment.topCenter,
+      child: SizedBox(
+        height: top,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: positionedCards,
+        ),
+      ),
+    );
   }
 }
 
@@ -222,7 +345,11 @@ class _WeekSelector extends StatelessWidget {
 }
 
 class _ExerciseCard extends StatelessWidget {
-  const _ExerciseCard({required this.exercise, required this.videoUrl});
+  const _ExerciseCard({
+    super.key,
+    required this.exercise,
+    required this.videoUrl,
+  });
 
   final TrainingExerciseItem exercise;
   final Uri? videoUrl;
@@ -310,7 +437,7 @@ class _ExerciseCard extends StatelessWidget {
               child: FilledButton.tonal(
                 onPressed:
                     exercise.removedFromTemplate ||
-                        exercise.completedSets >= exercise.targetSets
+                    _isExerciseCompleted(exercise)
                     ? null
                     : () => _openCheckInSheet(context),
                 child: Text(appL10n.trainingCompleteSet),
@@ -338,17 +465,22 @@ class _ExerciseCard extends StatelessWidget {
     BuildContext context,
     TrainingSetDetail detail,
   ) async {
-    final saved = await showBiteSyncModalBottomSheet<bool>(
+    final result = await showBiteSyncModalBottomSheet<_SetEditResult>(
       context: context,
       isScrollControlled: true,
       builder: (_) => _SetEditSheet(exercise: exercise, detail: detail),
     );
-    if (saved == true && context.mounted) {
+    if (result == _SetEditResult.updated && context.mounted) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(appL10n.trainingSetUpdated)));
+    } else if (result == _SetEditResult.deleted && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(appL10n.trainingDeleteSetSuccess)));
     }
   }
 }
+
+enum _SetEditResult { updated, deleted }
 
 class _CompletedSetRow extends StatelessWidget {
   const _CompletedSetRow({
@@ -549,7 +681,49 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
         );
     if (!mounted) return;
     if (outcome.isSuccess) {
-      Navigator.pop(context, true);
+      Navigator.pop(context, _SetEditResult.updated);
+    } else {
+      setState(() {
+        _submitting = false;
+        _error = outcome.errorMessage;
+      });
+    }
+  }
+
+  Future<void> _confirmDelete() async {
+    if (_submitting) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(appL10n.trainingDeleteSetTitle),
+        content: Text(appL10n.trainingDeleteSetDescription),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(appL10n.commonCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(appL10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (!mounted || confirmed != true) return;
+
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    final outcome = await ref
+        .read(trainingControllerProvider.notifier)
+        .deleteSetDetail(
+          itemId: widget.exercise.itemId,
+          requestId: widget.detail.requestId,
+        );
+    if (!mounted) return;
+    if (outcome.isSuccess) {
+      Navigator.pop(context, _SetEditResult.deleted);
     } else {
       setState(() {
         _submitting = false;
@@ -674,6 +848,15 @@ class _SetEditSheetState extends ConsumerState<_SetEditSheet> {
                       ? appL10n.commonSaving
                       : appL10n.commonSaveChanges,
                 ),
+              ),
+            ),
+            SizedBox(height: AppSpacing.xs),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: _submitting ? null : _confirmDelete,
+                icon: Icon(Icons.delete_outline),
+                label: Text(appL10n.trainingDeleteSet),
               ),
             ),
           ],

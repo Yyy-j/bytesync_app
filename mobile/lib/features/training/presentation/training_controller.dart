@@ -164,6 +164,33 @@ class TrainingController extends Notifier<TrainingState> {
     }
   }
 
+  Future<TrainingSetEditOutcome> deleteSetDetail({
+    required String itemId,
+    required String requestId,
+  }) async {
+    final current = state;
+    if (current is! TrainingReady) {
+      return TrainingSetEditOutcome.failure(appL10n.trainingDataNotLoaded);
+    }
+
+    try {
+      await _repository.deleteSetDetail(
+        weekId: current.week.weekId,
+        itemId: itemId,
+        requestId: requestId,
+      );
+      final refreshed = await _load(preserveSelection: true);
+      if (!refreshed) {
+        return TrainingSetEditOutcome.failure(appL10n.trainingDeleteSetFailed);
+      }
+      return const TrainingSetEditOutcome.success();
+    } catch (error) {
+      return TrainingSetEditOutcome.failure(
+        _message(error, fallback: appL10n.trainingDeleteSetFailed),
+      );
+    }
+  }
+
   int _initialDayIndex(TrainingWeek week) {
     final now = DateTime.now();
     for (final day in week.days) {

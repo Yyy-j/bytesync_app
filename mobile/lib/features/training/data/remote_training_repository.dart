@@ -218,4 +218,19 @@ class RemoteTrainingRepository implements TrainingRepository {
       throw _errorMapper.map(error);
     }
   }
+
+  @override
+  Future<void> deleteSetDetail({
+    required String weekId,
+    required String itemId,
+    required String requestId,
+  }) async {
+    try {
+      await _dio.delete<void>(
+        ApiEndpoints.trainingSetDetail(weekId, itemId, requestId),
+      );
+    } catch (error) {
+      throw _errorMapper.map(error);
+    }
+  }
 }
