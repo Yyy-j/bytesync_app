@@ -639,27 +639,30 @@ class _CompactNutritionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: valueColor,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
+          SizedBox(
+            height: 60,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: valueColor,
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(
-                width: 60,
-                height: 60,
-                child: SvgPicture.asset(characterAsset, fit: BoxFit.contain),
-              ),
-            ],
+                SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: SvgPicture.asset(characterAsset, fit: BoxFit.contain),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           FittedBox(
@@ -678,10 +681,7 @@ class _CompactNutritionCard extends StatelessWidget {
                 ],
               ),
               maxLines: 1,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-              ),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -1163,143 +1163,125 @@ class _MealListItem extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       backgroundColor: isDark ? _SummaryDarkColors.background : null,
       borderColor: _summaryContentCardBorder(context),
-      child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            width: double.infinity,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            height: 34,
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        meal.name,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: isDark ? _SummaryDarkColors.primaryText : null,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 112,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  meal.mealTime,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isDark
-                                        ? _SummaryDarkColors.secondaryText
-                                        : theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                                Text(
-                                  ownerName,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: onManage == null
-                                ? null
-                                : busy
-                                ? const Center(
-                                    child: SizedBox(
-                                      width: 24,
-                                      height: 24,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    ),
-                                  )
-                                : IconButton(
-                                    tooltip: appL10n.todayManageMeal(meal.name),
-                                    visualDensity: VisualDensity.compact,
-                                    padding: EdgeInsets.zero,
-                                    onPressed: onManage,
-                                    icon: const Icon(Icons.more_vert),
-                                  ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  appL10n.commonCaloriesValue('${meal.calories.round()}'),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: isDark
-                        ? _SummaryDarkColors.secondaryText
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Padding(
-                  padding: const EdgeInsets.only(right: 80),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _MacroTag(
-                          label: appL10n.todayProteinGrams(
-                            meal.protein.round(),
-                          ),
-                          color: AppColors.protein,
-                          bg: AppColors.proteinBg,
-                          darkColor: _SummaryDarkColors.blue,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        _MacroTag(
-                          label: appL10n.todayCarbsGrams(meal.carbs.round()),
-                          color: AppColors.carbs,
-                          bg: AppColors.carbsBg,
-                          darkColor: _SummaryDarkColors.purple,
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        _MacroTag(
-                          label: appL10n.todayFatGrams(meal.fat.round()),
-                          color: AppColors.fat,
-                          bg: AppColors.fatBg,
-                          darkColor: _SummaryDarkColors.pink,
-                        ),
-                      ],
+                Expanded(
+                  child: Text(
+                    meal.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? _SummaryDarkColors.primaryText : null,
                     ),
                   ),
                 ),
-                const SizedBox(height: 28),
+                Flexible(
+                  child: Text(
+                    '${meal.mealTime} · $ownerName',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? _SummaryDarkColors.secondaryText
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: onManage == null
+                      ? null
+                      : busy
+                      ? const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : IconButton(
+                          tooltip: appL10n.todayManageMeal(meal.name),
+                          visualDensity: VisualDensity.compact,
+                          padding: EdgeInsets.zero,
+                          onPressed: onManage,
+                          icon: const Icon(Icons.more_vert),
+                        ),
+                ),
               ],
             ),
           ),
-          Positioned(
-            right: 0,
-            bottom: 0,
-            child: SizedBox(
-              width: 72,
-              height: 72,
-              child: SvgPicture.asset(
-                characterAsset,
-                fit: BoxFit.contain,
-              ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            height: 76,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        appL10n.commonCaloriesValue('${meal.calories.round()}'),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: isDark
+                              ? _SummaryDarkColors.secondaryText
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _MacroTag(
+                              label: appL10n.todayProteinGrams(
+                                meal.protein.round(),
+                              ),
+                              color: AppColors.protein,
+                              bg: AppColors.proteinBg,
+                              darkColor: _SummaryDarkColors.blue,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            _MacroTag(
+                              label: appL10n.todayCarbsGrams(
+                                meal.carbs.round(),
+                              ),
+                              color: AppColors.carbs,
+                              bg: AppColors.carbsBg,
+                              darkColor: _SummaryDarkColors.purple,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            _MacroTag(
+                              label: appL10n.todayFatGrams(meal.fat.round()),
+                              color: AppColors.fat,
+                              bg: AppColors.fatBg,
+                              darkColor: _SummaryDarkColors.pink,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: SvgPicture.asset(characterAsset, fit: BoxFit.contain),
+                ),
+              ],
             ),
           ),
         ],
