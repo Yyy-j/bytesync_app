@@ -11,6 +11,7 @@ import 'package:bytesync/features/meals/domain/meal_ai_result.dart';
 import 'package:bytesync/features/meals/domain/meal_patch.dart';
 import 'package:bytesync/features/meals/domain/meal_share_mode.dart';
 import 'package:bytesync/features/meals/domain/meal_source.dart';
+import 'package:bytesync/features/meals/domain/reusable_meal_item.dart';
 import 'package:bytesync/features/meals/presentation/meal_management_controller.dart';
 import 'package:bytesync/features/summary/domain/daily_summary.dart';
 import 'package:bytesync/features/summary/presentation/summary_controller.dart';
@@ -49,10 +50,17 @@ class _FakeMealsRepository implements MealsRepository {
       throw UnimplementedError();
 
   @override
-  Future<List<Meal>> getMealsForReuse({
+  Future<List<ReusableMealItem>> getMealsForReuse({
     required DateTime date,
-    int limit = 3,
+    int limit = 5,
   }) => throw UnimplementedError();
+
+  @override
+  Future<ReusableMealItem> favoriteMeal(String mealId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> unfavoriteMeal(String favoriteId) => throw UnimplementedError();
 
   @override
   Future<List<Meal>> getRecentMealsForReuse({int limit = 3}) =>

@@ -982,6 +982,36 @@ abstract class AppLocalizations {
   /// **'添加'**
   String get recordAdd;
 
+  /// No description provided for @recordFavorite.
+  ///
+  /// In zh, this message translates to:
+  /// **'收藏'**
+  String get recordFavorite;
+
+  /// No description provided for @recordUnfavorite.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消收藏'**
+  String get recordUnfavorite;
+
+  /// No description provided for @recordFavoriteLimit.
+  ///
+  /// In zh, this message translates to:
+  /// **'收藏最多 5 个'**
+  String get recordFavoriteLimit;
+
+  /// No description provided for @recordFavoriteFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'收藏失败'**
+  String get recordFavoriteFailed;
+
+  /// No description provided for @recordUnfavoriteFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消收藏失败'**
+  String get recordUnfavoriteFailed;
+
   /// No description provided for @recordRecognitionComplete.
   ///
   /// In zh, this message translates to:

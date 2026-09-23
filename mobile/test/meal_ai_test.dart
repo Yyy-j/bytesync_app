@@ -12,6 +12,7 @@ import 'package:bytesync/features/meals/domain/meal_ai_result.dart';
 import 'package:bytesync/features/meals/domain/meal_patch.dart';
 import 'package:bytesync/features/meals/domain/meal_share_mode.dart';
 import 'package:bytesync/features/meals/domain/meal_source.dart';
+import 'package:bytesync/features/meals/domain/reusable_meal_item.dart';
 import 'package:bytesync/features/meals/presentation/add_meal_page.dart';
 import 'package:bytesync/features/meals/presentation/record_controller.dart';
 import 'package:bytesync/features/pair/domain/pair.dart';
@@ -90,10 +91,17 @@ class _SavingMealsRepository implements MealsRepository {
       throw UnimplementedError();
 
   @override
-  Future<List<Meal>> getMealsForReuse({
+  Future<List<ReusableMealItem>> getMealsForReuse({
     required DateTime date,
-    int limit = 3,
+    int limit = 5,
   }) => throw UnimplementedError();
+
+  @override
+  Future<ReusableMealItem> favoriteMeal(String mealId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<void> unfavoriteMeal(String favoriteId) => throw UnimplementedError();
 
   @override
   Future<List<Meal>> getRecentMealsForReuse({int limit = 3}) =>
@@ -509,28 +517,15 @@ void main() {
   });
 
   testWidgets('yesterday meal fills and expands manual form', (tester) async {
-    final yesterday = Meal(
-      id: 'meal-1',
-      pairId: 'pair-1',
-      userId: 'self-1',
-      sharedMealId: null,
+    const yesterday = ReusableMealItem(
+      mealId: 'meal-1',
+      favoriteId: null,
       name: '番茄炒蛋',
-      source: MealSource.manual,
-      baseCalories: 420,
-      baseProtein: 18,
-      baseCarbs: 32,
-      baseFat: 21,
       calories: 420,
       protein: 18,
       carbs: 32,
       fat: 21,
-      portionRatio: 1,
-      shareRatio: 1,
-      shareMode: MealShareMode.solo,
-      mealDate: DateTime(2026, 9, 14),
-      mealTime: '12:00',
-      createdAt: DateTime(2026, 9, 14),
-      updatedAt: DateTime(2026, 9, 14),
+      isFavorite: false,
     );
     await tester.pumpWidget(
       ProviderScope(
@@ -546,7 +541,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('今天也吃了？'), findsOneWidget);
-    await tester.tap(find.text('添加'));
+    await tester.tap(find.byTooltip('添加'));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('record-manual-form')), findsOneWidget);

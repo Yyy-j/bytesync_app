@@ -477,6 +477,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordAdd => '添加';
 
   @override
+  String get recordFavorite => '收藏';
+
+  @override
+  String get recordUnfavorite => '取消收藏';
+
+  @override
+  String get recordFavoriteLimit => '收藏最多 5 个';
+
+  @override
+  String get recordFavoriteFailed => '收藏失败';
+
+  @override
+  String get recordUnfavoriteFailed => '取消收藏失败';
+
+  @override
   String get recordRecognitionComplete => '识别完成';
 
   @override

@@ -25,6 +25,9 @@ class ApiEndpoints {
   static String mealById(String id) => '/meals/$id';
   static const String mealsRecent = '/meals/recent';
   static const String mealsReuse = '/meals/reuse';
+  static const String mealFavorites = '/meals/favorites';
+  static String mealFavoriteById(String id) =>
+      '$mealFavorites/${Uri.encodeComponent(id)}';
 
   // ── Meal AI ──────────────────────────────────────────
   static const String analyzeMealText = '/ai/meals/analyze-text';

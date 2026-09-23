@@ -7,11 +7,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../app/home_shell.dart';
+import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/bitesync_bottom_sheet.dart';
 import '../../../pair/domain/pair_state.dart';
 import '../../../pair/presentation/pair_controller.dart';
-import '../../domain/meal.dart';
+import '../../data/meals_providers.dart';
+import '../../domain/reusable_meal_item.dart';
 import '../../domain/meal_share_mode.dart';
 import '../../domain/meal_source.dart';
 import '../domain/record_draft.dart';
@@ -148,15 +150,22 @@ class _ManualForm extends StatelessWidget {
 }
 
 class _YesterdaySection extends StatelessWidget {
-  const _YesterdaySection({required this.meals, required this.onSelected});
+  const _YesterdaySection({
+    required this.meals,
+    required this.onSelected,
+    required this.onFavorite,
+    required this.isFavoriteBusy,
+  });
 
-  final AsyncValue<List<Meal>> meals;
-  final ValueChanged<Meal> onSelected;
+  final AsyncValue<List<ReusableMealItem>> meals;
+  final ValueChanged<ReusableMealItem> onSelected;
+  final ValueChanged<ReusableMealItem> onFavorite;
+  final bool Function(ReusableMealItem) isFavoriteBusy;
 
   @override
   Widget build(BuildContext context) => meals.maybeWhen(
     data: (values) {
-      final visible = values.take(3).toList(growable: false);
+      final visible = values.take(5).toList(growable: false);
       if (visible.isEmpty) return const SizedBox.shrink();
       final theme = Theme.of(context);
       return Column(
@@ -188,6 +197,24 @@ class _YesterdaySection extends StatelessWidget {
                       ),
                       style: TextStyle(
                         color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: visible[index].isFavorite
+                          ? appL10n.recordUnfavorite
+                          : appL10n.recordFavorite,
+                      onPressed: isFavoriteBusy(visible[index])
+                          ? null
+                          : () => onFavorite(visible[index]),
+                      visualDensity: VisualDensity.compact,
+                      color: visible[index].isFavorite
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                      icon: Icon(
+                        visible[index].isFavorite
+                            ? Icons.bookmark_rounded
+                            : Icons.bookmark_border_rounded,
+                        size: 20,
                       ),
                     ),
                     IconButton(
@@ -792,6 +819,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   late final ImagePicker _imagePicker;
   bool _showCameraShortcut = false;
   bool _saving = false;
+  final Set<String> _favoriteBusy = {};
 
   @override
   void initState() {
@@ -885,7 +913,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
       return true;
   }
 
-  void _fillManualFromMeal(Meal meal) {
+  void _fillManualFromMeal(ReusableMealItem meal) {
     _nameController.text = meal.name;
     _caloriesController.text = _value(meal.calories);
     _proteinController.text = _value(meal.protein);
@@ -893,6 +921,34 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     _fatController.text = _value(meal.fat);
     _snack(appL10n.recordYesterdayFilled);
     _showManualSheet();
+  }
+
+  String _favoriteKey(ReusableMealItem item) =>
+      item.favoriteId ?? item.mealId ?? item.name;
+
+  Future<void> _toggleFavorite(ReusableMealItem item) async {
+    final key = _favoriteKey(item);
+    if (_favoriteBusy.contains(key)) return;
+    setState(() => _favoriteBusy.add(key));
+    try {
+      final repository = ref.read(mealsRepositoryProvider);
+      if (item.isFavorite) {
+        await repository.unfavoriteMeal(item.favoriteId!);
+      } else {
+        await repository.favoriteMeal(item.mealId!);
+      }
+      ref.invalidate(yesterdayMealsProvider);
+    } catch (error) {
+      if (!mounted) return;
+      final message = error is ConflictException
+          ? appL10n.recordFavoriteLimit
+          : item.isFavorite
+          ? appL10n.recordUnfavoriteFailed
+          : appL10n.recordFavoriteFailed;
+      _snack(message);
+    } finally {
+      if (mounted) setState(() => _favoriteBusy.remove(key));
+    }
   }
 
   num _number(String value) => num.tryParse(value.trim()) ?? 0;
@@ -1053,6 +1109,9 @@ class _RecordPageState extends ConsumerState<RecordPage> {
               child: _YesterdaySection(
                 meals: ref.watch(yesterdayMealsProvider),
                 onSelected: _fillManualFromMeal,
+                onFavorite: _toggleFavorite,
+                isFavoriteBusy: (item) =>
+                    _favoriteBusy.contains(_favoriteKey(item)),
               ),
             ),
           ),

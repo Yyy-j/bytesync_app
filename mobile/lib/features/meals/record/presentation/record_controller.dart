@@ -11,6 +11,7 @@ import '../../domain/meal_ai_result.dart';
 import '../../domain/meal_patch.dart';
 import '../../domain/meal_share_mode.dart';
 import '../../domain/meal_source.dart';
+import '../../domain/reusable_meal_item.dart';
 import '../domain/record_draft.dart';
 import '../domain/record_state.dart';
 
@@ -19,14 +20,14 @@ final recordControllerProvider =
       RecordController.new,
     );
 
-final yesterdayMealsProvider = FutureProvider.autoDispose<List<Meal>>((ref) {
+final yesterdayMealsProvider = FutureProvider.autoDispose<List<ReusableMealItem>>((ref) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
   return ref
       .watch(mealsRepositoryProvider)
       .getMealsForReuse(
         date: today.subtract(const Duration(days: 1)),
-        limit: 3,
+        limit: 5,
       );
 });
 
