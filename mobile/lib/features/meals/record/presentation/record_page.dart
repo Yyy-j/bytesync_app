@@ -156,85 +156,141 @@ class _YesterdaySection extends StatelessWidget {
     required this.onSelected,
     required this.onFavorite,
     required this.isFavoriteBusy,
+    required this.isFavoritePending,
+    required this.onClearPending,
   });
 
   final AsyncValue<List<ReusableMealItem>> meals;
   final ValueChanged<ReusableMealItem> onSelected;
   final ValueChanged<ReusableMealItem> onFavorite;
   final bool Function(ReusableMealItem) isFavoriteBusy;
+  final bool Function(ReusableMealItem) isFavoritePending;
+  final VoidCallback onClearPending;
 
   @override
   Widget build(BuildContext context) => meals.maybeWhen(
     data: (values) {
-      final visible = values.take(5).toList(growable: false);
+      final visible = [
+        ...values.where((meal) => meal.isFavorite),
+        ...values.where((meal) => !meal.isFavorite),
+      ];
       if (visible.isEmpty) return const SizedBox.shrink();
       final theme = Theme.of(context);
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            appL10n.recordYesterdayPrompt,
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 10),
-          for (var index = 0; index < visible.length; index++) ...[
-            InkWell(
-              onTap: () => onSelected(visible[index]),
-              borderRadius: BorderRadius.circular(10),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        visible[index].name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+      return TapRegion(
+        onTapOutside: (_) => onClearPending(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              appL10n.recordYesterdayPrompt,
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 10),
+            for (var index = 0; index < visible.length; index++) ...[
+              InkWell(
+                onTap: () {
+                  onClearPending();
+                  onSelected(visible[index]);
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          visible[index].name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    Text(
-                      appL10n.commonCaloriesValue(
-                        _value(visible[index].calories),
+                      Text(
+                        appL10n.commonCaloriesValue(
+                          _value(visible[index].calories),
+                        ),
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurfaceVariant,
+                      _FavoriteButton(
+                        isFavorite: visible[index].isFavorite,
+                        pendingDelete: isFavoritePending(visible[index]),
+                        busy: isFavoriteBusy(visible[index]),
+                        onPressed: () => onFavorite(visible[index]),
                       ),
-                    ),
-                    IconButton(
-                      tooltip: visible[index].isFavorite
-                          ? appL10n.recordUnfavorite
-                          : appL10n.recordFavorite,
-                      onPressed: isFavoriteBusy(visible[index])
-                          ? null
-                          : () => onFavorite(visible[index]),
-                      visualDensity: VisualDensity.compact,
-                      color: visible[index].isFavorite
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
-                      icon: Icon(
-                        visible[index].isFavorite
-                            ? Icons.bookmark_rounded
-                            : Icons.bookmark_border_rounded,
-                        size: 20,
+                      IconButton(
+                        tooltip: appL10n.recordAdd,
+                        onPressed: () {
+                          onClearPending();
+                          onSelected(visible[index]);
+                        },
+                        icon: const Icon(Icons.add, size: 20),
                       ),
-                    ),
-                    IconButton(
-                      tooltip: appL10n.recordAdd,
-                      onPressed: () => onSelected(visible[index]),
-                      icon: const Icon(Icons.add, size: 20),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            if (index != visible.length - 1)
-              Divider(height: 1, color: theme.dividerColor),
+              if (index != visible.length - 1)
+                Divider(height: 1, color: theme.dividerColor),
+            ],
           ],
-        ],
+        ),
       );
     },
     orElse: () => const SizedBox.shrink(),
   );
+}
+
+class _FavoriteButton extends StatelessWidget {
+  const _FavoriteButton({
+    required this.isFavorite,
+    required this.pendingDelete,
+    required this.busy,
+    required this.onPressed,
+  });
+
+  final bool isFavorite;
+  final bool pendingDelete;
+  final bool busy;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = isFavorite
+        ? theme.colorScheme.primary
+        : theme.colorScheme.onSurfaceVariant;
+    return IconButton(
+      tooltip: isFavorite ? appL10n.recordUnfavorite : appL10n.recordFavorite,
+      onPressed: busy ? null : onPressed,
+      visualDensity: VisualDensity.compact,
+      color: color,
+      style: pendingDelete
+          ? IconButton.styleFrom(
+              backgroundColor: theme.colorScheme.error.withValues(alpha: 0.12),
+              shape: const CircleBorder(),
+            )
+          : null,
+      icon: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 240),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInOut,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(scale: animation, child: child),
+        ),
+        child: Icon(
+          pendingDelete
+              ? Icons.close_rounded
+              : isFavorite
+              ? Icons.bookmark_rounded
+              : Icons.bookmark_border_rounded,
+          key: ValueKey(pendingDelete ? 'pending' : isFavorite),
+          size: 20,
+        ),
+      ),
+    );
+  }
 }
 
 class _ResultView extends StatelessWidget {
@@ -819,6 +875,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   bool _showCameraShortcut = false;
   bool _saving = false;
   final Set<String> _favoriteBusy = {};
+  final Set<String> _pendingFavoriteDelete = {};
 
   @override
   void initState() {
@@ -832,6 +889,9 @@ class _RecordPageState extends ConsumerState<RecordPage> {
 
   void _handleScroll() {
     if (!_scrollController.hasClients) return;
+    if (_pendingFavoriteDelete.isNotEmpty && mounted) {
+      setState(() => _pendingFavoriteDelete.clear());
+    }
     final shouldShow = _scrollController.offset > 280;
     if (shouldShow != _showCameraShortcut && mounted) {
       setState(() => _showCameraShortcut = shouldShow);
@@ -928,6 +988,10 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   Future<void> _toggleFavorite(ReusableMealItem item) async {
     final key = _favoriteKey(item);
     if (_favoriteBusy.contains(key)) return;
+    if (item.isFavorite && !_pendingFavoriteDelete.contains(key)) {
+      setState(() => _pendingFavoriteDelete.add(key));
+      return;
+    }
     setState(() => _favoriteBusy.add(key));
     try {
       final repository = ref.read(mealsRepositoryProvider);
@@ -937,8 +1001,12 @@ class _RecordPageState extends ConsumerState<RecordPage> {
         await repository.favoriteMeal(item.mealId!);
       }
       ref.invalidate(yesterdayMealsProvider);
+      if (mounted) {
+        setState(() => _pendingFavoriteDelete.remove(key));
+      }
     } catch (error) {
       if (!mounted) return;
+      setState(() => _pendingFavoriteDelete.remove(key));
       final message = error is ConflictException
           ? appL10n.recordFavoriteLimit
           : item.isFavorite
@@ -1110,12 +1178,20 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                 onFavorite: _toggleFavorite,
                 isFavoriteBusy: (item) =>
                     _favoriteBusy.contains(_favoriteKey(item)),
+                isFavoritePending: (item) =>
+                    _pendingFavoriteDelete.contains(_favoriteKey(item)),
+                onClearPending: _clearPendingFavoriteDelete,
               ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _clearPendingFavoriteDelete() {
+    if (_pendingFavoriteDelete.isEmpty || !mounted) return;
+    setState(() => _pendingFavoriteDelete.clear());
   }
 
   Future<void> _showRefineDialog() async {
