@@ -100,7 +100,10 @@ class RemoteMealsRepository implements MealsRepository {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.mealsReuse,
-        queryParameters: {'date': _dateOnly(date), 'limit': limit.clamp(1, 5)},
+        queryParameters: {
+          'date': _dateOnly(date),
+          if (limit > 0) 'limit': limit,
+        },
       );
       final raw = response.data!['items'] as List<dynamic>;
       return raw

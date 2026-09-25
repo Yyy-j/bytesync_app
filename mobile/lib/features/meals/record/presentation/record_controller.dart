@@ -20,16 +20,17 @@ final recordControllerProvider =
       RecordController.new,
     );
 
-final yesterdayMealsProvider = FutureProvider.autoDispose<List<ReusableMealItem>>((ref) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  return ref
-      .watch(mealsRepositoryProvider)
-      .getMealsForReuse(
-        date: today.subtract(const Duration(days: 1)),
-        limit: 5,
-      );
-});
+final yesterdayMealsProvider =
+    FutureProvider.autoDispose<List<ReusableMealItem>>((ref) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      return ref
+          .watch(mealsRepositoryProvider)
+          .getMealsForReuse(
+            date: today.subtract(const Duration(days: 1)),
+            limit: 0,
+          );
+    });
 
 class RecordController extends AutoDisposeNotifier<RecordState> {
   late final MealAiRepository _aiRepository;

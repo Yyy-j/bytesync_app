@@ -204,12 +204,23 @@ class _YesterdaySection extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
-                        appL10n.commonCaloriesValue(
+                      SizedBox(
+                        width: 48,
+                        child: Text(
                           _value(visible[index].calories),
+                          textAlign: TextAlign.left,
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      SizedBox(
+                        width: 35,
+                        child: Text(
+                          'kcal',
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                       _FavoriteButton(
