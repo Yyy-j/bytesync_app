@@ -224,6 +224,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profileDisplayName => '用户显示名';
 
   @override
+  String get profileDisplayNameTooLong => '用户名最多 8 个字符';
+
+  @override
   String get profileCharacter => '我的形象';
 
   @override

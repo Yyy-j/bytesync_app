@@ -9,6 +9,7 @@ import 'package:bytesync/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/bitesync_bottom_sheet.dart';
+import '../../../shared/widgets/bitesync_snackbar.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../domain/training_day.dart';
 import '../domain/training_duration.dart';
@@ -197,11 +198,11 @@ class _AnimatedExerciseListState extends State<_AnimatedExerciseList> {
     if (!mounted) return;
     var changed = false;
     for (final exercise in widget.exercises) {
-      final renderObject =
-          _measurementKeys[exercise.itemId]?.currentContext?.findRenderObject();
+      final renderObject = _measurementKeys[exercise.itemId]?.currentContext
+          ?.findRenderObject();
       if (renderObject is! RenderBox || !renderObject.hasSize) continue;
       final height = renderObject.size.height;
-        if ((height - (_heights[exercise.itemId] ?? 0)).abs() > 0.5) {
+      if ((height - (_heights[exercise.itemId] ?? 0)).abs() > 0.5) {
         _heights[exercise.itemId] = height;
         changed = true;
       }
@@ -262,10 +263,7 @@ class _AnimatedExerciseListState extends State<_AnimatedExerciseList> {
       alignment: Alignment.topCenter,
       child: SizedBox(
         height: top,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: positionedCards,
-        ),
+        child: Stack(clipBehavior: Clip.none, children: positionedCards),
       ),
     );
   }
@@ -437,7 +435,7 @@ class _ExerciseCard extends StatelessWidget {
               child: FilledButton.tonal(
                 onPressed:
                     exercise.removedFromTemplate ||
-                    _isExerciseCompleted(exercise)
+                        _isExerciseCompleted(exercise)
                     ? null
                     : () => _openCheckInSheet(context),
                 child: Text(appL10n.trainingCompleteSet),
@@ -456,8 +454,7 @@ class _ExerciseCard extends StatelessWidget {
       builder: (_) => _CheckInSheet(exercise: exercise),
     );
     if (saved == true && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(appL10n.trainingSetCompleted)));
+      BiteSyncSnackBar.show(context, message: appL10n.trainingSetCompleted);
     }
   }
 
@@ -471,11 +468,9 @@ class _ExerciseCard extends StatelessWidget {
       builder: (_) => _SetEditSheet(exercise: exercise, detail: detail),
     );
     if (result == _SetEditResult.updated && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(appL10n.trainingSetUpdated)));
+      BiteSyncSnackBar.show(context, message: appL10n.trainingSetUpdated);
     } else if (result == _SetEditResult.deleted && context.mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(appL10n.trainingDeleteSetSuccess)));
+      BiteSyncSnackBar.show(context, message: appL10n.trainingDeleteSetSuccess);
     }
   }
 }

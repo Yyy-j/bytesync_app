@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
+import '../../../shared/widgets/bitesync_snackbar.dart';
 import '../domain/pair_state.dart';
 import '../../auth/presentation/auth_controller.dart';
 import 'pair_controller.dart';
@@ -92,10 +93,9 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                               ClipboardData(text: connected.pair.inviteCode),
                             );
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(appL10n.pairInviteCodeCopied),
-                                ),
+                              BiteSyncSnackBar.show(
+                                context,
+                                message: appL10n.pairInviteCodeCopied,
                               );
                             }
                           },

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/bitesync_bottom_sheet.dart';
+import '../../../shared/widgets/bitesync_snackbar.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../meals/domain/meal.dart';
 import '../../meals/domain/meal_source.dart';
@@ -73,16 +73,6 @@ class _SummaryPageState extends ConsumerState<SummaryPage> {
                 key: ValueKey(_calendarExpanded),
               ),
             ),
-          ),
-          IconButton(
-            tooltip: appL10n.profileNutritionGoals,
-            icon: Icon(Icons.track_changes_outlined),
-            onPressed: () => context.push('/nutrition-goals'),
-          ),
-          IconButton(
-            tooltip: appL10n.pairDetails,
-            icon: const Icon(Icons.people_outline),
-            onPressed: () => context.push('/pairing'),
           ),
         ],
       ),
@@ -853,14 +843,11 @@ Future<void> _showMealActions(
   }
 
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        result.isSuccess
-            ? successMessage
-            : result.message ?? appL10n.errorOperationFailed,
-      ),
-    ),
+  BiteSyncSnackBar.show(
+    context,
+    message: result.isSuccess
+        ? successMessage
+        : result.message ?? appL10n.errorOperationFailed,
   );
 }
 

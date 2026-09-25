@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// The package counts Unicode grapheme clusters rather than UTF-16 code units.
+// ignore: depend_on_referenced_packages
+import 'package:characters/characters.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
@@ -63,6 +66,9 @@ class ProfileController extends AutoDisposeNotifier<ProfileState> {
   }
 
   Future<ProfileSaveResult> save({required String? displayName}) async {
+    if (displayName != null && displayName.characters.length > 8) {
+      return ProfileSaveResult.failure(appL10n.profileDisplayNameTooLong);
+    }
     final current = state;
     if (current is! ProfileReady || current.saving) {
       return ProfileSaveResult.failure(appL10n.errorCannotSaveNow);

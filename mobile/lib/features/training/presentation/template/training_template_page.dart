@@ -5,6 +5,7 @@ import 'package:bytesync/l10n/l10n.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_card.dart';
 import '../../../../shared/widgets/bitesync_bottom_sheet.dart';
+import '../../../../shared/widgets/bitesync_snackbar.dart';
 import '../../../../shared/widgets/state_views.dart';
 import '../../domain/training_duration.dart';
 import '../../domain/training_exercise_item.dart';
@@ -227,13 +228,12 @@ class _TemplateBody extends ConsumerWidget {
       _snack(context, result.errorMessage!);
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(appL10n.trainingPlanSaved),
-        action: SnackBarAction(
-          label: appL10n.trainingSyncWeek,
-          onPressed: () => _sync(context, ref),
-        ),
+    BiteSyncSnackBar.show(
+      context,
+      message: appL10n.trainingPlanSaved,
+      action: SnackBarAction(
+        label: appL10n.trainingSyncWeek,
+        onPressed: () => _sync(context, ref),
       ),
     );
   }
@@ -252,8 +252,7 @@ class _TemplateBody extends ConsumerWidget {
   }
 
   void _snack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    BiteSyncSnackBar.show(context, message: message);
   }
 }
 

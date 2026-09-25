@@ -4,6 +4,7 @@ import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/bitesync_bottom_sheet.dart';
+import '../../../../shared/widgets/bitesync_snackbar.dart';
 import '../../domain/training_duration.dart';
 import '../../domain/training_exercise_item.dart';
 import '../data/fixed_training_exercises.dart';
@@ -433,8 +434,7 @@ class _TrainingExercisePickerState
   }
 
   void _snack(BuildContext context, String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    BiteSyncSnackBar.show(context, message: message);
   }
 }
 

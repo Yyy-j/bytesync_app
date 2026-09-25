@@ -72,6 +72,7 @@
   "profileLoading": "正在加载用户资料",
   "profileUnnamed": "未设置显示名",
   "profileDisplayName": "用户显示名",
+  "profileDisplayNameTooLong": "用户名最多 8 个字符",
   "profileCharacter": "我的形象",
   "characterPageTitle": "我的形象",
   "characterSave": "保存",

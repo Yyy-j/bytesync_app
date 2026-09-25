@@ -7,6 +7,7 @@ import 'package:bytesync/l10n/l10n.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_controller.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/bitesync_snackbar.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../pair/domain/pair_state.dart';
@@ -105,7 +106,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               SizedBox(height: AppSpacing.lg),
               TextField(
                 controller: _displayNameController,
-                maxLength: 100,
+                maxLength: 8,
                 decoration: InputDecoration(
                   labelText: appL10n.profileDisplayName,
                 ),
@@ -250,7 +251,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   void _snack(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    BiteSyncSnackBar.show(context, message: message);
   }
 }

@@ -10,6 +10,7 @@ import '../../../../app/home_shell.dart';
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/bitesync_bottom_sheet.dart';
+import '../../../../shared/widgets/bitesync_snackbar.dart';
 import '../../../pair/domain/pair_state.dart';
 import '../../../pair/presentation/pair_controller.dart';
 import '../../data/meals_providers.dart';
@@ -771,9 +772,7 @@ class _RecordIdleHeader extends StatelessWidget {
                           shape: const CircleBorder(),
                         ),
                         icon: SvgPicture.asset(
-                          isDark
-                              ? 'svg/send-blue.svg'
-                              : 'svg/send-green.svg',
+                          isDark ? 'svg/send-blue.svg' : 'svg/send-green.svg',
                           key: ValueKey(
                             isDark
                                 ? 'record-send-blue-svg'
@@ -910,7 +909,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
           fat: _number(_fatController.text),
         );
     _clearManual();
-      return true;
+    return true;
   }
 
   void _fillManualFromMeal(ReusableMealItem meal) {
@@ -989,8 +988,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
   }
 
   void _snack(String message) =>
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(message)));
+      BiteSyncSnackBar.show(context, message: message);
 
   Future<void> _showManualSheet() async {
     await showBiteSyncModalBottomSheet<void>(

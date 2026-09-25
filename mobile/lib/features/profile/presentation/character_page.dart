@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
+import '../../../shared/widgets/bitesync_snackbar.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../domain/user_character.dart';
 import 'profile_controller.dart';
@@ -105,9 +106,7 @@ class _CharacterPageState extends ConsumerState<CharacterPage> {
     if (result.isSuccess) {
       Navigator.of(context).pop(true);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.errorMessage!)),
-      );
+      BiteSyncSnackBar.show(context, message: result.errorMessage!);
     }
   }
 }
@@ -150,10 +149,7 @@ class _CharacterSelectionCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: theme.cardColor,
               borderRadius: BorderRadius.circular(AppRadius.lg),
-              border: Border.all(
-                color: borderColor,
-                width: selected ? 2 : 1,
-              ),
+              border: Border.all(color: borderColor, width: selected ? 2 : 1),
             ),
             child: Stack(
               children: [

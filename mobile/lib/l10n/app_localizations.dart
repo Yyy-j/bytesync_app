@@ -508,6 +508,12 @@ abstract class AppLocalizations {
   /// **'用户显示名'**
   String get profileDisplayName;
 
+  /// No description provided for @profileDisplayNameTooLong.
+  ///
+  /// In zh, this message translates to:
+  /// **'用户名最多 8 个字符'**
+  String get profileDisplayNameTooLong;
+
   /// No description provided for @profileCharacter.
   ///
   /// In zh, this message translates to:

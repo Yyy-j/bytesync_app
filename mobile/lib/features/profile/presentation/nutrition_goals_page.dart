@@ -4,6 +4,7 @@ import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/bitesync_snackbar.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../domain/user_profile.dart';
 import 'nutrition_goals_controller.dart';
@@ -141,12 +142,9 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
           ),
         );
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result.isSuccess ? appL10n.goalsSaved : result.errorMessage!,
-        ),
-      ),
+    BiteSyncSnackBar.show(
+      context,
+      message: result.isSuccess ? appL10n.goalsSaved : result.errorMessage!,
     );
   }
 

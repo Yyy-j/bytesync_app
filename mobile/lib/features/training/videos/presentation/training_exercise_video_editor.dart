@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
+import '../../../../shared/widgets/bitesync_snackbar.dart';
 import 'training_exercise_video_controller.dart';
 
 Future<void> openTrainingVideoUrl(BuildContext context, Uri url) async {
@@ -13,8 +14,7 @@ Future<void> openTrainingVideoUrl(BuildContext context, Uri url) async {
     opened = false;
   }
   if (!opened && context.mounted) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(appL10n.trainingVideoOpenFailed)));
+    BiteSyncSnackBar.show(context, message: appL10n.trainingVideoOpenFailed);
   }
 }
 
@@ -31,14 +31,11 @@ Future<void> showTrainingVideoEditor(
     state = ref.read(trainingExerciseVideoControllerProvider);
   }
   if (state is! TrainingExerciseVideoReady || state.mutating) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          state is TrainingExerciseVideoFailure
-              ? state.message
-              : appL10n.trainingVideoListLoading,
-        ),
-      ),
+    BiteSyncSnackBar.show(
+      context,
+      message: state is TrainingExerciseVideoFailure
+          ? state.message
+          : appL10n.trainingVideoListLoading,
     );
     return;
   }
@@ -109,16 +106,13 @@ Future<void> showTrainingVideoEditor(
             .read(trainingExerciseVideoControllerProvider.notifier)
             .save(exerciseId, action.videoUrl!);
   if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result.isSuccess
-              ? action.delete
-                    ? appL10n.trainingVideoDeleted
-                    : appL10n.trainingVideoSaved
-              : result.errorMessage!,
-        ),
-      ),
+    BiteSyncSnackBar.show(
+      context,
+      message: result.isSuccess
+          ? action.delete
+                ? appL10n.trainingVideoDeleted
+                : appL10n.trainingVideoSaved
+          : result.errorMessage!,
     );
   }
 }
