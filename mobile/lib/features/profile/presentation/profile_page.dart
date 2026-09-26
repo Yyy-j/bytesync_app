@@ -164,58 +164,67 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
         SizedBox(height: AppSpacing.md),
         AppCard(
-          child: Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.face_retouching_natural_outlined),
-                title: Text(appL10n.profileCharacter),
-                trailing: Icon(Icons.chevron_right),
-                onTap: _openCharacterPage,
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.flag_outlined),
-                title: Text(appL10n.profileNutritionGoals),
-                trailing: Icon(Icons.chevron_right),
-                onTap: () => context.push('/nutrition-goals'),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.fitness_center_outlined),
-                title: Text(appL10n.profileTrainingPlan),
-                trailing: Icon(Icons.chevron_right),
-                onTap: () => context.push('/training/template'),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(Icons.history),
-                title: Text(appL10n.trainingHistory),
-                trailing: Icon(Icons.chevron_right),
-                onTap: () => context.push('/training/history'),
-              ),
-            ],
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.face_retouching_natural_outlined),
+                  title: Text(appL10n.profileCharacter),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: _openCharacterPage,
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.flag_outlined),
+                  title: Text(appL10n.profileNutritionGoals),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () => context.push('/nutrition-goals'),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.fitness_center_outlined),
+                  title: Text(appL10n.profileTrainingPlan),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () => context.push('/training/template'),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.history),
+                  title: Text(appL10n.trainingHistory),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () => context.push('/training/history'),
+                ),
+              ],
+            ),
           ),
         ),
         SizedBox(height: AppSpacing.md),
         AppCard(
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.people_outline),
-            title: Text(appL10n.profilePairSection),
-            subtitle: Text(_pairSummary(pairState)),
-            trailing: Icon(Icons.chevron_right),
-            onTap: () => context.push('/pairing'),
+          child: Material(
+            type: MaterialType.transparency,
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.people_outline),
+              title: Text(appL10n.profilePairSection),
+              subtitle: Text(_pairSummary(pairState)),
+              trailing: Icon(Icons.chevron_right),
+              onTap: () => context.push('/pairing'),
+            ),
           ),
         ),
         SizedBox(height: AppSpacing.md),
         AppCard(
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.security_outlined),
-            title: Text(appL10n.accountPrivacyTitle),
-            trailing: Icon(Icons.chevron_right),
-            onTap: () => context.push('/account-privacy'),
+          child: Material(
+            type: MaterialType.transparency,
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.security_outlined),
+              title: Text(appL10n.accountPrivacyTitle),
+              trailing: Icon(Icons.chevron_right),
+              onTap: () => context.push('/account-privacy'),
+            ),
           ),
         ),
         SizedBox(height: AppSpacing.lg),

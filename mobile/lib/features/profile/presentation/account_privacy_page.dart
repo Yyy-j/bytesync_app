@@ -28,10 +28,13 @@ class _AccountPrivacyPageState extends ConsumerState<AccountPrivacyPage> {
         padding: EdgeInsets.all(AppSpacing.pagePadding),
         children: [
           AppCard(
-            child: ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.login_outlined),
-              title: Text(appL10n.accountPrivacyLoginMethod),
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.login_outlined),
+                title: Text(appL10n.accountPrivacyLoginMethod),
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -61,22 +64,25 @@ class _AccountPrivacyPageState extends ConsumerState<AccountPrivacyPage> {
           ),
           const SizedBox(height: AppSpacing.xl),
           AppCard(
-            child: ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: Icon(
-                Icons.delete_outline,
-                color: Theme.of(context).colorScheme.error,
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                title: Text(appL10n.authDeleteAccount),
+                subtitle: Text(appL10n.accountPrivacyDeleteDescription),
+                trailing: _deleting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.chevron_right),
+                onTap: _deleting ? null : _deleteAccount,
               ),
-              title: Text(appL10n.authDeleteAccount),
-              subtitle: Text(appL10n.accountPrivacyDeleteDescription),
-              trailing: _deleting
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.chevron_right),
-              onTap: _deleting ? null : _deleteAccount,
             ),
           ),
         ],
@@ -155,10 +161,13 @@ class _InfoTile extends StatelessWidget {
   final String? subtitle;
 
   @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    leading: Icon(icon),
-    title: Text(title),
-    subtitle: subtitle == null ? null : Text(subtitle!),
+  Widget build(BuildContext context) => Material(
+    type: MaterialType.transparency,
+    child: ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon),
+      title: Text(title),
+      subtitle: subtitle == null ? null : Text(subtitle!),
+    ),
   );
 }
