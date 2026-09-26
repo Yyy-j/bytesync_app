@@ -184,6 +184,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.monitor_weight_outlined),
+                  title: const Text('身体数据'),
+                  trailing: Icon(Icons.chevron_right),
+                  onTap: () => context.push('/profile/body'),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.fitness_center_outlined),
                   title: Text(appL10n.profileTrainingPlan),
                   trailing: Icon(Icons.chevron_right),

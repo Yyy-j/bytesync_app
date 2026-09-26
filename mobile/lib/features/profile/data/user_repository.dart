@@ -6,7 +6,15 @@ abstract interface class UserRepository {
 
   Future<UserProfile> updateNutritionGoals(NutritionGoals goals);
 
-  Future<UserProfile> updateProfile({required String? displayName});
+  Future<UserProfile> updateProfile({
+    required String? displayName,
+    int? birthYear,
+    String? sexForEnergyEstimate,
+    double? heightCm,
+    double? targetWeightKg,
+    DateTime? targetDate,
+    String? activityLevel,
+  });
 
   Future<UserProfile> updateCharacter(UserCharacter character);
 }

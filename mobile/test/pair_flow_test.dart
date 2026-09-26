@@ -23,6 +23,7 @@ import 'package:bytesync/features/pair/presentation/pairing_page.dart';
 final _user = AuthUser(
   id: 'user-1',
   provider: 'google',
+  onboardingCompletedAt: DateTime(2026, 9, 27),
   email: 'one@example.com',
 );
 final _pair = Pair(

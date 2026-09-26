@@ -39,11 +39,27 @@ class RemoteUserRepository implements UserRepository {
   }
 
   @override
-  Future<UserProfile> updateProfile({required String? displayName}) async {
+  Future<UserProfile> updateProfile({
+    required String? displayName,
+    int? birthYear,
+    String? sexForEnergyEstimate,
+    double? heightCm,
+    double? targetWeightKg,
+    DateTime? targetDate,
+    String? activityLevel,
+  }) async {
     try {
       final response = await _dio.patch<Map<String, dynamic>>(
         ApiEndpoints.usersMe,
-        data: UpdateUserProfileRequestDto(displayName: displayName).toJson(),
+        data: UpdateUserProfileRequestDto(
+          displayName: displayName,
+          birthYear: birthYear,
+          sexForEnergyEstimate: sexForEnergyEstimate,
+          heightCm: heightCm,
+          targetWeightKg: targetWeightKg,
+          targetDate: targetDate,
+          activityLevel: activityLevel,
+        ).toJson(),
       );
       return UserProfileDto.fromJson(response.data!).toDomain();
     } catch (error) {

@@ -22,6 +22,13 @@ class UserProfile {
     required this.displayName,
     required this.goals,
     this.character = UserCharacter.boy,
+    this.onboardingCompletedAt,
+    this.birthYear,
+    this.sexForEnergyEstimate,
+    this.heightCm,
+    this.targetWeightKg,
+    this.targetDate,
+    this.activityLevel,
   });
 
   final String id;
@@ -30,4 +37,11 @@ class UserProfile {
   final String? displayName;
   final NutritionGoals goals;
   final UserCharacter character;
+  final DateTime? onboardingCompletedAt;
+  final int? birthYear;
+  final String? sexForEnergyEstimate;
+  final double? heightCm;
+  final double? targetWeightKg;
+  final DateTime? targetDate;
+  final String? activityLevel;
 }

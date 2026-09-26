@@ -11,6 +11,8 @@ import '../features/pair/presentation/pairing_page.dart';
 import '../features/profile/presentation/character_page.dart';
 import '../features/profile/presentation/account_privacy_page.dart';
 import '../features/profile/presentation/nutrition_goals_page.dart';
+import '../features/body/presentation/body_data_page.dart';
+import '../features/body/presentation/onboarding_page.dart';
 import '../features/training/presentation/history/training_history_page.dart';
 import '../features/training/presentation/template/training_template_page.dart';
 import 'home_shell.dart';
@@ -52,7 +54,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         return location == '/splash' ? null : '/splash';
       }
       if (authState is AuthAuthenticated) {
-        return (location == '/login' || location == '/splash') ? '/' : null;
+        if (!authState.user.onboardingCompleted) {
+          return location == '/onboarding' ? null : '/onboarding';
+        }
+        return (location == '/login' ||
+                location == '/splash' ||
+                location == '/onboarding')
+            ? '/'
+            : null;
       }
       // AuthUnauthenticated or AuthLoading (mid sign-in attempt from the
       // login page itself) both mean "show the login page".
@@ -62,6 +71,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/splash', builder: (context, state) => const SplashPage()),
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
       GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingPage(),
+      ),
+      GoRoute(
         path: '/pairing',
         builder: (context, state) => const PairingPage(),
       ),
@@ -69,6 +82,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/nutrition-goals',
         builder: (context, state) => const NutritionGoalsPage(),
+      ),
+      GoRoute(
+        path: '/profile/body',
+        builder: (context, state) => const BodyDataPage(),
       ),
       GoRoute(
         path: '/profile/character',

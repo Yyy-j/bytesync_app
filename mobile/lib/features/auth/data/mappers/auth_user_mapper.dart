@@ -11,5 +11,12 @@ AuthUser mapCurrentUserResponseToAuthUser(CurrentUserResponseDto dto) {
     provider: dto.provider,
     email: dto.email,
     displayName: dto.displayName,
+    onboardingCompletedAt: dto.onboardingCompletedAt,
+    birthYear: dto.birthYear,
+    sexForEnergyEstimate: dto.sexForEnergyEstimate,
+    heightCm: dto.heightCm,
+    targetWeightKg: dto.targetWeightKg,
+    targetDate: dto.targetDate,
+    activityLevel: dto.activityLevel,
   );
 }

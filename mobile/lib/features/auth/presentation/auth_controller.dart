@@ -81,6 +81,15 @@ class AuthController extends Notifier<AuthState> {
     state = const AuthUnauthenticated();
   }
 
+  Future<void> refreshCurrentUser() async {
+    if (state is! AuthAuthenticated) return;
+    try {
+      state = AuthAuthenticated(await _repository.getCurrentUser());
+    } catch (_) {
+      // Keep the current session usable when a background refresh fails.
+    }
+  }
+
   String _messageFor(Object error) {
     if (error is ApiException) return error.message;
     return appL10n.authSignInFailed;

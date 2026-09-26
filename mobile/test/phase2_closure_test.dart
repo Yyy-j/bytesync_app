@@ -28,6 +28,7 @@ import 'package:bytesync/features/summary/presentation/summary_controller.dart';
 final _user = AuthUser(
   id: 'user-1',
   provider: 'google',
+  onboardingCompletedAt: DateTime(2026, 9, 27),
   email: 'one@example.com',
 );
 

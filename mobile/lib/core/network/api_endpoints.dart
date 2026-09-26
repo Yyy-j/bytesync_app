@@ -14,6 +14,12 @@ class ApiEndpoints {
   static const String authRefresh = '/auth/refresh';
   static const String authLogout = '/auth/logout';
   static const String usersMe = '/users/me';
+    static const String usersMeBody = '/users/me/body';
+    static const String usersMeWeights = '/users/me/weight-measurements';
+    static String usersMeWeight(String id) => '$usersMeWeights/$id';
+    static const String usersMeRecommendation =
+            '/users/me/calorie-recommendation';
+    static const String usersMeOnboarding = '/users/me/onboarding';
 
   // ── Pairs ─────────────────────────────────────────────
   static const String pairsMe = '/pairs/me';

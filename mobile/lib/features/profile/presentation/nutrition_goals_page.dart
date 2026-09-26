@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/theme/app_theme.dart';
@@ -64,6 +65,14 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
         Text(
           appL10n.goalsDescription,
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: () => context.push('/profile/body'),
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: const Text('根据身体目标重新计算'),
+          ),
         ),
         SizedBox(height: AppSpacing.lg),
         AppCard(

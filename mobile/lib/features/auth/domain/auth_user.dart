@@ -14,12 +14,28 @@ class AuthUser {
     required this.provider,
     this.email,
     this.displayName,
+    this.onboardingCompletedAt,
+    this.birthYear,
+    this.sexForEnergyEstimate,
+    this.heightCm,
+    this.targetWeightKg,
+    this.targetDate,
+    this.activityLevel,
   });
 
   final String id;
   final String provider;
   final String? email;
   final String? displayName;
+  final DateTime? onboardingCompletedAt;
+  final int? birthYear;
+  final String? sexForEnergyEstimate;
+  final double? heightCm;
+  final double? targetWeightKg;
+  final DateTime? targetDate;
+  final String? activityLevel;
+
+  bool get onboardingCompleted => onboardingCompletedAt != null;
 
   /// A display-safe label; never returns an empty string.
   String get label {
@@ -28,10 +44,19 @@ class AuthUser {
     return appL10n.commonDefaultUser;
   }
 
-  AuthUser copyWith({String? displayName}) => AuthUser(
-    id: id,
-    provider: provider,
-    email: email,
-    displayName: displayName ?? this.displayName,
-  );
+  AuthUser copyWith({String? displayName, DateTime? onboardingCompletedAt}) =>
+      AuthUser(
+        id: id,
+        provider: provider,
+        email: email,
+        displayName: displayName ?? this.displayName,
+        onboardingCompletedAt:
+            onboardingCompletedAt ?? this.onboardingCompletedAt,
+        birthYear: birthYear,
+        sexForEnergyEstimate: sexForEnergyEstimate,
+        heightCm: heightCm,
+        targetWeightKg: targetWeightKg,
+        targetDate: targetDate,
+        activityLevel: activityLevel,
+      );
 }
