@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
@@ -14,36 +17,55 @@ final pairControllerProvider = NotifierProvider<PairController, PairState>(
 
 class PairController extends Notifier<PairState> {
   late final PairRepository _repository;
+  late final _PairLifecycleObserver _lifecycleObserver;
+  int _refreshGeneration = 0;
 
   @override
   PairState build() {
     _repository = ref.watch(pairRepositoryProvider);
+    _lifecycleObserver = _PairLifecycleObserver(_onAppLifecycleStateChanged);
+    WidgetsBinding.instance.addObserver(_lifecycleObserver);
+    ref.onDispose(() {
+      _refreshGeneration++;
+      WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+    });
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
       if (next is AuthAuthenticated) {
-        refresh();
+        unawaited(refresh());
       } else {
+        _refreshGeneration++;
         state = const PairInitial();
       }
     });
 
     if (ref.read(authControllerProvider) is AuthAuthenticated) {
-      refresh();
+      unawaited(refresh());
     }
     return const PairInitial();
   }
 
-  Future<void> refresh() async {
+  Future<void> refresh({bool showLoading = true}) async {
+    final generation = ++_refreshGeneration;
     if (ref.read(authControllerProvider) is! AuthAuthenticated) {
       state = const PairInitial();
       return;
     }
 
-    state = const PairLoading();
+    if (showLoading) state = const PairLoading();
     try {
       final pair = await _repository.getCurrentPair();
+      if (generation != _refreshGeneration) return;
       state = pair == null ? const PairNotFound() : PairConnected(pair);
     } catch (error) {
+      if (generation != _refreshGeneration) return;
       state = PairFailure(_messageFor(error));
+    }
+  }
+
+  void _onAppLifecycleStateChanged(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        ref.read(authControllerProvider) is AuthAuthenticated) {
+      unawaited(refresh(showLoading: false));
     }
   }
 
@@ -101,5 +123,16 @@ class PairController extends Notifier<PairState> {
       return appL10n.pairInvalidInviteCode;
     }
     return appL10n.pairOperationFailed;
+  }
+}
+
+class _PairLifecycleObserver extends WidgetsBindingObserver {
+  _PairLifecycleObserver(this.onStateChanged);
+
+  final ValueChanged<AppLifecycleState> onStateChanged;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    onStateChanged(state);
   }
 }

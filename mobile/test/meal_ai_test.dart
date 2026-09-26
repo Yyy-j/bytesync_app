@@ -188,7 +188,7 @@ class _RacePairController extends PairController {
   );
 
   @override
-  Future<void> refresh() async {
+  Future<void> refresh({bool showLoading = true}) async {
     refreshed = true;
     state = const PairNotFound();
   }

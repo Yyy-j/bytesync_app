@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
@@ -98,6 +100,40 @@ class _FixedPairController extends PairController {
 
   @override
   PairState build() => PairConnected(pair);
+
+  @override
+  Future<void> refresh({bool showLoading = true}) async {}
+}
+
+class _PollingPairRepository extends _FakePairRepository {
+  int reads = 0;
+  bool connectOnNextRead = false;
+
+  @override
+  Future<Pair?> getCurrentPair() async {
+    reads++;
+    if (connectOnNextRead) currentPair = _completedPair;
+    return currentPair;
+  }
+}
+
+class _SequencedPairRepository implements PairRepository {
+  final firstRead = Completer<Pair?>();
+  final secondRead = Completer<Pair?>();
+  int reads = 0;
+
+  @override
+  Future<Pair?> getCurrentPair() {
+    reads++;
+    return reads == 1 ? firstRead.future : secondRead.future;
+  }
+
+  @override
+  Future<Pair> createPair() => throw UnimplementedError();
+
+  @override
+  Future<Pair> joinPair({required String inviteCode}) =>
+      throw UnimplementedError();
 }
 
 Future<void> _settle(WidgetTester tester) async {
@@ -294,4 +330,147 @@ void main() {
     expect(find.text('邀请 Ta'), findsNothing);
     expect(find.text('输入邀请码'), findsNothing);
   });
+
+  testWidgets('Pending polling transitions to Connected and then stops', (
+    tester,
+  ) async {
+    final repository = _PollingPairRepository()..currentPair = _pair;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(_FixedAuthController.new),
+          pairRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: const MaterialApp(home: PairingPage()),
+      ),
+    );
+    await _settle(tester);
+
+    repository.connectOnNextRead = true;
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pump();
+    expect(find.text('你们已连接'), findsOneWidget);
+    expect(find.text('Two'), findsOneWidget);
+
+    final readsAfterConnected = repository.reads;
+    await tester.pump(const Duration(seconds: 8));
+    expect(repository.reads, readsAfterConnected);
+  });
+
+  testWidgets('disposing PairingPage stops Pending polling', (tester) async {
+    final repository = _PollingPairRepository()..currentPair = _pair;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(_FixedAuthController.new),
+          pairRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: const MaterialApp(home: PairingPage()),
+      ),
+    );
+    await _settle(tester);
+    final readsBeforeDispose = repository.reads;
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 8));
+    expect(repository.reads, readsBeforeDispose);
+  });
+
+  testWidgets('re-entering PairingPage refreshes the current Pair', (
+    tester,
+  ) async {
+    final repository = _PollingPairRepository()..currentPair = _pair;
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(_FixedAuthController.new),
+          pairRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: const MaterialApp(home: PairingPage()),
+      ),
+    );
+    await _settle(tester);
+    final readsOnFirstEntry = repository.reads;
+
+    repository.connectOnNextRead = true;
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(_FixedAuthController.new),
+          pairRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: const MaterialApp(home: PairingPage()),
+      ),
+    );
+    await _settle(tester);
+
+    expect(repository.reads, greaterThan(readsOnFirstEntry));
+    expect(find.text('你们已连接'), findsOneWidget);
+  });
+
+  testWidgets('resuming the app refreshes Pair state', (tester) async {
+    final repository = _PollingPairRepository()..currentPair = _pair;
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_FixedAuthController.new),
+        pairRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const MaterialApp(home: SizedBox.shrink()),
+      ),
+    );
+    container.read(pairControllerProvider);
+    await _settle(tester);
+    repository.connectOnNextRead = true;
+    final readsBeforeResume = repository.reads;
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    await tester.pump();
+
+    expect(repository.reads, greaterThan(readsBeforeResume));
+    expect(container.read(pairControllerProvider), isA<PairConnected>());
+    expect(
+      (container.read(
+        pairControllerProvider,
+      ) as PairConnected).pair.isConnected,
+      isTrue,
+    );
+  });
+
+  test(
+    'older Pending response cannot overwrite newer Connected response',
+    () async {
+      final repository = _SequencedPairRepository();
+      final container = ProviderContainer(
+        overrides: [
+          authControllerProvider.overrideWith(_FixedAuthController.new),
+          pairRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(pairControllerProvider);
+      await Future<void>.delayed(Duration.zero);
+      final newerRefresh = container
+          .read(pairControllerProvider.notifier)
+          .refresh(showLoading: false);
+      repository.secondRead.complete(_completedPair);
+      await newerRefresh;
+      repository.firstRead.complete(_pair);
+      await Future<void>.delayed(Duration.zero);
+
+      final state = container.read(pairControllerProvider);
+      expect(state, isA<PairConnected>());
+      expect((state as PairConnected).pair.isConnected, isTrue);
+    },
+  );
 }

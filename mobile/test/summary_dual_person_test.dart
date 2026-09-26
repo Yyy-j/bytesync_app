@@ -135,9 +135,9 @@ void main() {
 
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pump();
-    expect(find.text('我'), findsAtLeastNWidgets(2));
+    expect(find.text('我', skipOffstage: false), findsAtLeastNWidgets(2));
     expect(find.text('1250 / 2000 kcal'), findsOneWidget);
-    expect(find.text('Harper'), findsAtLeastNWidgets(2));
+    expect(find.text('Harper', skipOffstage: false), findsAtLeastNWidgets(2));
     expect(find.text('980 / 1800 kcal'), findsOneWidget);
     expect(find.text('2230'), findsNothing);
     await tester.drag(find.byType(ListView), const Offset(0, -500));

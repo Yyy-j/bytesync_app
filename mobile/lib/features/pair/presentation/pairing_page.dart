@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,11 +19,60 @@ class PairingPage extends ConsumerStatefulWidget {
 
 class _PairingPageState extends ConsumerState<PairingPage> {
   final _inviteCodeController = TextEditingController();
+  Timer? _pendingPollTimer;
+  bool _pendingPollInFlight = false;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual<PairState>(pairControllerProvider, (_, next) {
+      _syncPendingPolling(next);
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final controller = ref.read(pairControllerProvider.notifier);
+      unawaited(controller.refresh(showLoading: false));
+      _syncPendingPolling(ref.read(pairControllerProvider));
+    });
+  }
 
   @override
   void dispose() {
+    _pendingPollTimer?.cancel();
+    _pendingPollTimer = null;
     _inviteCodeController.dispose();
     super.dispose();
+  }
+
+  void _syncPendingPolling(PairState state) {
+    final isPending = state is PairConnected && state.pair.isPending;
+    if (!isPending) {
+      _pendingPollTimer?.cancel();
+      _pendingPollTimer = null;
+      return;
+    }
+    if (_pendingPollTimer != null) return;
+    _pendingPollTimer = Timer.periodic(
+      const Duration(seconds: 4),
+      (_) => _pollPendingPair(),
+    );
+  }
+
+  Future<void> _pollPendingPair() async {
+    if (_pendingPollInFlight || !mounted) return;
+    final state = ref.read(pairControllerProvider);
+    if (state is! PairConnected || !state.pair.isPending) {
+      _syncPendingPolling(state);
+      return;
+    }
+    _pendingPollInFlight = true;
+    try {
+      await ref
+          .read(pairControllerProvider.notifier)
+          .refresh(showLoading: false);
+    } finally {
+      _pendingPollInFlight = false;
+    }
   }
 
   @override
