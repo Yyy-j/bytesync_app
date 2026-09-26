@@ -136,6 +136,35 @@ class _SequencedPairRepository implements PairRepository {
       throw UnimplementedError();
 }
 
+class _MutationRacePairRepository implements PairRepository {
+  _MutationRacePairRepository({required this.joinedPair});
+
+  final Pair joinedPair;
+  final oldRefresh = Completer<Pair?>();
+  Pair? currentPair;
+  bool mutationStarted = false;
+
+  @override
+  Future<Pair?> getCurrentPair() {
+    if (!mutationStarted) return oldRefresh.future;
+    return Future.value(currentPair);
+  }
+
+  @override
+  Future<Pair> createPair() async {
+    mutationStarted = true;
+    currentPair = _pair;
+    return _pair;
+  }
+
+  @override
+  Future<Pair> joinPair({required String inviteCode}) async {
+    mutationStarted = true;
+    currentPair = joinedPair;
+    return joinedPair;
+  }
+}
+
 Future<void> _settle(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 50));
@@ -473,4 +502,48 @@ void main() {
       expect((state as PairConnected).pair.isConnected, isTrue);
     },
   );
+
+  test('old refresh cannot overwrite createPair result', () async {
+    final repository = _MutationRacePairRepository(joinedPair: _completedPair);
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_FixedAuthController.new),
+        pairRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final controller = container.read(pairControllerProvider.notifier);
+    await Future<void>.delayed(Duration.zero);
+    final create = controller.createPair();
+    await create;
+    repository.oldRefresh.complete(null);
+    await Future<void>.delayed(Duration.zero);
+
+    final state = container.read(pairControllerProvider);
+    expect(state, isA<PairConnected>());
+    expect((state as PairConnected).pair.isPending, isTrue);
+  });
+
+  test('old refresh cannot overwrite joinPair result', () async {
+    final repository = _MutationRacePairRepository(joinedPair: _completedPair);
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_FixedAuthController.new),
+        pairRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final controller = container.read(pairControllerProvider.notifier);
+    await Future<void>.delayed(Duration.zero);
+    final join = controller.joinPair('ABC123');
+    await join;
+    repository.oldRefresh.complete(_pair);
+    await Future<void>.delayed(Duration.zero);
+
+    final state = container.read(pairControllerProvider);
+    expect(state, isA<PairConnected>());
+    expect((state as PairConnected).pair.isConnected, isTrue);
+  });
 }

@@ -95,6 +95,7 @@ class PairController extends Notifier<PairState> {
   }
 
   Future<void> _runMutation(Future<void> Function() operation) async {
+    _refreshGeneration++;
     state = const PairLoading();
     try {
       await operation();
