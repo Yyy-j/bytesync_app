@@ -1,3 +1,5 @@
+import '../../profile/domain/user_character.dart';
+
 class Pair {
   const Pair({
     required this.pairId,
@@ -42,9 +44,11 @@ class PairMember {
     required this.userId,
     required this.displayName,
     required this.isSelf,
+    this.character = UserCharacter.boy,
   });
 
   final String userId;
   final String displayName;
   final bool isSelf;
+  final UserCharacter character;
 }

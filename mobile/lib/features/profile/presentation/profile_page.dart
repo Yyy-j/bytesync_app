@@ -9,7 +9,6 @@ import '../../../core/theme/theme_controller.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/bitesync_snackbar.dart';
 import '../../../shared/widgets/state_views.dart';
-import '../../../core/network/api_exception.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../pair/domain/pair_state.dart';
 import '../../pair/presentation/pair_controller.dart';
@@ -25,7 +24,6 @@ class ProfilePage extends ConsumerStatefulWidget {
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   final _displayNameController = TextEditingController();
   String? _loadedProfileId;
-  bool _deletingAccount = false;
 
   @override
   void dispose() {
@@ -214,24 +212,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         AppCard(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.delete_outline),
-            title: Text(appL10n.authDeleteAccount),
-            subtitle: Text(appL10n.authDeleteAccountDescription),
-            trailing: _deletingAccount
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(Icons.chevron_right),
-            onTap: _deletingAccount ? null : _deleteAccount,
+            leading: Icon(Icons.security_outlined),
+            title: Text(appL10n.accountPrivacyTitle),
+            trailing: Icon(Icons.chevron_right),
+            onTap: () => context.push('/account-privacy'),
           ),
         ),
         SizedBox(height: AppSpacing.lg),
         OutlinedButton.icon(
-          onPressed: _deletingAccount
-              ? null
-              : () => ref.read(authControllerProvider.notifier).signOut(),
+          onPressed: () => ref.read(authControllerProvider.notifier).signOut(),
           icon: Icon(Icons.logout),
           label: Text(appL10n.authSignOut),
         ),
@@ -274,70 +263,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Future<void> _openCharacterPage() async {
     final saved = await context.push<bool>('/profile/character');
     if (saved == true && mounted) _snack(appL10n.characterSaved);
-  }
-
-  Future<void> _deleteAccount() async {
-    final pairState = ref.read(pairControllerProvider);
-    final connected = pairState is PairConnected && pairState.pair.isConnected;
-    final firstConfirmed = await _confirmDelete(
-      title: appL10n.authDeleteAccountTitle,
-      description: connected
-          ? appL10n.authDeleteAccountConnectedDescription
-          : appL10n.authDeleteAccountDescription,
-      confirmLabel: appL10n.commonContinue,
-    );
-    if (!firstConfirmed || !mounted) return;
-    final finalConfirmed = await _confirmDelete(
-      title: appL10n.authDeleteAccountTitle,
-      description: appL10n.authDeleteAccountDescription,
-      confirmLabel: appL10n.authDeleteAccountConfirm,
-      destructive: true,
-    );
-    if (!finalConfirmed || !mounted) return;
-
-    setState(() => _deletingAccount = true);
-    try {
-      await ref.read(authControllerProvider.notifier).deleteAccount();
-    } catch (error) {
-      if (mounted) {
-        final message = error is ApiException
-            ? error.message
-            : appL10n.authDeleteAccountFailed;
-        _snack(message);
-        setState(() => _deletingAccount = false);
-      }
-    }
-  }
-
-  Future<bool> _confirmDelete({
-    required String title,
-    required String description,
-    required String confirmLabel,
-    bool destructive = false,
-  }) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text(title),
-            content: Text(description),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text(appL10n.commonCancel),
-              ),
-              FilledButton(
-                style: destructive
-                    ? FilledButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.error,
-                      )
-                    : null,
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(confirmLabel),
-              ),
-            ],
-          ),
-        ) ??
-        false;
   }
 
   void _snack(String message) {

@@ -1,4 +1,5 @@
 import '../../../../core/network/api_exception.dart';
+import '../../../profile/domain/user_character.dart';
 
 class PairDto {
   const PairDto({
@@ -43,13 +44,19 @@ class PairDto {
 }
 
 class PairMemberDto {
-  const PairMemberDto({required this.userId, required this.displayName});
+  const PairMemberDto({
+    required this.userId,
+    required this.displayName,
+    required this.character,
+  });
 
   factory PairMemberDto.fromJson(Map<String, dynamic> json) => PairMemberDto(
     userId: json['user_id'] as String,
     displayName: json['display_name'] as String?,
+    character: UserCharacter.fromWire(json['character']),
   );
 
   final String userId;
   final String? displayName;
+  final UserCharacter character;
 }

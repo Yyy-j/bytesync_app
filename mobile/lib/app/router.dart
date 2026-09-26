@@ -9,6 +9,7 @@ import '../features/pair/domain/pair_state.dart';
 import '../features/pair/presentation/pair_controller.dart';
 import '../features/pair/presentation/pairing_page.dart';
 import '../features/profile/presentation/character_page.dart';
+import '../features/profile/presentation/account_privacy_page.dart';
 import '../features/profile/presentation/nutrition_goals_page.dart';
 import '../features/training/presentation/history/training_history_page.dart';
 import '../features/training/presentation/template/training_template_page.dart';
@@ -72,6 +73,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/character',
         builder: (context, state) => const CharacterPage(),
+      ),
+      GoRoute(
+        path: '/account-privacy',
+        builder: (context, state) => const AccountPrivacyPage(),
       ),
       GoRoute(
         path: '/training/template',

@@ -4,6 +4,8 @@ import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../summary/presentation/summary_controller.dart';
+import '../../pair/domain/pair_state.dart';
+import '../../pair/presentation/pair_controller.dart';
 import '../data/meal_ai_repository.dart';
 import '../data/meals_providers.dart';
 import '../data/meals_repository.dart';
@@ -76,6 +78,7 @@ class MealManagementController extends Notifier<MealManagementState> {
   }
 
   Future<MealManagementResult> updateMeal(Meal meal, MealPatch patch) {
+    if (!_isEditable(meal)) return Future.value(_historicalResult);
     final guardedPatch = MealPatch(
       name: patch.name,
       baseCalories: patch.baseCalories,
@@ -96,10 +99,12 @@ class MealManagementController extends Notifier<MealManagementState> {
   }
 
   Future<MealManagementResult> deleteMeal(Meal meal) {
+    if (!_isEditable(meal)) return Future.value(_historicalResult);
     return _mutate(meal.id, () => _mealsRepository.deleteMeal(meal.id));
   }
 
   Future<MealManagementResult> refineMeal(Meal meal, String newHint) async {
+    if (!_isEditable(meal)) return _historicalResult;
     final trimmedHint = newHint.trim();
     if (meal.source != MealSource.text) {
       return MealManagementResult.failure(appL10n.mealReestimateUnsupported);
@@ -187,5 +192,17 @@ class MealManagementController extends Notifier<MealManagementState> {
     if (error is ServerException) return appL10n.errorServer;
     if (error is ApiException) return error.message;
     return appL10n.errorOperationFailed;
+  }
+
+  MealManagementResult get _historicalResult =>
+      MealManagementResult.failure(appL10n.mealHistoricalReadOnly);
+
+  bool _isEditable(Meal meal) {
+    if (meal.pairId == null) return true;
+    if (!ref.exists(pairControllerProvider)) return true;
+    final state = ref.read(pairControllerProvider);
+    return state is PairConnected &&
+        state.pair.isConnected &&
+        state.pair.pairId == meal.pairId;
   }
 }

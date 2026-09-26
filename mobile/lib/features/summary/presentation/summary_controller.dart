@@ -56,14 +56,20 @@ class SummaryController extends Notifier<SummaryState> {
   String? dailyError;
   bool monthlyLoading = false;
   String? monthlyError;
+  String? _pairScopeKey;
   MonthlySummary? get monthlySummary => _monthlyCache[_monthKey(focusedMonth)];
 
   @override
   SummaryState build() {
     _repository = ref.watch(summaryRepositoryProvider);
     ref.listen<PairState>(pairControllerProvider, (previous, next) {
-      if (previous != next) refresh();
+      final nextScope = _scopeKey(next);
+      if (_pairScopeKey != nextScope) {
+        _pairScopeKey = nextScope;
+        refresh();
+      }
     });
+    _pairScopeKey = _scopeKey(ref.read(pairControllerProvider));
     selectedDate = _dateOnly(DateTime.now());
     focusedMonth = DateTime(selectedDate.year, selectedDate.month);
     _loadInitial();
@@ -173,4 +179,11 @@ class SummaryController extends Notifier<SummaryState> {
       DateTime(value.year, value.month, value.day);
   static DateTime _monthKey(DateTime value) =>
       DateTime(value.year, value.month);
+
+  static String _scopeKey(PairState state) {
+    if (state is PairConnected && state.pair.isConnected) {
+      return 'pair:${state.pair.pairId}';
+    }
+    return 'single';
+  }
 }

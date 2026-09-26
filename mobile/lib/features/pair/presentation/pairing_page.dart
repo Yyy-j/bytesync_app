@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
@@ -310,8 +311,15 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                     if (isConnected)
                       ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.people_outline),
-                        title: Text(partner!.displayName),
+                        leading: SizedBox(
+                          width: 44,
+                          height: 44,
+                          child: SvgPicture.asset(
+                            partner!.character.bodyAsset,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        title: Text(partner.displayName),
                         subtitle: Text(appL10n.pairPartnerInfo),
                       )
                     else ...[

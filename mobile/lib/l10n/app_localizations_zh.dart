@@ -151,6 +151,44 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get accountPrivacyTitle => '账号与隐私';
+
+  @override
+  String get accountPrivacyLoginMethod => '当前登录方式：Google';
+
+  @override
+  String get accountPrivacyPrivacyPolicy => '隐私政策';
+
+  @override
+  String get accountPrivacyTerms => '使用条款';
+
+  @override
+  String get accountPrivacyAiData => 'AI 数据处理';
+
+  @override
+  String get accountPrivacyAiDataDescription =>
+      '你提交的文字和图片可能会发送给 AI 服务，用于生成营养估算；不会用于训练你的个人画像。';
+
+  @override
+  String get accountPrivacyAccountData => '账号数据';
+
+  @override
+  String get accountPrivacyAccountDataDescription =>
+      '你的资料、饮食和训练记录会与账号关联，并可在删除账号时一并删除。';
+
+  @override
+  String get accountPrivacyDeleteDescription => '永久删除账号及属于你的数据';
+
+  @override
+  String get mealHistoricalReadOnly => '历史配对记录仅供查看';
+
+  @override
+  String get todayExpandCalendar => '展开日历';
+
+  @override
+  String get todayCollapseCalendar => '收起日历';
+
+  @override
   String get errorInvalidRequest => '请求参数有误，请检查后重试';
 
   @override

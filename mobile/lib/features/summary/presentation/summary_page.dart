@@ -15,6 +15,8 @@ import '../../meals/domain/meal.dart';
 import '../../meals/domain/meal_source.dart';
 import '../../meals/presentation/meal_management_controller.dart';
 import '../../profile/domain/user_character.dart';
+import '../../pair/domain/pair_state.dart';
+import '../../pair/presentation/pair_controller.dart';
 import '../domain/daily_summary.dart';
 import 'summary_controller.dart';
 
@@ -58,7 +60,9 @@ class _SummaryPageState extends ConsumerState<SummaryPage> {
         title: Text(appL10n.navToday),
         actions: [
           IconButton(
-            tooltip: _calendarExpanded ? '收起日历' : '展开日历',
+            tooltip: _calendarExpanded
+                ? appL10n.todayCollapseCalendar
+                : appL10n.todayExpandCalendar,
             onPressed: () {
               setState(() => _calendarExpanded = !_calendarExpanded);
             },
@@ -127,6 +131,13 @@ class _SummaryBody extends ConsumerWidget {
         ? _SummaryDarkColors.secondaryText
         : theme.colorScheme.onSurfaceVariant;
     final managementState = ref.watch(mealManagementControllerProvider);
+    final pairState = ref.watch(pairControllerProvider);
+    final activePairId =
+        pairState is PairConnected && pairState.pair.isConnected
+        ? pairState.pair.pairId
+        : null;
+    final pairScopeKnown =
+        pairState is! PairInitial && pairState is! PairLoading;
     final sortedMeals = [...summary.meals]
       ..sort((left, right) {
         final leftIsCurrentUser = left.userId == summary.selfSlice.userId;
@@ -220,7 +231,11 @@ class _SummaryBody extends ConsumerWidget {
                   ownerName: _ownerName(meal),
                   characterAsset: _mealCharacter(meal).eatAsset,
                   busy: managementState.isBusy(meal.id),
-                  onManage: meal.userId == summary.selfSlice.userId
+                  onManage:
+                      meal.userId == summary.selfSlice.userId &&
+                          (meal.pairId == null ||
+                              !pairScopeKnown ||
+                              meal.pairId == activePairId)
                       ? () => _showMealActions(context, ref, meal)
                       : null,
                 ),
@@ -1214,7 +1229,21 @@ class _MealListItem extends StatelessWidget {
                         width: 32,
                         height: 32,
                         child: onManage == null
-                            ? null
+                            ? meal.pairId == null
+                                  ? null
+                                  : Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Text(
+                                        appL10n.mealHistoricalReadOnly,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: theme
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                        textAlign: TextAlign.right,
+                                      ),
+                                    )
                             : busy
                             ? const Center(
                                 child: SizedBox(

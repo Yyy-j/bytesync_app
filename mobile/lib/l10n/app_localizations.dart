@@ -358,6 +358,78 @@ abstract class AppLocalizations {
   /// **'Google 登录失败：{description}'**
   String authGoogleSignInFailed(String description);
 
+  /// No description provided for @accountPrivacyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'账号与隐私'**
+  String get accountPrivacyTitle;
+
+  /// No description provided for @accountPrivacyLoginMethod.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前登录方式：Google'**
+  String get accountPrivacyLoginMethod;
+
+  /// No description provided for @accountPrivacyPrivacyPolicy.
+  ///
+  /// In zh, this message translates to:
+  /// **'隐私政策'**
+  String get accountPrivacyPrivacyPolicy;
+
+  /// No description provided for @accountPrivacyTerms.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用条款'**
+  String get accountPrivacyTerms;
+
+  /// No description provided for @accountPrivacyAiData.
+  ///
+  /// In zh, this message translates to:
+  /// **'AI 数据处理'**
+  String get accountPrivacyAiData;
+
+  /// No description provided for @accountPrivacyAiDataDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'你提交的文字和图片可能会发送给 AI 服务，用于生成营养估算；不会用于训练你的个人画像。'**
+  String get accountPrivacyAiDataDescription;
+
+  /// No description provided for @accountPrivacyAccountData.
+  ///
+  /// In zh, this message translates to:
+  /// **'账号数据'**
+  String get accountPrivacyAccountData;
+
+  /// No description provided for @accountPrivacyAccountDataDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'你的资料、饮食和训练记录会与账号关联，并可在删除账号时一并删除。'**
+  String get accountPrivacyAccountDataDescription;
+
+  /// No description provided for @accountPrivacyDeleteDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'永久删除账号及属于你的数据'**
+  String get accountPrivacyDeleteDescription;
+
+  /// No description provided for @mealHistoricalReadOnly.
+  ///
+  /// In zh, this message translates to:
+  /// **'历史配对记录仅供查看'**
+  String get mealHistoricalReadOnly;
+
+  /// No description provided for @todayExpandCalendar.
+  ///
+  /// In zh, this message translates to:
+  /// **'展开日历'**
+  String get todayExpandCalendar;
+
+  /// No description provided for @todayCollapseCalendar.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起日历'**
+  String get todayCollapseCalendar;
+
   /// No description provided for @errorInvalidRequest.
   ///
   /// In zh, this message translates to:

@@ -18,6 +18,7 @@ class PairMapper {
                 userId: member.userId,
                 displayName: member.displayName ?? appL10n.commonUnnamedMember,
                 isSelf: member.userId == currentUserId,
+                character: member.character,
               ),
             )
             .toList(growable: false),
