@@ -202,7 +202,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(Icons.people_outline),
-            title: Text(appL10n.profilePairing),
+            title: Text(appL10n.profilePairSection),
             subtitle: Text(_pairSummary(pairState)),
             trailing: Icon(Icons.chevron_right),
             onTap: () => context.push('/pairing'),
@@ -220,16 +220,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   String _pairSummary(PairState state) {
     if (state is PairConnected) {
-      final partner = state.pair.partner;
-      return partner == null
-          ? appL10n.profilePairWaiting
-          : appL10n.profilePairedWith(partner.displayName);
+      if (state.pair.isPending) return appL10n.profilePairPending;
+      if (state.pair.isConnected) {
+        final partner = state.pair.partner;
+        if (partner != null) {
+          return appL10n.profilePairedWith(partner.displayName);
+        }
+      }
+      return appL10n.profilePairSingle;
     }
     if (state is PairLoading || state is PairInitial) {
       return appL10n.profilePairLoading;
     }
     if (state is PairFailure) return state.message;
-    return appL10n.profileNotPaired;
+    if (state is PairNotFound) return appL10n.profilePairSingle;
+    return appL10n.profilePairSingle;
   }
 
   Future<void> _saveProfile() async {

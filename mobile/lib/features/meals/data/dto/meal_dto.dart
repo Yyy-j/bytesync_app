@@ -42,7 +42,7 @@ class MealDto {
     try {
       return MealDto(
         id: json['id'] as String,
-        pairId: json['pair_id'] as String,
+        pairId: json['pair_id'] as String?,
         userId: json['user_id'] as String,
         sharedMealId: json['shared_meal_id'] as String?,
         name: json['name'] as String,
@@ -74,7 +74,7 @@ class MealDto {
   }
 
   final String id;
-  final String pairId;
+  final String? pairId;
   final String userId;
   final String? sharedMealId;
   final String name;

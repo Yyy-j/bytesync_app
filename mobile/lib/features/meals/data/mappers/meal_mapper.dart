@@ -18,12 +18,7 @@ class MealMapper {
         name: dto.name,
         source: MealSource.fromWire(dto.source),
         dishes: dto.dishes
-            .map(
-              (dish) => MealAiDish(
-                name: dish.name,
-                calories: dish.calories,
-              ),
-            )
+            .map((dish) => MealAiDish(name: dish.name, calories: dish.calories))
             .toList(growable: false),
         aiHint: dto.aiHint,
         originalInput: dto.originalInput,

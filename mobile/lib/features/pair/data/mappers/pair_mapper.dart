@@ -21,6 +21,10 @@ class PairMapper {
               ),
             )
             .toList(growable: false),
+        connectedAt: dto.connectedAt == null
+            ? null
+            : DateTime.parse(dto.connectedAt!),
+        endedAt: dto.endedAt == null ? null : DateTime.parse(dto.endedAt!),
         createdAt: DateTime.parse(dto.createdAt),
       );
     } on FormatException catch (error) {

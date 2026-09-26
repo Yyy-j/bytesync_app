@@ -45,20 +45,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: refresh,
     redirect: (context, state) {
       final authState = ref.read(authControllerProvider);
-      final pairState = ref.read(pairControllerProvider);
       final location = state.matchedLocation;
 
       if (authState is AuthInitial || authState is AuthRestoreFailed) {
         return location == '/splash' ? null : '/splash';
       }
       if (authState is AuthAuthenticated) {
-        if (pairState is PairInitial || pairState is PairLoading) {
-          return location == '/splash' ? null : '/splash';
-        }
-        if (pairState is PairConnected) {
-          return (location == '/login' || location == '/splash') ? '/' : null;
-        }
-        return (location == '/login' || location == '/splash') ? '/pairing' : null;
+        return (location == '/login' || location == '/splash') ? '/' : null;
       }
       // AuthUnauthenticated or AuthLoading (mid sign-in attempt from the
       // login page itself) both mean "show the login page".
@@ -67,7 +60,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashPage()),
       GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
-      GoRoute(path: '/pairing', builder: (context, state) => const PairingPage()),
+      GoRoute(
+        path: '/pairing',
+        builder: (context, state) => const PairingPage(),
+      ),
       GoRoute(path: '/', builder: (context, state) => const HomeShell()),
       GoRoute(
         path: '/nutrition-goals',
@@ -87,9 +83,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/training/history/:weekId',
-        builder: (context, state) => TrainingHistoryDetailPage(
-          weekId: state.pathParameters['weekId']!,
-        ),
+        builder: (context, state) =>
+            TrainingHistoryDetailPage(weekId: state.pathParameters['weekId']!),
       ),
     ],
   );

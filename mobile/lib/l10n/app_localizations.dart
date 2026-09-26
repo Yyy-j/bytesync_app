@@ -388,6 +388,48 @@ abstract class AppLocalizations {
   /// **'先创建一个配对，或输入Ta发来的邀请码。'**
   String get pairIntro;
 
+  /// No description provided for @pairSingleTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'一起记录，会更有意思'**
+  String get pairSingleTitle;
+
+  /// No description provided for @pairSingleDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'邀请 Ta 后，可以一起查看饮食和营养记录。'**
+  String get pairSingleDescription;
+
+  /// No description provided for @pairInvitePartner.
+  ///
+  /// In zh, this message translates to:
+  /// **'邀请 Ta'**
+  String get pairInvitePartner;
+
+  /// No description provided for @pairEnterInviteCode.
+  ///
+  /// In zh, this message translates to:
+  /// **'输入邀请码'**
+  String get pairEnterInviteCode;
+
+  /// No description provided for @pairPendingTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待 Ta 加入'**
+  String get pairPendingTitle;
+
+  /// No description provided for @pairPendingDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'把邀请码分享给 Ta，Ta 加入后就会自动连接。'**
+  String get pairPendingDescription;
+
+  /// No description provided for @pairConnectedTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'你们已连接'**
+  String get pairConnectedTitle;
+
   /// No description provided for @pairCurrentDetailsHint.
   ///
   /// In zh, this message translates to:
@@ -586,11 +628,29 @@ abstract class AppLocalizations {
   /// **'Ta与配对'**
   String get profilePairing;
 
+  /// No description provided for @profilePairSection.
+  ///
+  /// In zh, this message translates to:
+  /// **'我和 Ta'**
+  String get profilePairSection;
+
   /// No description provided for @profilePairWaiting.
   ///
   /// In zh, this message translates to:
   /// **'已创建配对，等待Ta加入'**
   String get profilePairWaiting;
+
+  /// No description provided for @profilePairSingle.
+  ///
+  /// In zh, this message translates to:
+  /// **'未配对'**
+  String get profilePairSingle;
+
+  /// No description provided for @profilePairPending.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待 Ta 加入'**
+  String get profilePairPending;
 
   /// No description provided for @profilePairedWith.
   ///
@@ -753,6 +813,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'还没有记录，去记一笔吧'**
   String get todayEmpty;
+
+  /// No description provided for @todayLogFirstMeal.
+  ///
+  /// In zh, this message translates to:
+  /// **'记录第一餐'**
+  String get todayLogFirstMeal;
+
+  /// No description provided for @todayInvitePartner.
+  ///
+  /// In zh, this message translates to:
+  /// **'邀请 Ta 一起记录'**
+  String get todayInvitePartner;
 
   /// No description provided for @todayAdjustPortion.
   ///
@@ -1042,6 +1114,12 @@ abstract class AppLocalizations {
   /// **'AI 估算，仅供参考'**
   String get recordAiDisclaimer;
 
+  /// No description provided for @recordPartnerRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'Ta 还没有加入，暂时只能记录自己的饮食。'**
+  String get recordPartnerRequired;
+
   /// No description provided for @recordRecognizeWithNote.
   ///
   /// In zh, this message translates to:
@@ -1083,6 +1161,18 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'这顿要同步给 Ta 吗？'**
   String get recordShareQuestion;
+
+  /// No description provided for @recordWhoAteQuestion.
+  ///
+  /// In zh, this message translates to:
+  /// **'这是谁吃的？'**
+  String get recordWhoAteQuestion;
+
+  /// No description provided for @recordShareMe.
+  ///
+  /// In zh, this message translates to:
+  /// **'我'**
+  String get recordShareMe;
 
   /// No description provided for @recordShareSolo.
   ///

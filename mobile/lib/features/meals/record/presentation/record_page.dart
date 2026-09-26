@@ -459,22 +459,16 @@ class _ResultView extends StatelessWidget {
             selected: draft.portionRatio,
             onSelected: onPortion,
           ),
-          SizedBox(height: 30),
-          Text(
-            appL10n.recordShareQuestion,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
-          SizedBox(height: 10),
-          if (partnerName == null)
-            _ChoiceRow<MealShareMode>(
-              choices: [(MealShareMode.solo, appL10n.recordShareSolo)],
-              selected: MealShareMode.solo,
-              onSelected: onShareMode,
-            )
-          else ...[
+          if (partnerName != null) ...[
+            SizedBox(height: 30),
+            Text(
+              appL10n.recordWhoAteQuestion,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+            ),
+            SizedBox(height: 10),
             _ChoiceRow<MealShareMode>(
               choices: [
-                (MealShareMode.solo, appL10n.recordShareSolo),
+                (MealShareMode.solo, appL10n.recordShareMe),
                 (MealShareMode.partnerOnly, appL10n.recordSharePartnerOnly),
                 (MealShareMode.sharedHalf, appL10n.recordShareTogether),
               ],

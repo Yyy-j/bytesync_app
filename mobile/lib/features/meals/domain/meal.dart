@@ -48,7 +48,7 @@ class Meal {
 
   // ── identity ──
   final String id;
-  final String pairId;
+  final String? pairId;
   final String userId;
   final String? sharedMealId;
 

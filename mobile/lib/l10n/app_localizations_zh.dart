@@ -164,6 +164,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get pairIntro => '先创建一个配对，或输入Ta发来的邀请码。';
 
   @override
+  String get pairSingleTitle => '一起记录，会更有意思';
+
+  @override
+  String get pairSingleDescription => '邀请 Ta 后，可以一起查看饮食和营养记录。';
+
+  @override
+  String get pairInvitePartner => '邀请 Ta';
+
+  @override
+  String get pairEnterInviteCode => '输入邀请码';
+
+  @override
+  String get pairPendingTitle => '等待 Ta 加入';
+
+  @override
+  String get pairPendingDescription => '把邀请码分享给 Ta，Ta 加入后就会自动连接。';
+
+  @override
+  String get pairConnectedTitle => '你们已连接';
+
+  @override
   String get pairCurrentDetailsHint => '查看当前配对详情。';
 
   @override
@@ -263,7 +284,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get profilePairing => 'Ta与配对';
 
   @override
+  String get profilePairSection => '我和 Ta';
+
+  @override
   String get profilePairWaiting => '已创建配对，等待Ta加入';
+
+  @override
+  String get profilePairSingle => '未配对';
+
+  @override
+  String get profilePairPending => '等待 Ta 加入';
 
   @override
   String profilePairedWith(String partnerName) {
@@ -347,6 +377,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get todayEmpty => '还没有记录，去记一笔吧';
+
+  @override
+  String get todayLogFirstMeal => '记录第一餐';
+
+  @override
+  String get todayInvitePartner => '邀请 Ta 一起记录';
 
   @override
   String get todayAdjustPortion => '调整份量';
@@ -511,6 +547,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recordAiDisclaimer => 'AI 估算，仅供参考';
 
   @override
+  String get recordPartnerRequired => 'Ta 还没有加入，暂时只能记录自己的饮食。';
+
+  @override
   String get recordRecognizeWithNote => '补充说明再识别';
 
   @override
@@ -530,6 +569,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recordShareQuestion => '这顿要同步给 Ta 吗？';
+
+  @override
+  String get recordWhoAteQuestion => '这是谁吃的？';
+
+  @override
+  String get recordShareMe => '我';
 
   @override
   String get recordShareSolo => '只记录给我';

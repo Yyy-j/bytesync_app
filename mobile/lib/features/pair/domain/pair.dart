@@ -4,12 +4,22 @@ class Pair {
     required this.inviteCode,
     required this.members,
     required this.createdAt,
+    this.connectedAt,
+    this.endedAt,
   });
 
   final String pairId;
   final String inviteCode;
   final List<PairMember> members;
   final DateTime createdAt;
+  final DateTime? connectedAt;
+  final DateTime? endedAt;
+
+  bool get isPending =>
+      members.length == 1 && connectedAt == null && endedAt == null;
+
+  bool get isConnected =>
+      members.length == 2 && connectedAt != null && endedAt == null;
 
   PairMember? get currentMember {
     for (final member in members) {
@@ -19,6 +29,7 @@ class Pair {
   }
 
   PairMember? get partner {
+    if (!isConnected) return null;
     for (final member in members) {
       if (!member.isSelf) return member;
     }

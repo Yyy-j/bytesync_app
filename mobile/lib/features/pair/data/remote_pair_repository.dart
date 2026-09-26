@@ -23,12 +23,14 @@ class RemotePairRepository implements PairRepository {
   @override
   Future<Pair?> getCurrentPair() async {
     try {
-      final response = await dio.get<Map<String, dynamic>>(ApiEndpoints.pairsMe);
+      final response = await dio.get<Map<String, dynamic>>(
+        ApiEndpoints.pairsMe,
+      );
       return await _map(response.data!);
-    } on NotFoundException {
-      return null;
     } catch (error) {
-      throw errorMapper.map(error);
+      final mapped = errorMapper.map(error);
+      if (mapped is NotFoundException) return null;
+      throw mapped;
     }
   }
 
@@ -36,10 +38,8 @@ class RemotePairRepository implements PairRepository {
   Future<Pair> createPair() => _post(ApiEndpoints.pairs);
 
   @override
-  Future<Pair> joinPair({required String inviteCode}) => _post(
-        ApiEndpoints.pairsJoin,
-        data: {'invite_code': inviteCode},
-      );
+  Future<Pair> joinPair({required String inviteCode}) =>
+      _post(ApiEndpoints.pairsJoin, data: {'invite_code': inviteCode});
 
   Future<Pair> _post(String path, {Map<String, dynamic>? data}) async {
     try {
@@ -52,9 +52,6 @@ class RemotePairRepository implements PairRepository {
 
   Future<Pair> _map(Map<String, dynamic> json) async {
     final user = await authRepository.getCurrentUser();
-    return PairMapper.fromDto(
-      PairDto.fromJson(json),
-      currentUserId: user.id,
-    );
+    return PairMapper.fromDto(PairDto.fromJson(json), currentUserId: user.id);
   }
 }

@@ -3,6 +3,7 @@ import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../../core/network/api_exception.dart';
 import '../../../summary/presentation/summary_controller.dart';
+import '../../../pair/presentation/pair_controller.dart';
 import '../../data/meal_ai_repository.dart';
 import '../../data/meals_providers.dart';
 import '../../data/meals_repository.dart';
@@ -223,6 +224,14 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
       clear();
       return true;
     } catch (error) {
+      if (error is ConflictException && _isPartnerRequired(error)) {
+        await ref.read(pairControllerProvider.notifier).refresh();
+        state = RecordError(
+          appL10n.recordPartnerRequired,
+          draft: current.copyWith(shareMode: MealShareMode.solo),
+        );
+        return false;
+      }
       state = RecordError(_messageFor(error), draft: current);
       return false;
     }
@@ -266,6 +275,12 @@ class RecordController extends AutoDisposeNotifier<RecordState> {
     }
     if (error is ServerException) return appL10n.recordAiUnavailable;
     return appL10n.recordAiEstimateFailed;
+  }
+
+  bool _isPartnerRequired(ConflictException error) {
+    final message = error.message.toLowerCase();
+    return message.contains('partner is required') ||
+        message.contains('partner_required');
   }
 }
 

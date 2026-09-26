@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
+import '../../../app/home_shell.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/bitesync_bottom_sheet.dart';
@@ -172,6 +174,17 @@ class _SummaryBody extends ConsumerWidget {
           )
         else ...[
           _SummaryCards(summary: summary),
+          if (summary.partnerSlice == null) ...[
+            SizedBox(height: AppSpacing.md),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => context.push('/pairing'),
+                icon: const Icon(Icons.group_add_outlined, size: 18),
+                label: Text(appL10n.todayInvitePartner),
+              ),
+            ),
+          ],
           SizedBox(height: AppSpacing.xl),
           Text(
             appL10n.todayRecords,
@@ -185,7 +198,18 @@ class _SummaryBody extends ConsumerWidget {
           if (emptyState || summary.meals.isEmpty)
             Padding(
               padding: EdgeInsets.only(top: AppSpacing.xl),
-              child: EmptyView(message: appL10n.todayEmpty),
+              child: Column(
+                children: [
+                  EmptyView(message: appL10n.todayEmpty),
+                  const SizedBox(height: AppSpacing.md),
+                  FilledButton.icon(
+                    onPressed: () =>
+                        ref.read(homeTabIndexProvider.notifier).state = 1,
+                    icon: const Icon(Icons.add_a_photo_outlined),
+                    label: Text(appL10n.todayLogFirstMeal),
+                  ),
+                ],
+              ),
             )
           else
             ...sortedMeals.map(

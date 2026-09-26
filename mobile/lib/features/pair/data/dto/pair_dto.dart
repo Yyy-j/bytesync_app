@@ -6,6 +6,8 @@ class PairDto {
     required this.inviteCode,
     required this.members,
     required this.createdAt,
+    required this.connectedAt,
+    required this.endedAt,
   });
 
   factory PairDto.fromJson(Map<String, dynamic> json) {
@@ -24,6 +26,8 @@ class PairDto {
             )
             .toList(growable: false),
         createdAt: json['created_at'] as String,
+        connectedAt: json['connected_at'] as String?,
+        endedAt: json['ended_at'] as String?,
       );
     } on TypeError catch (error) {
       throw MalformedResponseException('Pair 数据解析失败: $error');
@@ -34,6 +38,8 @@ class PairDto {
   final String inviteCode;
   final List<PairMemberDto> members;
   final String createdAt;
+  final String? connectedAt;
+  final String? endedAt;
 }
 
 class PairMemberDto {

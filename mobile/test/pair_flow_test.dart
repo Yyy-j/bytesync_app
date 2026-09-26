@@ -40,6 +40,7 @@ final _completedPair = Pair(
     PairMember(userId: 'user-2', displayName: 'Two', isSelf: false),
   ],
   createdAt: DateTime(2026),
+  connectedAt: DateTime(2026, 9, 20),
 );
 
 class _FakeAuthRepository implements AuthRepository {
@@ -120,7 +121,7 @@ void main() {
     expect(find.text('使用 Google 登录'), findsOneWidget);
   });
 
-  testWidgets('已登录未配对用户进入 /pairing', (tester) async {
+  testWidgets('已登录未配对用户直接进入主页', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -134,7 +135,7 @@ void main() {
     );
     await _settle(tester);
 
-    expect(find.byType(PairingPage), findsOneWidget);
+    expect(find.byType(HomeShell), findsOneWidget);
   });
 
   testWidgets('已登录已配对用户进入主页', (tester) async {
@@ -161,7 +162,7 @@ void main() {
     expect(find.byType(PairingPage), findsOneWidget);
     expect(find.text('ABC123'), findsOneWidget);
 
-    await tester.tap(find.text('进入主页'));
+    GoRouter.of(tester.element(find.byType(PairingPage))).go('/');
     await _settle(tester);
     expect(find.byType(HomeShell), findsOneWidget);
   });
@@ -248,10 +249,11 @@ void main() {
     expect(find.textContaining('pair-1'), findsNothing);
     expect(find.text('ABC123'), findsOneWidget);
     expect(find.text('等待Ta加入'), findsOneWidget);
-    expect(find.text('我的信息'), findsOneWidget);
+    expect(find.text('等待 Ta 加入'), findsOneWidget);
+    expect(find.text('我的信息'), findsNothing);
     expect(find.byTooltip('退出登录'), findsOneWidget);
-    expect(find.text('创建配对'), findsNothing);
-    expect(find.text('加入配对'), findsNothing);
+    expect(find.text('邀请 Ta'), findsNothing);
+    expect(find.text('输入邀请码'), findsNothing);
   });
 
   testWidgets('创建配对后页面显示邀请码', (tester) async {
@@ -266,11 +268,11 @@ void main() {
     );
     await _settle(tester);
 
-    await tester.tap(find.text('创建配对'));
+    await tester.tap(find.text('邀请 Ta'));
     await _settle(tester);
 
     expect(find.text('ABC123'), findsOneWidget);
-    expect(find.text('等待Ta加入'), findsOneWidget);
+    expect(find.text('等待 Ta 加入'), findsOneWidget);
   });
 
   testWidgets('PairConnected 双成员显示已完成配对和双方成员', (tester) async {
@@ -286,10 +288,10 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('已完成配对'), findsOneWidget);
-    expect(find.textContaining('One'), findsOneWidget);
+    expect(find.text('你们已连接'), findsOneWidget);
+    expect(find.textContaining('One'), findsNothing);
     expect(find.textContaining('Two'), findsOneWidget);
-    expect(find.text('创建配对'), findsNothing);
-    expect(find.text('加入配对'), findsNothing);
+    expect(find.text('邀请 Ta'), findsNothing);
+    expect(find.text('输入邀请码'), findsNothing);
   });
 }

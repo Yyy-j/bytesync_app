@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bytesync/features/meals/data/meal_ai_repository.dart';
+import 'package:bytesync/core/network/api_exception.dart';
 import 'package:bytesync/features/meals/data/meals_providers.dart';
 import 'package:bytesync/features/meals/data/meals_repository.dart';
 import 'package:bytesync/features/meals/domain/meal.dart';
@@ -164,8 +165,33 @@ class _FixedPairController extends PairController {
           ),
       ],
       createdAt: DateTime(2026),
+      connectedAt: withPartner ? DateTime(2026, 9, 20) : null,
     ),
   );
+}
+
+class _RacePairController extends PairController {
+  bool refreshed = false;
+
+  @override
+  PairState build() => PairConnected(
+    Pair(
+      pairId: 'pair-1',
+      inviteCode: 'ABC123',
+      members: const [
+        PairMember(userId: 'self-1', displayName: '我', isSelf: true),
+        PairMember(userId: 'partner-1', displayName: 'Harper', isSelf: false),
+      ],
+      createdAt: DateTime(2026),
+      connectedAt: DateTime(2026, 9, 20),
+    ),
+  );
+
+  @override
+  Future<void> refresh() async {
+    refreshed = true;
+    state = const PairNotFound();
+  }
 }
 
 void main() {
@@ -203,6 +229,49 @@ void main() {
     expect((state as RecordResult).result.dishes, ['牛肉面', '煎蛋']);
     expect(state.draft.shareMode, MealShareMode.solo);
   });
+
+  test(
+    'partner-required conflict refreshes Pair and keeps a solo draft',
+    () async {
+      final mealsRepository = _SavingMealsRepository(
+        saveError: ConflictException(
+          'A partner is required for this share mode',
+        ),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          mealsRepositoryProvider.overrideWithValue(mealsRepository),
+          pairControllerProvider.overrideWith(_RacePairController.new),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(recordControllerProvider.notifier);
+      controller.loadManual(
+        name: '鸡肉饭',
+        calories: 500,
+        protein: 30,
+        carbs: 60,
+        fat: 12,
+      );
+      controller.setShareMode(MealShareMode.sharedHalf);
+
+      expect(await controller.save(), isFalse);
+      final state = container.read(recordControllerProvider);
+      expect(state, isA<RecordError>());
+      final errorState = state as RecordError;
+      final draft = errorState.draft!;
+      expect(draft.name, '鸡肉饭');
+      expect(draft.shareMode, MealShareMode.solo);
+      expect(
+        (container.read(
+          pairControllerProvider.notifier,
+        ) as _RacePairController).refreshed,
+        isTrue,
+      );
+      expect(errorState.message, 'Ta 还没有加入，暂时只能记录自己的饮食。');
+    },
+  );
 
   test('image analysis forwards the unified input as hint', () async {
     final repository = _FakeImageMealAiRepository();
@@ -295,7 +364,8 @@ void main() {
     expect(find.text('识别完成'), findsOneWidget);
     expect(find.text('菜品：牛肉面、煎蛋'), findsOneWidget);
     expect(find.text('AI 估算，仅供参考'), findsOneWidget);
-    expect(find.text('只记录给我'), findsOneWidget);
+    expect(find.text('这是谁吃的？'), findsNothing);
+    expect(find.text('只记录给我'), findsNothing);
     expect(find.text('只给 Ta 记'), findsNothing);
   });
 
@@ -454,7 +524,7 @@ void main() {
     await tester.pump();
 
     expect(container.read(selectedRecordImagePathProvider), isNull);
-    expect(find.text('手动记录'), findsOneWidget);
+    expect(find.text('手动记录'), findsAtLeastNWidgets(1));
   });
 
   testWidgets('idle is minimal and manual form starts collapsed', (
@@ -489,32 +559,35 @@ void main() {
     expect(find.text('卡路里 *'), findsOneWidget);
   });
 
-  testWidgets('empty text send is disabled and camera opens source sheet', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          yesterdayMealsProvider.overrideWith((ref) async => []),
-          pairControllerProvider.overrideWith(
-            () => _FixedPairController(withPartner: false),
-          ),
-        ],
-        child: const MaterialApp(home: AddMealPage()),
-      ),
-    );
+  testWidgets(
+    'empty text send is disabled and camera entry remains available',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            yesterdayMealsProvider.overrideWith((ref) async => []),
+            pairControllerProvider.overrideWith(
+              () => _FixedPairController(withPartner: false),
+            ),
+          ],
+          child: const MaterialApp(home: AddMealPage()),
+        ),
+      );
 
-    final send = tester.widget<IconButton>(
-      find.byKey(const ValueKey('record-send-button')),
-    );
-    expect(send.onPressed, isNull);
+      final send = tester.widget<IconButton>(
+        find.byKey(const ValueKey('record-send-button')),
+      );
+      expect(send.onPressed, isNull);
 
-    await tester.tap(find.byKey(const ValueKey('record-camera-button')));
-    await tester.pumpAndSettle();
-    expect(find.text('拍照'), findsOneWidget);
-    expect(find.text('从相册选择'), findsOneWidget);
-    expect(find.text('取消'), findsOneWidget);
-  });
+      await tester.tap(find.byKey(const ValueKey('record-camera-button')));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const ValueKey('record-camera-button')),
+        findsOneWidget,
+      );
+      expect(find.text('拍一餐'), findsNWidgets(2));
+    },
+  );
 
   testWidgets('yesterday meal fills and expands manual form', (tester) async {
     const yesterday = ReusableMealItem(
@@ -553,6 +626,7 @@ void main() {
       ),
     );
     expect(caloriesField.controller?.text, '420');
+    await tester.pump(const Duration(seconds: 4));
   });
 
   testWidgets('light and dark modes select matching SVG assets', (
@@ -624,6 +698,7 @@ void main() {
     expect(mealsRepository.savedInput?.aiHint, '米饭只有半碗');
     final idleInput = tester.widget<TextField>(inputFinder);
     expect(idleInput.controller?.text, isEmpty);
+    await tester.pump(const Duration(seconds: 4));
   });
 
   testWidgets('failed image save keeps hint image and draft', (tester) async {

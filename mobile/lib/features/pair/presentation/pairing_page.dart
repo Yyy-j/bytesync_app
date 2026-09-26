@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../shared/widgets/bitesync_snackbar.dart';
@@ -29,7 +28,10 @@ class _PairingPageState extends ConsumerState<PairingPage> {
   Widget build(BuildContext context) {
     final pairState = ref.watch(pairControllerProvider);
     final isLoading = pairState is PairLoading;
-    final connected = pairState is PairConnected ? pairState : null;
+    final pair = pairState is PairConnected ? pairState.pair : null;
+    final isConnected = pair?.isConnected == true;
+    final isPending = pair?.isPending == true;
+    final partner = isConnected ? pair?.partner : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -47,14 +49,20 @@ class _PairingPageState extends ConsumerState<PairingPage> {
         padding: EdgeInsets.all(24),
         children: [
           Text(
-            appL10n.pairTitle,
+            isConnected
+                ? appL10n.pairConnectedTitle
+                : isPending
+                ? appL10n.pairPendingTitle
+                : appL10n.pairSingleTitle,
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
           Text(
-            connected == null
-                ? appL10n.pairIntro
-                : appL10n.pairCurrentDetailsHint,
+            isConnected
+                ? appL10n.pairCurrentDetailsHint
+                : isPending
+                ? appL10n.pairPendingDescription
+                : appL10n.pairSingleDescription,
           ),
           if (pairState is PairFailure) ...[
             SizedBox(height: 20),
@@ -63,7 +71,7 @@ class _PairingPageState extends ConsumerState<PairingPage> {
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ],
-          if (connected != null) ...[
+          if (pair != null) ...[
             SizedBox(height: 24),
             Card(
               child: Padding(
@@ -78,7 +86,7 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                       children: [
                         Expanded(
                           child: SelectableText(
-                            connected.pair.inviteCode,
+                            pair.inviteCode,
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -90,7 +98,7 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                           icon: const Icon(Icons.copy_outlined),
                           onPressed: () async {
                             await Clipboard.setData(
-                              ClipboardData(text: connected.pair.inviteCode),
+                              ClipboardData(text: pair.inviteCode),
                             );
                             if (context.mounted) {
                               BiteSyncSnackBar.show(
@@ -104,38 +112,27 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      connected.pair.members.length == 1
-                          ? appL10n.pairWaitingForPartner
-                          : appL10n.pairConnected,
+                      isConnected
+                          ? appL10n.pairConnected
+                          : appL10n.pairWaitingForPartner,
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     SizedBox(height: 12),
-                    Text(appL10n.commonMember),
+                    Text(
+                      isConnected
+                          ? appL10n.pairPartnerInfo
+                          : appL10n.pairInviteCode,
+                    ),
                     SizedBox(height: 8),
-                    ...connected.pair.members.map(
-                      (member) => ListTile(
+                    if (isConnected)
+                      ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(
-                          member.isSelf ? Icons.person : Icons.people_outline,
-                        ),
-                        title: Text(member.displayName),
-                        subtitle: Text(
-                          member.isSelf
-                              ? appL10n.pairMyInfo
-                              : appL10n.pairPartnerInfo,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: () {
-                        ref
-                            .read(pairControllerProvider.notifier)
-                            .continueToHome();
-                        context.go('/');
-                      },
-                      child: Text(appL10n.pairEnterHome),
-                    ),
+                        leading: const Icon(Icons.people_outline),
+                        title: Text(partner!.displayName),
+                        subtitle: Text(appL10n.pairPartnerInfo),
+                      )
+                    else
+                      Text(appL10n.pairPendingDescription),
                   ],
                 ),
               ),
@@ -147,8 +144,8 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                   ? null
                   : () =>
                         ref.read(pairControllerProvider.notifier).createPair(),
-              icon: Icon(Icons.add_link),
-              label: Text(appL10n.pairCreate),
+              icon: Icon(Icons.person_add_alt_1),
+              label: Text(appL10n.pairInvitePartner),
             ),
             SizedBox(height: 24),
             Divider(),
@@ -170,7 +167,7 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                         .read(pairControllerProvider.notifier)
                         .joinPair(_inviteCodeController.text),
               icon: Icon(Icons.group_add_outlined),
-              label: Text(appL10n.pairJoin),
+              label: Text(appL10n.pairEnterInviteCode),
             ),
           ],
           if (isLoading) ...[

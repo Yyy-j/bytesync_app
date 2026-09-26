@@ -112,6 +112,31 @@ void main() {
     expect(summary.partnerSlice?.character, UserCharacter.boy);
   });
 
+  test('daily Single JSON accepts null partner slices and goals', () {
+    final summary = DailySummary.fromJson({
+      'date': '2026-09-15',
+      'calories': 0,
+      'protein': 0,
+      'carbs': 0,
+      'fat': 0,
+      'meal_count': 0,
+      'meals': [],
+      'self_slice': {
+        'user_id': 'self-1',
+        'display_name': 'Me',
+        'character': 'girl',
+        'calories': 0,
+      },
+      'self_goals': {'calorie_goal': 2000},
+      'partner_slice': null,
+      'partner_goals': null,
+    });
+
+    expect(summary.selfSlice.userId, 'self-1');
+    expect(summary.partnerSlice, isNull);
+    expect(summary.partnerGoals, isNull);
+  });
+
   test('monthly JSON parses goals and calories from the backend contract', () {
     final summary = MonthlySummary.fromJson({
       'month': '2026-09',
@@ -177,6 +202,33 @@ void main() {
       ),
       hasLength(30),
     );
+  });
+
+  testWidgets('Single empty Today offers first meal and partner CTAs', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          summaryControllerProvider.overrideWith(
+            () => _FixedSummaryController(
+              MonthlySummary.fromJson({
+                'month': '2026-09',
+                'self': {'calorie_goal': 2000},
+                'partner': null,
+                'days': [],
+              }),
+            ),
+          ),
+        ],
+        child: const MaterialApp(home: SummaryPage()),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('记录第一餐'), findsOneWidget);
+    expect(find.text('邀请 Ta 一起记录'), findsOneWidget);
+    expect(find.text('Ta'), findsNothing);
   });
 
   testWidgets('Today Calendar starts collapsed and toggles smoothly', (
