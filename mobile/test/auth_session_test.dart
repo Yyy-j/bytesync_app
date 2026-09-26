@@ -241,6 +241,31 @@ void main() {
     harness.dispose();
   });
 
+  test('delete account clears the local session after success', () async {
+    final harness = _Harness(
+      resourceHandler: (_) => _json(204, {}),
+      refreshHandler: (_) => _json(204, {}),
+    );
+    await harness.storage.saveTokenPair(
+      accessToken: 'access-1',
+      refreshToken: 'refresh-1',
+      refreshedAt: DateTime.now().toUtc(),
+    );
+    final repository = RemoteAuthRepository(
+      dio: harness.resourceDio,
+      storage: harness.storage,
+      googleAuthClient: GoogleAuthClient(),
+      errorMapper: const DioErrorMapper(),
+      sessionManager: harness.sessionManager,
+    );
+
+    await repository.deleteAccount();
+
+    expect(harness.storage.accessToken, isNull);
+    expect(harness.storage.refreshToken, isNull);
+    harness.dispose();
+  });
+
   test('concurrent 401 responses share one refresh flight', () async {
     var refreshCalls = 0;
     final harness = _Harness(

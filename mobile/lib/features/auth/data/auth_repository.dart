@@ -26,4 +26,6 @@ abstract interface class AuthRepository {
 
   /// Revokes the refresh session, signs out of Google, and clears local tokens.
   Future<void> signOut();
+
+  Future<void> deleteAccount();
 }

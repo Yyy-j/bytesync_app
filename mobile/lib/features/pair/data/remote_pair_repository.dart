@@ -41,10 +41,28 @@ class RemotePairRepository implements PairRepository {
   Future<Pair> joinPair({required String inviteCode}) =>
       _post(ApiEndpoints.pairsJoin, data: {'invite_code': inviteCode});
 
+  @override
+  Future<Pair> regenerateInviteCode() =>
+      _post(ApiEndpoints.pairsRegenerateInviteCode);
+
+  @override
+  Future<void> cancelPair() => _delete(ApiEndpoints.pairsCancel);
+
+  @override
+  Future<void> endPair() => _delete(ApiEndpoints.pairsEnd);
+
   Future<Pair> _post(String path, {Map<String, dynamic>? data}) async {
     try {
       final response = await dio.post<Map<String, dynamic>>(path, data: data);
       return await _map(response.data!);
+    } catch (error) {
+      throw errorMapper.map(error);
+    }
+  }
+
+  Future<void> _delete(String path) async {
+    try {
+      await dio.post<void>(path);
     } catch (error) {
       throw errorMapper.map(error);
     }

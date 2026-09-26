@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../shared/widgets/bitesync_snackbar.dart';
+import '../domain/pair.dart';
 import '../domain/pair_state.dart';
 import '../../auth/presentation/auth_controller.dart';
 import 'pair_controller.dart';
@@ -21,6 +23,8 @@ class _PairingPageState extends ConsumerState<PairingPage> {
   final _inviteCodeController = TextEditingController();
   Timer? _pendingPollTimer;
   bool _pendingPollInFlight = false;
+  bool _actionInFlight = false;
+  Pair? _actionPair;
 
   @override
   void initState() {
@@ -59,7 +63,7 @@ class _PairingPageState extends ConsumerState<PairingPage> {
   }
 
   Future<void> _pollPendingPair() async {
-    if (_pendingPollInFlight || !mounted) return;
+    if (_pendingPollInFlight || _actionInFlight || !mounted) return;
     final state = ref.read(pairControllerProvider);
     if (state is! PairConnected || !state.pair.isPending) {
       _syncPendingPolling(state);
@@ -75,11 +79,117 @@ class _PairingPageState extends ConsumerState<PairingPage> {
     }
   }
 
+  Future<void> _shareInvite(Pair pair) => SharePlus.instance.share(
+    ShareParams(text: appL10n.pairShareInviteText(pair.inviteCode)),
+  );
+
+  Future<bool> _confirm({
+    required String title,
+    required String description,
+    required String confirmLabel,
+    bool destructive = false,
+  }) async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(description),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(appL10n.commonCancel),
+              ),
+              FilledButton(
+                style: destructive
+                    ? FilledButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      )
+                    : null,
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(confirmLabel),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _runAction(
+    Future<void> Function() action, {
+    required Pair pair,
+    String? successMessage,
+  }) async {
+    if (_actionInFlight) return;
+    setState(() {
+      _actionInFlight = true;
+      _actionPair = pair;
+    });
+    await action();
+    if (!mounted) return;
+    setState(() {
+      _actionInFlight = false;
+      _actionPair = null;
+    });
+    if (successMessage != null) {
+      BiteSyncSnackBar.show(context, message: successMessage);
+    }
+  }
+
+  Future<void> _regenerate(Pair pair) async {
+    if (!await _confirm(
+      title: appL10n.pairRegenerateTitle,
+      description: appL10n.pairRegenerateDescription,
+      confirmLabel: appL10n.pairRegenerateInvite,
+    )) {
+      return;
+    }
+    await _runAction(
+      () => ref.read(pairControllerProvider.notifier).regenerateInviteCode(),
+      pair: pair,
+      successMessage: appL10n.pairRegenerateSuccess,
+    );
+  }
+
+  Future<void> _cancelInvite(Pair pair) async {
+    if (!await _confirm(
+      title: appL10n.pairCancelTitle,
+      description: appL10n.pairCancelDescription,
+      confirmLabel: appL10n.pairCancelConfirm,
+    )) {
+      return;
+    }
+    await _runAction(
+      () => ref.read(pairControllerProvider.notifier).cancelPair(),
+      pair: pair,
+      successMessage: appL10n.pairCancelSuccess,
+    );
+  }
+
+  Future<void> _endPair(Pair pair) async {
+    if (!await _confirm(
+      title: appL10n.pairEndTitle,
+      description: appL10n.pairEndDescription,
+      confirmLabel: appL10n.pairEndConfirm,
+      destructive: true,
+    )) {
+      return;
+    }
+    await _runAction(
+      () => ref.read(pairControllerProvider.notifier).endPair(),
+      pair: pair,
+      successMessage: appL10n.pairEndSuccess,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pairState = ref.watch(pairControllerProvider);
-    final isLoading = pairState is PairLoading;
-    final pair = pairState is PairConnected ? pairState.pair : null;
+    final isLoading = pairState is PairLoading || _actionInFlight;
+    final pair = pairState is PairConnected
+        ? pairState.pair
+        : _actionInFlight
+        ? _actionPair
+        : null;
     final isConnected = pair?.isConnected == true;
     final isPending = pair?.isPending == true;
     final partner = isConnected ? pair?.partner : null;
@@ -132,35 +242,46 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                   children: [
                     Text(appL10n.pairDetails),
                     SizedBox(height: 12),
-                    Text(appL10n.pairInviteCode),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SelectableText(
-                            pair.inviteCode,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                    if (isPending) ...[
+                      Text(appL10n.pairInviteCode),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SelectableText(
+                              pair.inviteCode,
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                        IconButton(
-                          tooltip: appL10n.pairCopyInviteCode,
-                          icon: const Icon(Icons.copy_outlined),
-                          onPressed: () async {
-                            await Clipboard.setData(
-                              ClipboardData(text: pair.inviteCode),
-                            );
-                            if (context.mounted) {
-                              BiteSyncSnackBar.show(
-                                context,
-                                message: appL10n.pairInviteCodeCopied,
-                              );
-                            }
-                          },
-                        ),
-                      ],
-                    ),
+                          IconButton(
+                            tooltip: appL10n.pairCopyInviteCode,
+                            icon: const Icon(Icons.copy_outlined),
+                            onPressed: isLoading
+                                ? null
+                                : () async {
+                                    await Clipboard.setData(
+                                      ClipboardData(text: pair.inviteCode),
+                                    );
+                                    if (context.mounted) {
+                                      BiteSyncSnackBar.show(
+                                        context,
+                                        message: appL10n.pairInviteCodeCopied,
+                                      );
+                                    }
+                                  },
+                          ),
+                          IconButton(
+                            tooltip: appL10n.pairShareInvite,
+                            icon: const Icon(Icons.ios_share_outlined),
+                            onPressed: isLoading
+                                ? null
+                                : () => _shareInvite(pair),
+                          ),
+                        ],
+                      ),
+                    ],
                     SizedBox(height: 16),
                     Text(
                       isConnected
@@ -182,8 +303,37 @@ class _PairingPageState extends ConsumerState<PairingPage> {
                         title: Text(partner!.displayName),
                         subtitle: Text(appL10n.pairPartnerInfo),
                       )
-                    else
+                    else ...[
                       Text(appL10n.pairPendingDescription),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: isLoading
+                                ? null
+                                : () => _regenerate(pair),
+                            icon: const Icon(Icons.refresh),
+                            label: Text(appL10n.pairRegenerateInvite),
+                          ),
+                          TextButton(
+                            onPressed: isLoading
+                                ? null
+                                : () => _cancelInvite(pair),
+                            child: Text(appL10n.pairCancelInvite),
+                          ),
+                        ],
+                      ),
+                    ],
+                    if (isConnected) ...[
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: isLoading ? null : () => _endPair(pair),
+                        icon: const Icon(Icons.link_off),
+                        label: Text(appL10n.pairEnd),
+                      ),
+                    ],
                   ],
                 ),
               ),

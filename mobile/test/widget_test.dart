@@ -22,6 +22,9 @@ class _UnauthenticatedAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<void> deleteAccount() async {}
 }
 
 void main() {
@@ -44,4 +47,3 @@ void main() {
     expect(find.text('使用 Google 登录'), findsOneWidget);
   });
 }
-

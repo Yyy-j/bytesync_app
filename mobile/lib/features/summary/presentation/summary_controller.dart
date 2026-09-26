@@ -5,6 +5,8 @@ import '../../../core/network/api_exception.dart';
 import '../data/summary_providers.dart';
 import '../data/summary_repository.dart';
 import '../domain/daily_summary.dart';
+import '../../pair/domain/pair_state.dart';
+import '../../pair/presentation/pair_controller.dart';
 
 /// UI state for the summary page: the four states required by the project
 /// brief (loading / empty / success / error).
@@ -59,6 +61,9 @@ class SummaryController extends Notifier<SummaryState> {
   @override
   SummaryState build() {
     _repository = ref.watch(summaryRepositoryProvider);
+    ref.listen<PairState>(pairControllerProvider, (previous, next) {
+      if (previous != next) refresh();
+    });
     selectedDate = _dateOnly(DateTime.now());
     focusedMonth = DateTime(selectedDate.year, selectedDate.month);
     _loadInitial();

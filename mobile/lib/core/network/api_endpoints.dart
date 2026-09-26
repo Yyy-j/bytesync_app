@@ -19,6 +19,10 @@ class ApiEndpoints {
   static const String pairsMe = '/pairs/me';
   static const String pairs = '/pairs';
   static const String pairsJoin = '/pairs/join';
+  static const String pairsRegenerateInviteCode =
+      '/pairs/invite-code/regenerate';
+  static const String pairsCancel = '/pairs/cancel';
+  static const String pairsEnd = '/pairs/end';
 
   // ── Meals ─────────────────────────────────────────────
   static const String meals = '/meals';

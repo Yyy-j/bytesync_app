@@ -106,6 +106,12 @@ abstract class AppLocalizations {
   /// **'取消'**
   String get commonCancel;
 
+  /// No description provided for @commonContinue.
+  ///
+  /// In zh, this message translates to:
+  /// **'继续'**
+  String get commonContinue;
+
   /// No description provided for @commonDelete.
   ///
   /// In zh, this message translates to:
@@ -274,6 +280,42 @@ abstract class AppLocalizations {
   /// **'退出登录'**
   String get authSignOut;
 
+  /// No description provided for @authDeleteAccount.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除账号'**
+  String get authDeleteAccount;
+
+  /// No description provided for @authDeleteAccountTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除账号？'**
+  String get authDeleteAccountTitle;
+
+  /// No description provided for @authDeleteAccountDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'账号将永久删除，BiteSync 中属于你的数据会被删除，此操作无法撤销。'**
+  String get authDeleteAccountDescription;
+
+  /// No description provided for @authDeleteAccountConnectedDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'账号将永久删除，BiteSync 中属于你的数据会被删除。你们的配对会同时结束，但不会删除 Ta 的账号和属于 Ta 的数据。此操作无法撤销。'**
+  String get authDeleteAccountConnectedDescription;
+
+  /// No description provided for @authDeleteAccountConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'永久删除账号'**
+  String get authDeleteAccountConfirm;
+
+  /// No description provided for @authDeleteAccountFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除账号失败，请稍后重试'**
+  String get authDeleteAccountFailed;
+
   /// No description provided for @authRestoreFailed.
   ///
   /// In zh, this message translates to:
@@ -379,7 +421,7 @@ abstract class AppLocalizations {
   /// No description provided for @pairTitle.
   ///
   /// In zh, this message translates to:
-  /// **'与Ta配对'**
+  /// **'我和 Ta'**
   String get pairTitle;
 
   /// No description provided for @pairIntro.
@@ -459,6 +501,108 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'邀请码已复制'**
   String get pairInviteCodeCopied;
+
+  /// No description provided for @pairShareInvite.
+  ///
+  /// In zh, this message translates to:
+  /// **'分享邀请码'**
+  String get pairShareInvite;
+
+  /// No description provided for @pairShareInviteText.
+  ///
+  /// In zh, this message translates to:
+  /// **'来和我一起用 BiteSync 记录饮食吧。邀请码：{inviteCode}'**
+  String pairShareInviteText(String inviteCode);
+
+  /// No description provided for @pairRegenerateInvite.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新生成邀请码'**
+  String get pairRegenerateInvite;
+
+  /// No description provided for @pairRegenerateTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'重新生成邀请码？'**
+  String get pairRegenerateTitle;
+
+  /// No description provided for @pairRegenerateDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'旧邀请码会立即失效，之前分享出去的邀请码将无法再使用。'**
+  String get pairRegenerateDescription;
+
+  /// No description provided for @pairRegenerateSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'邀请码已更新'**
+  String get pairRegenerateSuccess;
+
+  /// No description provided for @pairCancelInvite.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消邀请'**
+  String get pairCancelInvite;
+
+  /// No description provided for @pairCancelTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消邀请？'**
+  String get pairCancelTitle;
+
+  /// No description provided for @pairCancelDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前邀请码会失效。你仍然可以继续一个人使用 BiteSync。'**
+  String get pairCancelDescription;
+
+  /// No description provided for @pairCancelConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认取消'**
+  String get pairCancelConfirm;
+
+  /// No description provided for @pairCancelSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'邀请已取消'**
+  String get pairCancelSuccess;
+
+  /// No description provided for @pairEnd.
+  ///
+  /// In zh, this message translates to:
+  /// **'解除配对'**
+  String get pairEnd;
+
+  /// No description provided for @pairEndTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'解除配对？'**
+  String get pairEndTitle;
+
+  /// No description provided for @pairEndDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'解除后，你和 Ta 都会回到单人模式。之前的饮食记录会保留，以后仍可以重新配对。'**
+  String get pairEndDescription;
+
+  /// No description provided for @pairEndConfirm.
+  ///
+  /// In zh, this message translates to:
+  /// **'解除配对'**
+  String get pairEndConfirm;
+
+  /// No description provided for @pairEndSuccess.
+  ///
+  /// In zh, this message translates to:
+  /// **'已解除配对'**
+  String get pairEndSuccess;
+
+  /// No description provided for @pairLifecycleConflict.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前配对状态已经变化，请刷新后重试'**
+  String get pairLifecycleConflict;
 
   /// No description provided for @pairWaitingForPartner.
   ///
@@ -655,7 +799,7 @@ abstract class AppLocalizations {
   /// No description provided for @profilePairedWith.
   ///
   /// In zh, this message translates to:
-  /// **'已配对：{partnerName}'**
+  /// **'已和 {partnerName} 连接'**
   String profilePairedWith(String partnerName);
 
   /// No description provided for @profilePairLoading.

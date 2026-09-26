@@ -76,6 +76,11 @@ class AuthController extends Notifier<AuthState> {
     state = const AuthUnauthenticated();
   }
 
+  Future<void> deleteAccount() async {
+    await _repository.deleteAccount();
+    state = const AuthUnauthenticated();
+  }
+
   String _messageFor(Object error) {
     if (error is ApiException) return error.message;
     return appL10n.authSignInFailed;

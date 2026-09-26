@@ -45,6 +45,15 @@ final _completedPair = Pair(
   connectedAt: DateTime(2026, 9, 20),
 );
 
+final _regeneratedPair = Pair(
+  pairId: 'pair-1',
+  inviteCode: 'NEW456',
+  members: const [
+    PairMember(userId: 'user-1', displayName: 'One', isSelf: true),
+  ],
+  createdAt: DateTime(2026),
+);
+
 class _FakeAuthRepository implements AuthRepository {
   _FakeAuthRepository({this.restoredUser});
 
@@ -61,6 +70,9 @@ class _FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<void> deleteAccount() async {}
 }
 
 class _FakePairRepository implements PairRepository {
@@ -86,6 +98,15 @@ class _FakePairRepository implements PairRepository {
     currentPair = _pair;
     return _pair;
   }
+
+  @override
+  Future<Pair> regenerateInviteCode() async => _regeneratedPair;
+
+  @override
+  Future<void> cancelPair() async {}
+
+  @override
+  Future<void> endPair() async {}
 }
 
 class _FixedAuthController extends AuthController {
@@ -134,6 +155,15 @@ class _SequencedPairRepository implements PairRepository {
   @override
   Future<Pair> joinPair({required String inviteCode}) =>
       throw UnimplementedError();
+
+  @override
+  Future<Pair> regenerateInviteCode() => throw UnimplementedError();
+
+  @override
+  Future<void> cancelPair() => throw UnimplementedError();
+
+  @override
+  Future<void> endPair() => throw UnimplementedError();
 }
 
 class _MutationRacePairRepository implements PairRepository {
@@ -163,6 +193,49 @@ class _MutationRacePairRepository implements PairRepository {
     currentPair = joinedPair;
     return joinedPair;
   }
+
+  @override
+  Future<Pair> regenerateInviteCode() => throw UnimplementedError();
+
+  @override
+  Future<void> cancelPair() => throw UnimplementedError();
+
+  @override
+  Future<void> endPair() => throw UnimplementedError();
+}
+
+class _InFlightMutationPairRepository implements PairRepository {
+  final oldRefresh = Completer<Pair?>();
+  final createCompletion = Completer<void>();
+  bool mutationStarted = false;
+  Pair? currentPair = _pair;
+
+  @override
+  Future<Pair?> getCurrentPair() {
+    if (!mutationStarted) return oldRefresh.future;
+    return Future.value(currentPair);
+  }
+
+  @override
+  Future<Pair> createPair() async {
+    mutationStarted = true;
+    await createCompletion.future;
+    currentPair = _pair;
+    return _pair;
+  }
+
+  @override
+  Future<Pair> joinPair({required String inviteCode}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Pair> regenerateInviteCode() => throw UnimplementedError();
+
+  @override
+  Future<void> cancelPair() => throw UnimplementedError();
+
+  @override
+  Future<void> endPair() => throw UnimplementedError();
 }
 
 Future<void> _settle(WidgetTester tester) async {
@@ -545,5 +618,72 @@ void main() {
     final state = container.read(pairControllerProvider);
     expect(state, isA<PairConnected>());
     expect((state as PairConnected).pair.isConnected, isTrue);
+  });
+
+  test(
+    'refresh triggered during mutation cannot overwrite mutation result',
+    () async {
+      final repository = _InFlightMutationPairRepository();
+      final container = ProviderContainer(
+        overrides: [
+          authControllerProvider.overrideWith(_FixedAuthController.new),
+          pairRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(pairControllerProvider.notifier);
+      await Future<void>.delayed(Duration.zero);
+      final create = controller.createPair();
+      await Future<void>.delayed(Duration.zero);
+      await controller.refresh(showLoading: false);
+      repository.createCompletion.complete();
+      await create;
+      repository.oldRefresh.complete(null);
+      await Future<void>.delayed(Duration.zero);
+
+      final state = container.read(pairControllerProvider);
+      expect(state, isA<PairConnected>());
+      expect((state as PairConnected).pair.isPending, isTrue);
+    },
+  );
+
+  test('pair lifecycle mutations update the shared Pair state', () async {
+    final repository = _FakePairRepository(currentPair: _pair);
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_FixedAuthController.new),
+        pairRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final controller = container.read(pairControllerProvider.notifier);
+    await controller.refresh();
+    await controller.cancelPair();
+    expect(container.read(pairControllerProvider), isA<PairNotFound>());
+
+    repository.currentPair = _completedPair;
+    await controller.refresh();
+    await controller.endPair();
+    expect(container.read(pairControllerProvider), isA<PairNotFound>());
+  });
+
+  test('regenerate replaces the Pending invite code', () async {
+    final repository = _FakePairRepository(currentPair: _pair);
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_FixedAuthController.new),
+        pairRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final controller = container.read(pairControllerProvider.notifier);
+    await controller.regenerateInviteCode();
+
+    final state = container.read(pairControllerProvider) as PairConnected;
+    expect(state.pair.inviteCode, 'NEW456');
+    expect(state.pair.isPending, isTrue);
   });
 }

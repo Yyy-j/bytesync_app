@@ -16,6 +16,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonCancel => '取消';
 
   @override
+  String get commonContinue => '继续';
+
+  @override
   String get commonDelete => '删除';
 
   @override
@@ -104,6 +107,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authSignOut => '退出登录';
 
   @override
+  String get authDeleteAccount => '删除账号';
+
+  @override
+  String get authDeleteAccountTitle => '删除账号？';
+
+  @override
+  String get authDeleteAccountDescription =>
+      '账号将永久删除，BiteSync 中属于你的数据会被删除，此操作无法撤销。';
+
+  @override
+  String get authDeleteAccountConnectedDescription =>
+      '账号将永久删除，BiteSync 中属于你的数据会被删除。你们的配对会同时结束，但不会删除 Ta 的账号和属于 Ta 的数据。此操作无法撤销。';
+
+  @override
+  String get authDeleteAccountConfirm => '永久删除账号';
+
+  @override
+  String get authDeleteAccountFailed => '删除账号失败，请稍后重试';
+
+  @override
   String get authRestoreFailed => '暂时无法验证登录状态，请重试';
 
   @override
@@ -158,7 +181,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get errorCannotSaveNow => '当前无法保存，请稍后重试';
 
   @override
-  String get pairTitle => '与Ta配对';
+  String get pairTitle => '我和 Ta';
 
   @override
   String get pairIntro => '先创建一个配对，或输入Ta发来的邀请码。';
@@ -198,6 +221,59 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pairInviteCodeCopied => '邀请码已复制';
+
+  @override
+  String get pairShareInvite => '分享邀请码';
+
+  @override
+  String pairShareInviteText(String inviteCode) {
+    return '来和我一起用 BiteSync 记录饮食吧。邀请码：$inviteCode';
+  }
+
+  @override
+  String get pairRegenerateInvite => '重新生成邀请码';
+
+  @override
+  String get pairRegenerateTitle => '重新生成邀请码？';
+
+  @override
+  String get pairRegenerateDescription => '旧邀请码会立即失效，之前分享出去的邀请码将无法再使用。';
+
+  @override
+  String get pairRegenerateSuccess => '邀请码已更新';
+
+  @override
+  String get pairCancelInvite => '取消邀请';
+
+  @override
+  String get pairCancelTitle => '取消邀请？';
+
+  @override
+  String get pairCancelDescription => '当前邀请码会失效。你仍然可以继续一个人使用 BiteSync。';
+
+  @override
+  String get pairCancelConfirm => '确认取消';
+
+  @override
+  String get pairCancelSuccess => '邀请已取消';
+
+  @override
+  String get pairEnd => '解除配对';
+
+  @override
+  String get pairEndTitle => '解除配对？';
+
+  @override
+  String get pairEndDescription => '解除后，你和 Ta 都会回到单人模式。之前的饮食记录会保留，以后仍可以重新配对。';
+
+  @override
+  String get pairEndConfirm => '解除配对';
+
+  @override
+  String get pairEndSuccess => '已解除配对';
+
+  @override
+  String get pairLifecycleConflict => '当前配对状态已经变化，请刷新后重试';
 
   @override
   String get pairWaitingForPartner => '等待Ta加入';
@@ -297,7 +373,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String profilePairedWith(String partnerName) {
-    return '已配对：$partnerName';
+    return '已和 $partnerName 连接';
   }
 
   @override

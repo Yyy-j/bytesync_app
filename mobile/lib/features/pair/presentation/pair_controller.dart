@@ -19,6 +19,7 @@ class PairController extends Notifier<PairState> {
   late final PairRepository _repository;
   late final _PairLifecycleObserver _lifecycleObserver;
   int _refreshGeneration = 0;
+  bool _mutationInFlight = false;
 
   @override
   PairState build() {
@@ -45,6 +46,7 @@ class PairController extends Notifier<PairState> {
   }
 
   Future<void> refresh({bool showLoading = true}) async {
+    if (_mutationInFlight) return;
     final generation = ++_refreshGeneration;
     if (ref.read(authControllerProvider) is! AuthAuthenticated) {
       state = const PairInitial();
@@ -87,6 +89,27 @@ class PairController extends Notifier<PairState> {
     });
   }
 
+  Future<void> regenerateInviteCode() async {
+    await _runMutation(() async {
+      final pair = await _repository.regenerateInviteCode();
+      state = PairConnected(pair, showInviteCode: true);
+    });
+  }
+
+  Future<void> cancelPair() async {
+    await _runMutation(() async {
+      await _repository.cancelPair();
+      state = const PairNotFound();
+    });
+  }
+
+  Future<void> endPair() async {
+    await _runMutation(() async {
+      await _repository.endPair();
+      state = const PairNotFound();
+    });
+  }
+
   void continueToHome() {
     final current = state;
     if (current is PairConnected && current.showInviteCode) {
@@ -96,11 +119,14 @@ class PairController extends Notifier<PairState> {
 
   Future<void> _runMutation(Future<void> Function() operation) async {
     _refreshGeneration++;
+    _mutationInFlight = true;
     state = const PairLoading();
     try {
       await operation();
     } catch (error) {
       state = PairFailure(_messageFor(error));
+    } finally {
+      _mutationInFlight = false;
     }
   }
 

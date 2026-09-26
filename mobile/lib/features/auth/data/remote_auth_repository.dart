@@ -109,4 +109,19 @@ class RemoteAuthRepository implements AuthRepository {
       // Ignore — signing out of Google is best-effort.
     }
   }
+
+  @override
+  Future<void> deleteAccount() async {
+    try {
+      await dio.delete<void>(ApiEndpoints.usersMe);
+    } catch (error) {
+      throw errorMapper.map(error);
+    }
+    await sessionManager.logout();
+    try {
+      await googleAuthClient.signOut();
+    } catch (_) {
+      // Account deletion has already succeeded; Google sign-out is best-effort.
+    }
+  }
 }
