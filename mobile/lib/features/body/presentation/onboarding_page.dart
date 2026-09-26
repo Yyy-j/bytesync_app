@@ -62,9 +62,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           LinearProgressIndicator(value: (_step + 1) / 4),
           SizedBox(height: AppSpacing.lg),
           if (_error != null)
-            ErrorView(
-              message: _error!,
-              onRetry: () => setState(() => _error = null),
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ),
           if (_step == 0) _basicStep(),
           if (_step == 1) _goalStep(),
@@ -105,6 +108,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       '非常高的活动量': 'very_high',
     }, (value) => setState(() => _activity = value)),
     _nextButton('查看推荐', _loadRecommendation),
+    TextButton(onPressed: _manualGoals, child: const Text('手动填写目标')),
   ]);
 
   Widget _recommendationStep() {
@@ -270,6 +274,11 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 
   Future<void> _loadRecommendation() async {
+    final birthYear = int.tryParse(_birthYear.text);
+    if (birthYear == null || birthYear > DateTime.now().year - 18) {
+      setState(() => _error = '未满 18 岁或年龄无法确认，请手动填写营养目标');
+      return;
+    }
     final input = _input();
     if (input == null) return;
     setState(() {
@@ -293,6 +302,17 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  void _manualGoals() {
+    setState(() {
+      _error = null;
+      _calories.clear();
+      _protein.clear();
+      _carbs.clear();
+      _fat.clear();
+      _step = 3;
+    });
   }
 
   void _editGoals() => showModalBottomSheet<void>(
@@ -349,7 +369,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       if (mounted) context.go('/');
     } on ConflictException {
       await ref.read(authControllerProvider.notifier).refreshCurrentUser();
-      if (ref.read(authControllerProvider).maybeWhenAuthenticated) {
+      if (ref.read(authControllerProvider) is AuthAuthenticated) {
         if (mounted) context.go('/');
       } else {
         setState(() => _error = '提交状态发生变化，请重试');
@@ -364,8 +384,4 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   }
 
   String _date(DateTime date) => '${date.month}月${date.day}日';
-}
-
-extension on dynamic {
-  bool get maybeWhenAuthenticated => this is AuthAuthenticated;
 }

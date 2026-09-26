@@ -2,7 +2,8 @@ import 'package:dio/dio.dart';
 
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/dio_error_mapper.dart';
-import '../../profile/data/dto/user_profile_dto.dart';
+import '../../../../core/network/api_exception.dart';
+import 'dto/body_dtos.dart';
 import '../../profile/domain/user_profile.dart';
 import '../domain/body_data.dart';
 import 'body_repository.dart';
@@ -17,13 +18,6 @@ class RemoteBodyRepository implements BodyRepository {
 
   DateTime? _date(Object? value) =>
       value is String ? DateTime.tryParse(value) : null;
-
-  WeightMeasurement _weight(Map<String, dynamic> json) => WeightMeasurement(
-    id: json['measurement_id'] as String? ?? json['id'] as String,
-    measuredOn: _date(json['measured_on'])!,
-    weightKg: (json['weight_kg'] as num).toDouble(),
-    bmi: (json['bmi'] as num).toDouble(),
-  );
 
   @override
   Future<BodyData> getBody() async {
@@ -54,13 +48,16 @@ class RemoteBodyRepository implements BodyRepository {
   @override
   Future<List<WeightMeasurement>> getWeights({int limit = 30}) async {
     try {
-      final response = await _dio.get<List<dynamic>>(
+      final response = await _dio.get<Map<String, dynamic>>(
         ApiEndpoints.usersMeWeights,
         queryParameters: {'limit': limit},
       );
-      return (response.data ?? const [])
-          .whereType<Map<String, dynamic>>()
-          .map(_weight)
+      final wrapper = response.data;
+      if (wrapper == null) {
+        throw MalformedResponseException('体重记录响应为空');
+      }
+      return WeightMeasurementsResponseDto.fromJson(wrapper).measurements
+          .map((item) => item.toDomain())
           .toList();
     } catch (error) {
       throw _errorMapper.map(error);
@@ -80,7 +77,7 @@ class RemoteBodyRepository implements BodyRepository {
           'weight_kg': weightKg,
         },
       );
-      return _weight(_data(response));
+      return WeightMeasurementDto.fromJson(_data(response)).toDomain();
     } catch (error) {
       throw _errorMapper.map(error);
     }
@@ -100,7 +97,7 @@ class RemoteBodyRepository implements BodyRepository {
           'weight_kg': weightKg,
         },
       );
-      return _weight(_data(response));
+      return WeightMeasurementDto.fromJson(_data(response)).toDomain();
     } catch (error) {
       throw _errorMapper.map(error);
     }
@@ -115,42 +112,24 @@ class RemoteBodyRepository implements BodyRepository {
     }
   }
 
-  CalorieRecommendation _recommendation(Map<String, dynamic> json) =>
-      CalorieRecommendation(
-        calories:
-            (json['calories'] ?? (json['goals'] as Map?)?['calories'] as num)
-                .toDouble(),
-        protein: (json['protein'] ?? (json['goals'] as Map?)?['protein'] as num)
-            .toDouble(),
-        carbs: (json['carbs'] ?? (json['goals'] as Map?)?['carbs'] as num)
-            .toDouble(),
-        fat: (json['fat'] ?? (json['goals'] as Map?)?['fat'] as num).toDouble(),
-        aggressiveTimeline: json['aggressive_timeline'] as bool? ?? false,
-        recommendedTargetDate: _date(json['recommended_target_date']),
-        requestedTargetDate: _date(json['requested_target_date']),
-        bmr: (json['bmr'] as num?)?.toDouble(),
-        maintenanceCalories: (json['maintenance_calories'] as num?)?.toDouble(),
-        method: json['method'] as String?,
-      );
-
   @override
   Future<CalorieRecommendation> recommend(BodyInput input) async {
     try {
-      return _recommendation(
+      return RecommendationResponseDto.fromJson(
         _data(
           await _dio.post<Map<String, dynamic>>(
             ApiEndpoints.usersMeRecommendation,
             data: input.toJson(),
           ),
         ),
-      );
+      ).toDomain();
     } catch (error) {
       throw _errorMapper.map(error);
     }
   }
 
   @override
-  Future<UserProfile> completeOnboarding(
+  Future<OnboardingResult> completeOnboarding(
     BodyInput input,
     NutritionGoals goals,
   ) async {
@@ -167,7 +146,7 @@ class RemoteBodyRepository implements BodyRepository {
           },
         },
       );
-      return UserProfileDto.fromJson(_data(response)).toDomain();
+      return OnboardingResponseDto.fromJson(_data(response)).toDomain();
     } catch (error) {
       throw _errorMapper.map(error);
     }

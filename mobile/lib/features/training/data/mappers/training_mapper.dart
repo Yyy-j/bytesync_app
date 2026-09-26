@@ -86,7 +86,9 @@ class TrainingMapper {
         targetDurationSeconds: dto.targetDurationSeconds,
         order: dto.order,
         completedSets: dto.completedSets,
-        setDetails: dto.setDetails.map(setDetailFromDto).toList(growable: false),
+        setDetails: dto.setDetails
+            .map(setDetailFromDto)
+            .toList(growable: false),
         removedFromTemplate: dto.removedFromTemplate,
       );
     } on FormatException catch (error) {

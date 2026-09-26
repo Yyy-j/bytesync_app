@@ -57,10 +57,7 @@ class _FakeTrainingRepository implements TrainingRepository {
     updatedItemId = itemId;
     updatedRequestId = requestId;
     updatedPatch = patch;
-    return TrainingSetUpdateResult(
-      completedSets: 1,
-      setDetail: _detail(),
-    );
+    return TrainingSetUpdateResult(completedSets: 1, setDetail: _detail());
   }
 
   @override
@@ -196,9 +193,7 @@ void main() {
   test('set edit uses public weekId and refreshes current week', () async {
     final repository = _FakeTrainingRepository();
     final container = ProviderContainer(
-      overrides: [
-        trainingRepositoryProvider.overrideWithValue(repository),
-      ],
+      overrides: [trainingRepositoryProvider.overrideWithValue(repository)],
     );
     addTearDown(container.dispose);
     final controller = container.read(trainingControllerProvider.notifier);
@@ -229,9 +224,7 @@ void main() {
   test('set delete uses public weekId and preserves selected day', () async {
     final repository = _FakeTrainingRepository();
     final container = ProviderContainer(
-      overrides: [
-        trainingRepositoryProvider.overrideWithValue(repository),
-      ],
+      overrides: [trainingRepositoryProvider.overrideWithValue(repository)],
     );
     addTearDown(container.dispose);
     final controller = container.read(trainingControllerProvider.notifier);

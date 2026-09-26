@@ -30,10 +30,7 @@ class TrainingWeek {
 }
 
 class CurrentTrainingWeekResult {
-  const CurrentTrainingWeekResult({
-    required this.week,
-    required this.created,
-  });
+  const CurrentTrainingWeekResult({required this.week, required this.created});
 
   final TrainingWeek week;
   final bool created;

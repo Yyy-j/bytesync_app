@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -7,6 +9,7 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/state_views.dart';
 import '../data/body_providers.dart';
 import '../domain/body_data.dart';
+import 'body_profile_edit_page.dart';
 
 final bodyDataControllerProvider =
     AsyncNotifierProvider.autoDispose<BodyDataController, BodyViewData>(
@@ -41,6 +44,13 @@ class BodyDataController extends AutoDisposeAsyncNotifier<BodyViewData> {
     await reload();
   }
 
+  Future<void> updateWeight(String id, DateTime date, double weight) async {
+    await ref
+        .read(bodyRepositoryProvider)
+        .updateWeight(id, measuredOn: date, weightKg: weight);
+    await reload();
+  }
+
   Future<void> deleteWeight(String id) async {
     await ref.read(bodyRepositoryProvider).deleteWeight(id);
     await reload();
@@ -53,7 +63,19 @@ class BodyDataPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(bodyDataControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('身体数据')),
+      appBar: AppBar(
+        title: const Text('身体数据'),
+        actions: [
+          IconButton(
+            tooltip: '编辑身体目标',
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const BodyProfileEditPage()),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: state.when(
           loading: () => const LoadingView(),
@@ -127,7 +149,7 @@ class BodyDataPage extends ConsumerWidget {
         ],
       ),
       if (data.weights.isEmpty) const EmptyView(message: '还没有体重记录'),
-      if (data.weights.length > 1)
+      if (data.weights.isNotEmpty)
         AppCard(
           child: SizedBox(
             height: 150,
@@ -149,62 +171,110 @@ class BodyDataPage extends ConsumerWidget {
             icon: const Icon(Icons.delete_outline),
             onPressed: () => _delete(context, ref, weight),
           ),
+          onTap: () => _edit(context, ref, weight),
         ),
       ),
     ],
   );
 
   Future<void> _add(BuildContext context, WidgetRef ref) async {
+    await _weightEditor(context, ref);
+  }
+
+  Future<void> _edit(
+    BuildContext context,
+    WidgetRef ref,
+    WeightMeasurement weight,
+  ) async {
+    await _weightEditor(context, ref, existing: weight);
+  }
+
+  Future<void> _weightEditor(
+    BuildContext context,
+    WidgetRef ref, {
+    WeightMeasurement? existing,
+  }) async {
     final controller = TextEditingController();
+    controller.text = existing?.weightKg.toString() ?? '';
+    var measuredOn = existing?.measuredOn ?? DateTime.now();
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (sheetContext) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          24,
-          24,
-          24,
-          MediaQuery.viewInsetsOf(sheetContext).bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              decoration: const InputDecoration(
-                labelText: '体重',
-                suffixText: 'kg',
-              ),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final weight = double.tryParse(controller.text);
-                if (weight == null || weight < 20 || weight > 400) return;
-                try {
-                  await ref
-                      .read(bodyDataControllerProvider.notifier)
-                      .addWeight(DateTime.now(), weight);
-                  if (sheetContext.mounted) Navigator.pop(sheetContext);
-                } catch (error) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          error is ApiException
-                              ? '这一天已经有体重记录，可以直接修改已有记录。'
-                              : '保存失败，请重试',
-                        ),
-                      ),
-                    );
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.viewInsetsOf(sheetContext).bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text('日期：${measuredOn.month}月${measuredOn.day}日'),
+                trailing: const Icon(Icons.calendar_today_outlined),
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: sheetContext,
+                    firstDate: DateTime(2000),
+                    lastDate: DateTime.now(),
+                    initialDate: measuredOn.isAfter(DateTime.now())
+                        ? DateTime.now()
+                        : measuredOn,
+                  );
+                  if (picked != null) {
+                    measuredOn = picked;
+                    if (sheetContext.mounted) setSheetState(() {});
                   }
-                }
-              },
-              child: const Text('记录今天体重'),
-            ),
-          ],
+                },
+              ),
+              TextField(
+                controller: controller,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                decoration: const InputDecoration(
+                  labelText: '体重',
+                  suffixText: 'kg',
+                ),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  final weight = double.tryParse(controller.text);
+                  if (weight == null || weight < 20 || weight > 400) return;
+                  try {
+                    if (existing == null) {
+                      await ref
+                          .read(bodyDataControllerProvider.notifier)
+                          .addWeight(measuredOn, weight);
+                    } else {
+                      await ref
+                          .read(bodyDataControllerProvider.notifier)
+                          .updateWeight(existing.id, measuredOn, weight);
+                    }
+                    if (sheetContext.mounted) Navigator.pop(sheetContext);
+                  } catch (error) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            error is ApiException
+                                ? existing == null
+                                      ? '这一天已经有体重记录，可以直接修改已有记录。'
+                                      : '这一天已经有体重记录，请选择其他日期。'
+                                : '保存失败，请重试',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
+                child: Text(existing == null ? '记录体重' : '保存修改'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -252,32 +322,50 @@ class _WeightChartPainter extends CustomPainter {
         .take(30)
         .map((item) => item.weightKg)
         .toList();
-    if (values.length < 2) return;
+    if (values.isEmpty) return;
     final minValue = values.reduce((a, b) => a < b ? a : b);
     final maxValue = values.reduce((a, b) => a > b ? a : b);
     final range = (maxValue - minValue).abs();
     final scale = range == 0 ? 1 : range;
     final path = Path();
+    final points = <Offset>[];
     for (var index = 0; index < values.length; index++) {
-      final x = index * size.width / (values.length - 1);
+      final x = values.length == 1
+          ? size.width / 2
+          : index * size.width / (values.length - 1);
       final y =
           size.height - ((values[index] - minValue) / scale * size.height);
+      points.add(Offset(x, y));
       if (index == 0) {
         path.moveTo(x, y);
       } else {
         path.lineTo(x, y);
       }
     }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3,
-    );
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    if (values.length > 1) canvas.drawPath(path, paint);
+    canvas.drawPoints(ui.PointMode.points, points, paint..strokeWidth = 8);
   }
 
   @override
-  bool shouldRepaint(_WeightChartPainter oldDelegate) =>
-      oldDelegate.weights != weights || oldDelegate.color != color;
+  bool shouldRepaint(_WeightChartPainter oldDelegate) {
+    if (oldDelegate.color != color ||
+        oldDelegate.weights.length != weights.length) {
+      return true;
+    }
+    for (var index = 0; index < weights.length; index++) {
+      final oldWeight = oldDelegate.weights[index];
+      final weight = weights[index];
+      if (oldWeight.id != weight.id ||
+          oldWeight.weightKg != weight.weightKg ||
+          oldWeight.measuredOn != weight.measuredOn ||
+          oldWeight.bmi != weight.bmi) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

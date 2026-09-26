@@ -58,9 +58,8 @@ void main() {
     expect(dto.exerciseId, 'custom-uuid');
     expect(dto.videoUrl, 'https://example.com/tutorial');
     expect(
-      const PutTrainingExerciseVideoRequestDto(
-        'https://example.com/tutorial',
-      ).toJson(),
+      const PutTrainingExerciseVideoRequestDto('https://example.com/tutorial')
+          .toJson(),
       {'video_url': 'https://example.com/tutorial'},
     );
   });
@@ -81,8 +80,9 @@ void main() {
     await container
         .read(trainingExerciseVideoControllerProvider.notifier)
         .refresh();
-    final ready = container.read(trainingExerciseVideoControllerProvider)
-        as TrainingExerciseVideoReady;
+    final ready = container.read(
+      trainingExerciseVideoControllerProvider,
+    ) as TrainingExerciseVideoReady;
     expect(ready.videos['chest_press']?.videoUrl, _video.videoUrl);
   });
 
@@ -99,21 +99,23 @@ void main() {
     );
     await controller.refresh();
     expect(
-      (await controller.save('chest_press', 'https://example.com/new')).isSuccess,
+      (await controller.save(
+        'chest_press',
+        'https://example.com/new',
+      )).isSuccess,
       isTrue,
     );
     expect(
-      (container.read(trainingExerciseVideoControllerProvider)
-              as TrainingExerciseVideoReady)
-          .videos['chest_press']
-          ?.videoUrl,
+      (container.read(
+        trainingExerciseVideoControllerProvider,
+      ) as TrainingExerciseVideoReady).videos['chest_press']?.videoUrl,
       Uri.parse('https://example.com/new'),
     );
     expect((await controller.delete('chest_press')).isSuccess, isTrue);
     expect(
-      (container.read(trainingExerciseVideoControllerProvider)
-              as TrainingExerciseVideoReady)
-          .videos,
+      (container.read(
+        trainingExerciseVideoControllerProvider,
+      ) as TrainingExerciseVideoReady).videos,
       isEmpty,
     );
   });

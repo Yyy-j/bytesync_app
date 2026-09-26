@@ -59,6 +59,7 @@ class CalorieRecommendation {
     this.bmr,
     this.maintenanceCalories,
     this.method,
+    this.direction,
   });
 
   final double calories;
@@ -71,6 +72,7 @@ class CalorieRecommendation {
   final double? bmr;
   final double? maintenanceCalories;
   final String? method;
+  final String? direction;
 
   NutritionGoals get goals => NutritionGoals(
     calories: calories,
@@ -78,6 +80,30 @@ class CalorieRecommendation {
     carbs: carbs,
     fat: fat,
   );
+}
+
+class OnboardingResult {
+  const OnboardingResult({
+    required this.onboardingCompletedAt,
+    required this.birthYear,
+    required this.sexForEnergyEstimate,
+    required this.heightCm,
+    required this.targetWeightKg,
+    required this.targetDate,
+    required this.activityLevel,
+    required this.goals,
+    required this.currentWeight,
+  });
+
+  final DateTime onboardingCompletedAt;
+  final int birthYear;
+  final String sexForEnergyEstimate;
+  final double heightCm;
+  final double targetWeightKg;
+  final DateTime targetDate;
+  final String activityLevel;
+  final NutritionGoals goals;
+  final WeightMeasurement? currentWeight;
 }
 
 class BodyInput {

@@ -92,9 +92,8 @@ class _CountingSummaryController extends SummaryController {
   int refreshCount = 0;
 
   @override
-  SummaryState build() => SummaryLoaded(
-        DailySummary.empty(DateTime(2026, 9, 14)),
-      );
+  SummaryState build() =>
+      SummaryLoaded(DailySummary.empty(DateTime(2026, 9, 14)));
 
   @override
   Future<void> refresh() async {
@@ -136,7 +135,8 @@ Meal _meal({MealSource source = MealSource.text}) {
   _FakeMealsRepository meals,
   _FakeMealAiRepository ai,
   _CountingSummaryController summary,
-}) _container() {
+})
+_container() {
   final meals = _FakeMealsRepository();
   final ai = _FakeMealAiRepository();
   final summary = _CountingSummaryController();
@@ -159,51 +159,54 @@ void main() {
     expect(json, {'dishes': <Map<String, dynamic>>[]});
   });
 
-  test('portion PATCH sends only portion ratio and expected timestamp', () async {
-    final scope = _container();
-    addTearDown(scope.container.dispose);
-    final meal = _meal();
+  test(
+    'portion PATCH sends only portion ratio and expected timestamp',
+    () async {
+      final scope = _container();
+      addTearDown(scope.container.dispose);
+      final meal = _meal();
 
-    final result = await scope.container
-        .read(mealManagementControllerProvider.notifier)
-        .updatePortion(meal, 1.5);
+      final result = await scope.container
+          .read(mealManagementControllerProvider.notifier)
+          .updatePortion(meal, 1.5);
 
-    expect(result.isSuccess, isTrue);
-    expect(
-      UpdateMealRequestDto.fromPatch(scope.meals.lastPatch!).toJson(),
-      {
+      expect(result.isSuccess, isTrue);
+      expect(UpdateMealRequestDto.fromPatch(scope.meals.lastPatch!).toJson(), {
         'portion_ratio': 1.5,
         'expected_updated_at': meal.updatedAt.toIso8601String(),
-      },
-    );
-    expect(scope.summary.refreshCount, 1);
-  });
+      });
+      expect(scope.summary.refreshCount, 1);
+    },
+  );
 
-  test('direct edit sends canonical base macros, not allocation macros', () async {
-    final scope = _container();
-    addTearDown(scope.container.dispose);
-    final meal = _meal();
+  test(
+    'direct edit sends canonical base macros, not allocation macros',
+    () async {
+      final scope = _container();
+      addTearDown(scope.container.dispose);
+      final meal = _meal();
 
-    await scope.container
-        .read(mealManagementControllerProvider.notifier)
-        .updateDetails(
-          meal,
-          name: '大份鸡肉饭',
-          baseCalories: 900,
-          baseProtein: 50,
-          baseCarbs: 100,
-          baseFat: 25,
-        );
+      await scope.container
+          .read(mealManagementControllerProvider.notifier)
+          .updateDetails(
+            meal,
+            name: '大份鸡肉饭',
+            baseCalories: 900,
+            baseProtein: 50,
+            baseCarbs: 100,
+            baseFat: 25,
+          );
 
-    final patch = scope.meals.lastPatch!;
-    expect(patch.baseCalories, 900);
-    expect(patch.baseProtein, 50);
-    expect(patch.baseCarbs, 100);
-    expect(patch.baseFat, 25);
-    expect(patch.portionRatio, isNull);
-    expect(patch.shareMode, isNull);
-    expect(patch.expectedUpdatedAt, meal.updatedAt);
-  });
+      final patch = scope.meals.lastPatch!;
+      expect(patch.baseCalories, 900);
+      expect(patch.baseProtein, 50);
+      expect(patch.baseCarbs, 100);
+      expect(patch.baseFat, 25);
+      expect(patch.portionRatio, isNull);
+      expect(patch.shareMode, isNull);
+      expect(patch.expectedUpdatedAt, meal.updatedAt);
+    },
+  );
 
   test('delete calls once and refreshes only after success', () async {
     final scope = _container();
@@ -235,23 +238,26 @@ void main() {
     expect(scope.summary.refreshCount, 0);
   });
 
-  test('409 refreshes server state and never retries the stale PATCH', () async {
-    final scope = _container();
-    addTearDown(scope.container.dispose);
-    scope.meals.updateError = ConflictException();
-    final meal = _meal();
+  test(
+    '409 refreshes server state and never retries the stale PATCH',
+    () async {
+      final scope = _container();
+      addTearDown(scope.container.dispose);
+      scope.meals.updateError = ConflictException();
+      final meal = _meal();
 
-    final result = await scope.container
-        .read(mealManagementControllerProvider.notifier)
-        .updatePortion(meal, 2);
+      final result = await scope.container
+          .read(mealManagementControllerProvider.notifier)
+          .updatePortion(meal, 2);
 
-    expect(result.isSuccess, isFalse);
-    expect(result.isConflict, isTrue);
-    expect(result.message, contains('其他地方被修改'));
-    expect(scope.meals.lastUpdatedId, meal.id);
-    expect(scope.meals.updateCallCount, 1);
-    expect(scope.summary.refreshCount, 1);
-  });
+      expect(result.isSuccess, isFalse);
+      expect(result.isConflict, isTrue);
+      expect(result.message, contains('其他地方被修改'));
+      expect(scope.meals.lastUpdatedId, meal.id);
+      expect(scope.meals.updateCallCount, 1);
+      expect(scope.summary.refreshCount, 1);
+    },
+  );
 
   test('text refine PATCHes new baseline and metadata', () async {
     final scope = _container();
@@ -264,9 +270,8 @@ void main() {
 
     expect(result.isSuccess, isTrue);
     expect(scope.ai.lastText, '一碗鸡肉饭；少油；米饭其实只有半碗');
-    final json = UpdateMealRequestDto.fromPatch(
-      scope.meals.lastPatch!,
-    ).toJson();
+    final json = UpdateMealRequestDto.fromPatch(scope.meals.lastPatch!)
+        .toJson();
     expect(json['name'], '半碗鸡肉饭');
     expect(json['base_calories'], 500);
     expect(json['base_protein'], 35);

@@ -12,6 +12,7 @@ import '../features/profile/presentation/character_page.dart';
 import '../features/profile/presentation/account_privacy_page.dart';
 import '../features/profile/presentation/nutrition_goals_page.dart';
 import '../features/body/presentation/body_data_page.dart';
+import '../features/body/presentation/body_profile_edit_page.dart';
 import '../features/body/presentation/onboarding_page.dart';
 import '../features/training/presentation/history/training_history_page.dart';
 import '../features/training/presentation/template/training_template_page.dart';
@@ -86,6 +87,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/body',
         builder: (context, state) => const BodyDataPage(),
+      ),
+      GoRoute(
+        path: '/profile/body/edit',
+        builder: (context, state) => const BodyProfileEditPage(),
       ),
       GoRoute(
         path: '/profile/character',

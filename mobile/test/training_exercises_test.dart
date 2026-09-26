@@ -181,9 +181,9 @@ void main() {
       order: 0,
     );
 
-    final json = SaveTrainingTemplateRequestDto.fromDomain(
-      const [TrainingDay(dayIndex: 0, exercises: [existing])],
-    ).toJson();
+    final json = SaveTrainingTemplateRequestDto.fromDomain(const [
+      TrainingDay(dayIndex: 0, exercises: [existing]),
+    ]).toJson();
     final days = json['days'] as List<dynamic>;
     final day = days.single as Map<String, dynamic>;
     final exercises = day['exercises'] as List<dynamic>;

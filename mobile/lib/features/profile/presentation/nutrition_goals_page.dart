@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/bitesync_snackbar.dart';
 import '../../../shared/widgets/state_views.dart';
+import '../../body/presentation/recommendation_result_sheet.dart';
 import '../domain/user_profile.dart';
 import 'nutrition_goals_controller.dart';
 
@@ -24,6 +25,7 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
   final _fatController = TextEditingController();
   bool _populated = false;
   String? _validationError;
+  String? _recommendationError;
 
   @override
   void dispose() {
@@ -69,11 +71,16 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
         Align(
           alignment: Alignment.centerLeft,
           child: TextButton.icon(
-            onPressed: () => context.push('/profile/body'),
+            onPressed: state.recommending ? null : _recommend,
             icon: const Icon(Icons.auto_awesome_outlined),
-            label: const Text('根据身体目标重新计算'),
+            label: Text(state.recommending ? '计算中…' : '根据身体目标重新计算'),
           ),
         ),
+        if (_recommendationError == '请先完善身体数据和目标')
+          TextButton(
+            onPressed: () => context.push('/profile/body/edit'),
+            child: const Text('完善身体数据和目标'),
+          ),
         SizedBox(height: AppSpacing.lg),
         AppCard(
           child: Column(
@@ -155,6 +162,36 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
       context,
       message: result.isSuccess ? appL10n.goalsSaved : result.errorMessage!,
     );
+  }
+
+  Future<void> _recommend() async {
+    final result = await ref
+        .read(nutritionGoalsControllerProvider.notifier)
+        .recommend();
+    if (!mounted) return;
+    if (!result.isSuccess) {
+      setState(() => _recommendationError = result.errorMessage);
+      BiteSyncSnackBar.show(context, message: result.errorMessage!);
+      return;
+    }
+    setState(() => _recommendationError = null);
+    final state = ref.read(nutritionGoalsControllerProvider);
+    if (state is! NutritionGoalsReady || state.recommendation == null) return;
+    final goals = await showRecommendationResultSheet(
+      context,
+      state.recommendation!,
+    );
+    if (goals == null || !mounted) return;
+    _setValues(goals);
+    final saved = await ref
+        .read(nutritionGoalsControllerProvider.notifier)
+        .save(goals);
+    if (mounted) {
+      BiteSyncSnackBar.show(
+        context,
+        message: saved.isSuccess ? appL10n.goalsSaved : saved.errorMessage!,
+      );
+    }
   }
 
   void _setValues(NutritionGoals goals) {

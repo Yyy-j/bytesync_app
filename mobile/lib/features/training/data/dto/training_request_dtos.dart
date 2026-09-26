@@ -45,7 +45,9 @@ class SaveTrainingTemplateRequestDto {
         .map(
           (day) => {
             'day_index': day.dayIndex,
-            'exercises': day.exercises.map(_exerciseJson).toList(growable: false),
+            'exercises': day.exercises
+                .map(_exerciseJson)
+                .toList(growable: false),
           },
         )
         .toList(growable: false),

@@ -31,10 +31,12 @@ class RecordDraft {
       baseProtein: result.protein,
       baseCarbs: result.carbs,
       baseFat: result.fat,
-      dishes: result.dishes.map((dish) {
-        if (dish is MealAiDish) return dish;
-        return MealAiDish(name: dish.toString());
-      }).toList(growable: false),
+      dishes: result.dishes
+          .map((dish) {
+            if (dish is MealAiDish) return dish;
+            return MealAiDish(name: dish.toString());
+          })
+          .toList(growable: false),
       source: source,
       originalText: originalText,
       hint: hint,
@@ -61,12 +63,14 @@ class RecordDraft {
   num get fat => baseFat * portionRatio;
 
   List<MealAiDish> get scaledDishes => dishes
-      .map((dish) => MealAiDish(
-            name: dish.name,
-            calories: dish.calories == null
-                ? null
-                : dish.calories! * portionRatio,
-          ))
+      .map(
+        (dish) => MealAiDish(
+          name: dish.name,
+          calories: dish.calories == null
+              ? null
+              : dish.calories! * portionRatio,
+        ),
+      )
       .toList(growable: false);
 
   RecordDraft copyWith({

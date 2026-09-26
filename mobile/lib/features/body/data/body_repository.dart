@@ -15,5 +15,8 @@ abstract interface class BodyRepository {
   });
   Future<void> deleteWeight(String id);
   Future<CalorieRecommendation> recommend(BodyInput input);
-  Future<UserProfile> completeOnboarding(BodyInput input, NutritionGoals goals);
+  Future<OnboardingResult> completeOnboarding(
+    BodyInput input,
+    NutritionGoals goals,
+  );
 }

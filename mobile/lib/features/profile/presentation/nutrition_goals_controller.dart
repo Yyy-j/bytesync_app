@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
+import '../../body/data/body_providers.dart';
+import '../../body/domain/body_data.dart';
 import '../../summary/presentation/summary_controller.dart';
 import '../data/user_providers.dart';
 import '../data/user_repository.dart';
@@ -22,10 +24,17 @@ class NutritionGoalsFailure extends NutritionGoalsState {
 }
 
 class NutritionGoalsReady extends NutritionGoalsState {
-  const NutritionGoalsReady({required this.profile, this.saving = false});
+  const NutritionGoalsReady({
+    required this.profile,
+    this.saving = false,
+    this.recommending = false,
+    this.recommendation,
+  });
 
   final UserProfile profile;
   final bool saving;
+  final bool recommending;
+  final CalorieRecommendation? recommendation;
 }
 
 class NutritionGoalsSaveResult {
@@ -79,6 +88,57 @@ class NutritionGoalsController
       return NutritionGoalsSaveResult.failure(
         _message(error, appL10n.goalsSaveFailed),
       );
+    }
+  }
+
+  Future<NutritionGoalsSaveResult> recommend() async {
+    final current = state;
+    if (current is! NutritionGoalsReady || current.recommending) {
+      return NutritionGoalsSaveResult.failure(appL10n.errorCannotSaveNow);
+    }
+    final birthYear = current.profile.birthYear;
+    final sex = current.profile.sexForEnergyEstimate;
+    final height = current.profile.heightCm;
+    final target = current.profile.targetWeightKg;
+    final targetDate = current.profile.targetDate;
+    final activity = current.profile.activityLevel;
+    if (birthYear == null ||
+        sex == null ||
+        height == null ||
+        target == null ||
+        targetDate == null ||
+        activity == null) {
+      return NutritionGoalsSaveResult.failure('请先完善身体数据和目标');
+    }
+    state = NutritionGoalsReady(profile: current.profile, recommending: true);
+    try {
+      final body = await ref.read(bodyRepositoryProvider).getBody();
+      final weight = body.currentWeight;
+      if (weight == null) {
+        state = NutritionGoalsReady(profile: current.profile);
+        return NutritionGoalsSaveResult.failure('请先完善身体数据和目标');
+      }
+      final recommendation = await ref
+          .read(bodyRepositoryProvider)
+          .recommend(
+            BodyInput(
+              birthYear: birthYear,
+              sexForEnergyEstimate: sex,
+              heightCm: height,
+              currentWeightKg: weight.weightKg,
+              targetWeightKg: target,
+              targetDate: targetDate,
+              activityLevel: activity,
+            ),
+          );
+      state = NutritionGoalsReady(
+        profile: current.profile,
+        recommendation: recommendation,
+      );
+      return const NutritionGoalsSaveResult.success();
+    } catch (error) {
+      state = NutritionGoalsReady(profile: current.profile);
+      return NutritionGoalsSaveResult.failure(_message(error, '暂时无法获取推荐，请重试'));
     }
   }
 

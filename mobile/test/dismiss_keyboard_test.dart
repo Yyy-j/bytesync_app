@@ -11,12 +11,7 @@ void main() {
       const MaterialApp(
         home: DismissKeyboard(
           child: Scaffold(
-            body: Column(
-              children: [
-                TextField(),
-                Text('点击这里收起键盘'),
-              ],
-            ),
+            body: Column(children: [TextField(), Text('点击这里收起键盘')]),
           ),
         ),
       ),

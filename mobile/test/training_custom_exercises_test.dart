@@ -236,10 +236,7 @@ void main() {
         defaultWeight: 5,
         defaultDurationSeconds: 600,
       );
-      final item = catalogExercise.toTemplateItem(
-        itemId: 'item-new',
-        order: 4,
-      );
+      final item = catalogExercise.toTemplateItem(itemId: 'item-new', order: 4);
 
       expect(item.itemId, 'item-new');
       expect(item.exerciseId, _uuid);
@@ -258,11 +255,7 @@ void main() {
   test('custom search matches name and category', () {
     final exercises = [
       _exercise(),
-      _exercise(
-        id: _secondUuid,
-        name: '划船机',
-        category: '有氧',
-      ),
+      _exercise(id: _secondUuid, name: '划船机', category: '有氧'),
     ];
 
     expect(
@@ -275,19 +268,16 @@ void main() {
     );
   });
 
-  test(
-    'custom categories include new values once and omit empty category',
-    () {
-      final categories = trainingCustomExerciseCategories([
-        _exercise(category: '腿部'),
-        _exercise(id: _secondUuid, category: '新分类'),
-        _exercise(id: 'third', category: '腿部'),
-        _exercise(id: 'fourth', category: ''),
-      ]);
+  test('custom categories include new values once and omit empty category', () {
+    final categories = trainingCustomExerciseCategories([
+      _exercise(category: '腿部'),
+      _exercise(id: _secondUuid, category: '新分类'),
+      _exercise(id: 'third', category: '腿部'),
+      _exercise(id: 'fourth', category: ''),
+    ]);
 
-      expect(categories, ['腿部', '新分类']);
-    },
-  );
+    expect(categories, ['腿部', '新分类']);
+  });
 
   test(
     'create update and delete each refresh the catalog after mutation',

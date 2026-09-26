@@ -59,10 +59,9 @@ void main() {
       const UpdateUserProfileRequestDto(displayName: 'New Name').toJson(),
       {'display_name': 'New Name'},
     );
-    expect(
-      const UpdateUserCharacterRequestDto(UserCharacter.girl).toJson(),
-      {'character': 'girl'},
-    );
+    expect(const UpdateUserCharacterRequestDto(UserCharacter.girl).toJson(), {
+      'character': 'girl',
+    });
     final legacyProfile = UserProfileDto.fromJson({
       'id': 'user-2',
       'email': null,
