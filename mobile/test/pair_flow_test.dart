@@ -81,6 +81,9 @@ class _FakePairRepository implements PairRepository {
   Pair? currentPair;
   Object? createError;
   Object? joinError;
+  Object? regenerateError;
+  Object? cancelError;
+  Object? endError;
 
   @override
   Future<Pair?> getCurrentPair() async => currentPair;
@@ -100,13 +103,20 @@ class _FakePairRepository implements PairRepository {
   }
 
   @override
-  Future<Pair> regenerateInviteCode() async => _regeneratedPair;
+  Future<Pair> regenerateInviteCode() async {
+    if (regenerateError != null) throw regenerateError!;
+    return _regeneratedPair;
+  }
 
   @override
-  Future<void> cancelPair() async {}
+  Future<void> cancelPair() async {
+    if (cancelError != null) throw cancelError!;
+  }
 
   @override
-  Future<void> endPair() async {}
+  Future<void> endPair() async {
+    if (endError != null) throw endError!;
+  }
 }
 
 class _FixedAuthController extends AuthController {
@@ -433,6 +443,40 @@ void main() {
     expect(find.text('输入邀请码'), findsNothing);
   });
 
+  testWidgets('regenerate failure keeps the old code and shows no success', (
+    tester,
+  ) async {
+    final repository = _FakePairRepository(currentPair: _pair)
+      ..regenerateError = NetworkException();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authControllerProvider.overrideWith(_FixedAuthController.new),
+          pairRepositoryProvider.overrideWithValue(repository),
+        ],
+        child: const MaterialApp(home: PairingPage()),
+      ),
+    );
+    await _settle(tester);
+
+    await tester.tap(find.text('重新生成邀请码'));
+    await tester.pump();
+    await tester.tap(find.text('重新生成邀请码').last);
+    await _settle(tester);
+
+    expect(find.text('ABC123'), findsOneWidget);
+    expect(find.text('邀请码已更新'), findsNothing);
+    expect(find.text('网络连接失败，请检查网络后重试'), findsOneWidget);
+    final button = tester.widget<OutlinedButton>(
+      find.ancestor(
+        of: find.text('重新生成邀请码'),
+        matching: find.byType(OutlinedButton),
+      ),
+    );
+    expect(button.onPressed, isNotNull);
+    await tester.pump(const Duration(seconds: 5));
+  });
+
   testWidgets('Pending polling transitions to Connected and then stops', (
     tester,
   ) async {
@@ -618,6 +662,119 @@ void main() {
     final state = container.read(pairControllerProvider);
     expect(state, isA<PairConnected>());
     expect((state as PairConnected).pair.isConnected, isTrue);
+  });
+
+  test('regenerate network failure preserves the old Pending Pair', () async {
+    final repository = _FakePairRepository(currentPair: _pair)
+      ..regenerateError = NetworkException();
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_FixedAuthController.new),
+        pairRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final controller = container.read(pairControllerProvider.notifier);
+    await controller.refresh();
+    await expectLater(
+      controller.regenerateInviteCode(),
+      throwsA(isA<NetworkException>()),
+    );
+
+    final state = container.read(pairControllerProvider) as PairConnected;
+    expect(state.pair.isPending, isTrue);
+    expect(state.pair.inviteCode, 'ABC123');
+  });
+
+  test(
+    'regenerate conflict refreshes the authoritative Connected Pair',
+    () async {
+      final repository = _FakePairRepository(currentPair: _completedPair)
+        ..regenerateError = ConflictException();
+      final container = ProviderContainer(
+        overrides: [
+          authControllerProvider.overrideWith(_FixedAuthController.new),
+          pairRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(pairControllerProvider.notifier);
+      await controller.refresh();
+      await expectLater(
+        controller.regenerateInviteCode(),
+        throwsA(isA<ConflictException>()),
+      );
+
+      final state = container.read(pairControllerProvider) as PairConnected;
+      expect(state.pair.isConnected, isTrue);
+      expect(controller.messageFor(ConflictException()), '当前配对状态发生冲突，请刷新后重试');
+    },
+  );
+
+  test('cancel network failure preserves the Pending Pair', () async {
+    final repository = _FakePairRepository(currentPair: _pair)
+      ..cancelError = NetworkException();
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_FixedAuthController.new),
+        pairRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final controller = container.read(pairControllerProvider.notifier);
+    await controller.refresh();
+    await expectLater(
+      controller.cancelPair(),
+      throwsA(isA<NetworkException>()),
+    );
+
+    final state = container.read(pairControllerProvider) as PairConnected;
+    expect(state.pair.isPending, isTrue);
+  });
+
+  test('end network failure preserves the Connected Pair', () async {
+    final repository = _FakePairRepository(currentPair: _completedPair)
+      ..endError = NetworkException();
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_FixedAuthController.new),
+        pairRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final controller = container.read(pairControllerProvider.notifier);
+    await controller.refresh();
+    await expectLater(controller.endPair(), throwsA(isA<NetworkException>()));
+
+    final state = container.read(pairControllerProvider) as PairConnected;
+    expect(state.pair.isConnected, isTrue);
+    expect(state.pair.partner, isNotNull);
+  });
+
+  test('end conflict refreshes to Single without guessing locally', () async {
+    final repository = _FakePairRepository()
+      ..currentPair = null
+      ..endError = ConflictException();
+    final container = ProviderContainer(
+      overrides: [
+        authControllerProvider.overrideWith(_FixedAuthController.new),
+        pairRepositoryProvider.overrideWithValue(repository),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final controller = container.read(pairControllerProvider.notifier);
+    repository.currentPair = _completedPair;
+    await controller.refresh();
+    repository.currentPair = null;
+    await expectLater(controller.endPair(), throwsA(isA<ConflictException>()));
+
+    expect(container.read(pairControllerProvider), isA<PairNotFound>());
+    expect(controller.messageFor(ConflictException()), '当前配对状态发生冲突，请刷新后重试');
   });
 
   test(

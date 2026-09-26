@@ -90,21 +90,21 @@ class PairController extends Notifier<PairState> {
   }
 
   Future<void> regenerateInviteCode() async {
-    await _runMutation(() async {
+    await _runLifecycleMutation(() async {
       final pair = await _repository.regenerateInviteCode();
       state = PairConnected(pair, showInviteCode: true);
     });
   }
 
   Future<void> cancelPair() async {
-    await _runMutation(() async {
+    await _runLifecycleMutation(() async {
       await _repository.cancelPair();
       state = const PairNotFound();
     });
   }
 
   Future<void> endPair() async {
-    await _runMutation(() async {
+    await _runLifecycleMutation(() async {
       await _repository.endPair();
       state = const PairNotFound();
     });
@@ -130,11 +130,35 @@ class PairController extends Notifier<PairState> {
     }
   }
 
+  Future<void> _runLifecycleMutation(Future<void> Function() operation) async {
+    final previousState = state;
+    _refreshGeneration++;
+    _mutationInFlight = true;
+    state = const PairLoading();
+    try {
+      await operation();
+    } catch (error) {
+      if (error is ConflictException) {
+        _mutationInFlight = false;
+        await refresh(showLoading: false);
+        throw ConflictException(appL10n.pairLifecycleConflict);
+      } else {
+        state = previousState;
+      }
+      rethrow;
+    } finally {
+      _mutationInFlight = false;
+    }
+  }
+
   String _messageFor(Object error) {
     if (error is! ApiException) return appL10n.errorOperationFailed;
     if (error is NetworkException) return appL10n.errorNetworkRetry;
     if (error is UnauthorizedException) return appL10n.authSessionExpired;
     if (error is ConflictException) {
+      if (error.message == appL10n.pairLifecycleConflict) {
+        return appL10n.pairLifecycleConflict;
+      }
       final message = error.message.toLowerCase();
       if (message.contains('full') || message.contains('满')) {
         return appL10n.pairFull;
@@ -151,6 +175,8 @@ class PairController extends Notifier<PairState> {
     }
     return appL10n.pairOperationFailed;
   }
+
+  String messageFor(Object error) => _messageFor(error);
 }
 
 class _PairLifecycleObserver extends WidgetsBindingObserver {

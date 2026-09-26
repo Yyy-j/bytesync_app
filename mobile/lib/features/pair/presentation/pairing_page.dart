@@ -124,14 +124,25 @@ class _PairingPageState extends ConsumerState<PairingPage> {
       _actionInFlight = true;
       _actionPair = pair;
     });
-    await action();
-    if (!mounted) return;
-    setState(() {
-      _actionInFlight = false;
-      _actionPair = null;
-    });
-    if (successMessage != null) {
-      BiteSyncSnackBar.show(context, message: successMessage);
+    try {
+      await action();
+      if (mounted && successMessage != null) {
+        BiteSyncSnackBar.show(context, message: successMessage);
+      }
+    } catch (error) {
+      if (mounted) {
+        final message = ref
+            .read(pairControllerProvider.notifier)
+            .messageFor(error);
+        BiteSyncSnackBar.show(context, message: message);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _actionInFlight = false;
+          _actionPair = null;
+        });
+      }
     }
   }
 
