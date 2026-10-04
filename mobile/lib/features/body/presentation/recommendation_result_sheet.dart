@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bytesync/l10n/l10n.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_card.dart';
@@ -18,7 +20,9 @@ Future<NutritionGoals?> showRecommendationResultSheet(
 
 class _RecommendationSheet extends StatefulWidget {
   const _RecommendationSheet({required this.recommendation});
+
   final CalorieRecommendation recommendation;
+
   @override
   State<_RecommendationSheet> createState() => _RecommendationSheetState();
 }
@@ -48,72 +52,97 @@ class _RecommendationSheetState extends State<_RecommendationSheet> {
   }
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.fromLTRB(
-      24,
-      24,
-      24,
-      MediaQuery.viewInsetsOf(context).bottom + 24,
-    ),
-    child: SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('推荐每日热量'),
-          Text(
-            '${widget.recommendation.calories.round()} kcal / 天',
-            style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
-          ),
-          Text(
-            '蛋白质 ${widget.recommendation.protein.round()}g · 碳水 ${widget.recommendation.carbs.round()}g · 脂肪 ${widget.recommendation.fat.round()}g',
-          ),
-          if (widget.recommendation.aggressiveTimeline)
-            AppCard(
-              child: Text(
-                '这个目标速度有些快，建议将目标日期调整到 ${widget.recommendation.recommendedTargetDate?.month}月${widget.recommendation.recommendedTargetDate?.day}日。',
+  Widget build(BuildContext context) {
+    final recommendation = widget.recommendation;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        24,
+        24,
+        24,
+        MediaQuery.viewInsetsOf(context).bottom + 24,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(appL10n.onboardingRecommendedCalories),
+            Text(
+              appL10n.recommendationCaloriesPerDay(
+                recommendation.calories.round().toString(),
+              ),
+              style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
+            ),
+            Text(
+              appL10n.recommendationMacros(
+                recommendation.protein.round().toString(),
+                recommendation.carbs.round().toString(),
+                recommendation.fat.round().toString(),
               ),
             ),
-          ExpansionTile(
-            title: const Text('为什么是这个数字？'),
-            children: [
-              ListTile(
-                title: const Text('基础代谢'),
-                trailing: Text(
-                  '${widget.recommendation.bmr?.round() ?? '-'} kcal',
+            if (recommendation.aggressiveTimeline)
+              AppCard(
+                child: Text(
+                  appL10n.recommendationAggressiveMessage(
+                    recommendation.recommendedTargetDate == null
+                        ? '-'
+                        : _date(recommendation.recommendedTargetDate!),
+                  ),
                 ),
               ),
-              ListTile(
-                title: const Text('维持热量'),
-                trailing: Text(
-                  '${widget.recommendation.maintenanceCalories?.round() ?? '-'} kcal',
+            ExpansionTile(
+              title: Text(appL10n.recommendationWhy),
+              children: [
+                ListTile(
+                  title: Text(appL10n.onboardingBmr),
+                  trailing: Text(
+                    appL10n.recommendationBmrValue(
+                      recommendation.bmr?.round().toString() ?? '-',
+                    ),
+                  ),
                 ),
+                ListTile(
+                  title: Text(appL10n.onboardingMaintenance),
+                  trailing: Text(
+                    appL10n.recommendationMaintenanceValue(
+                      recommendation.maintenanceCalories?.round().toString() ??
+                          '-',
+                    ),
+                  ),
+                ),
+                ListTile(
+                  title: Text(appL10n.onboardingMethod),
+                  trailing: Text(recommendation.method ?? '-'),
+                ),
+              ],
+            ),
+            TextButton(
+              onPressed: () => setState(() => _editing = !_editing),
+              child: Text(
+                _editing
+                    ? appL10n.recommendationCollapseAdjust
+                    : appL10n.recommendationAdjust,
               ),
-              ListTile(
-                title: const Text('计算方式'),
-                trailing: Text(widget.recommendation.method ?? '-'),
-              ),
+            ),
+            if (_editing) ...[
+              _field(appL10n.onboardingRecommendedCalories, _calories, 'kcal'),
+              _field(appL10n.commonProtein, _protein, 'g'),
+              _field(appL10n.macroCarbs, _carbs, 'g'),
+              _field(appL10n.commonFat, _fat, 'g'),
             ],
-          ),
-          TextButton(
-            onPressed: () => setState(() => _editing = !_editing),
-            child: Text(_editing ? '收起调整' : '调整目标'),
-          ),
-          if (_editing) ...[
-            _field('热量', _calories, 'kcal'),
-            _field('蛋白质', _protein, 'g'),
-            _field('碳水', _carbs, 'g'),
-            _field('脂肪', _fat, 'g'),
+            SizedBox(height: AppSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _apply,
+                child: Text(appL10n.recommendationApply),
+              ),
+            ),
           ],
-          SizedBox(height: AppSpacing.sm),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(onPressed: _apply, child: const Text('使用这个目标')),
-          ),
-        ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   Widget _field(
     String label,
@@ -152,4 +181,7 @@ class _RecommendationSheetState extends State<_RecommendationSheet> {
   String _number(double value) => value == value.roundToDouble()
       ? value.toInt().toString()
       : value.toString();
+
+  String _date(DateTime date) =>
+      DateFormat(appL10n.commonDateFormat, 'zh_CN').format(date);
 }

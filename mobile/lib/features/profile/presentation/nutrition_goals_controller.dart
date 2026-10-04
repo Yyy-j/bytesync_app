@@ -108,7 +108,9 @@ class NutritionGoalsController
         target == null ||
         targetDate == null ||
         activity == null) {
-      return NutritionGoalsSaveResult.failure('请先完善身体数据和目标');
+      return NutritionGoalsSaveResult.failure(
+        appL10n.nutritionIncompleteProfile,
+      );
     }
     state = NutritionGoalsReady(profile: current.profile, recommending: true);
     try {
@@ -116,7 +118,9 @@ class NutritionGoalsController
       final weight = body.currentWeight;
       if (weight == null) {
         state = NutritionGoalsReady(profile: current.profile);
-        return NutritionGoalsSaveResult.failure('请先完善身体数据和目标');
+        return NutritionGoalsSaveResult.failure(
+          appL10n.nutritionIncompleteProfile,
+        );
       }
       final recommendation = await ref
           .read(bodyRepositoryProvider)
@@ -138,7 +142,9 @@ class NutritionGoalsController
       return const NutritionGoalsSaveResult.success();
     } catch (error) {
       state = NutritionGoalsReady(profile: current.profile);
-      return NutritionGoalsSaveResult.failure(_message(error, '暂时无法获取推荐，请重试'));
+      return NutritionGoalsSaveResult.failure(
+        _message(error, appL10n.nutritionRecommendationFailed),
+      );
     }
   }
 

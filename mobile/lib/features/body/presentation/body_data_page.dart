@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/theme/app_theme.dart';
@@ -64,10 +66,10 @@ class BodyDataPage extends ConsumerWidget {
     final state = ref.watch(bodyDataControllerProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('身体数据'),
+        title: Text(appL10n.bodyTitle),
         actions: [
           IconButton(
-            tooltip: '编辑身体目标',
+            tooltip: appL10n.bodyEditProfile,
             icon: const Icon(Icons.edit_outlined),
             onPressed: () => Navigator.push(
               context,
@@ -80,7 +82,9 @@ class BodyDataPage extends ConsumerWidget {
         child: state.when(
           loading: () => const LoadingView(),
           error: (error, _) => ErrorView(
-            message: error is ApiException ? error.message : '加载失败，请重试',
+            message: error is ApiException
+                ? error.message
+                : appL10n.bodyProfileLoadFailed,
             onRetry: () => ref.invalidate(bodyDataControllerProvider),
           ),
           data: (data) => _content(context, ref, data),
@@ -100,15 +104,17 @@ class BodyDataPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('当前体重'),
+            Text(appL10n.bodyCurrentWeight),
             Text(
               data.body.currentWeight == null
-                  ? '还没有记录'
+                  ? appL10n.bodyNoWeight
                   : '${data.body.currentWeight!.weightKg} kg',
               style: const TextStyle(fontSize: 30, fontWeight: FontWeight.w700),
             ),
             if (data.body.currentWeight != null)
-              Text('BMI ${data.body.currentWeight!.bmi}'),
+              Text(
+                appL10n.bodyBmiValue(data.body.currentWeight!.bmi.toString()),
+              ),
           ],
         ),
       ),
@@ -117,21 +123,25 @@ class BodyDataPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('目标'),
+            Text(appL10n.bodyGoal),
             Text(
               data.body.targetWeightKg == null
-                  ? '还没有设置目标'
-                  : '目标体重 ${data.body.targetWeightKg} kg',
+                  ? appL10n.bodyNoGoal
+                  : appL10n.bodyTargetWeightValue(
+                      data.body.targetWeightKg.toString(),
+                    ),
             ),
             if (data.body.targetDate != null)
-              Text(
-                '目标日期 ${data.body.targetDate!.month}月${data.body.targetDate!.day}日',
-              ),
+              Text(appL10n.bodyTargetDateValue(_date(data.body.targetDate!))),
             if (data.body.weightDifferenceKg != null)
               Text(
                 data.body.weightDifferenceKg! < 0
-                    ? '距离目标还有 ${data.body.weightDifferenceKg!.abs()} kg'
-                    : '还需要增加 ${data.body.weightDifferenceKg} kg',
+                    ? appL10n.bodyWeightRemaining(
+                        data.body.weightDifferenceKg!.abs().toString(),
+                      )
+                    : appL10n.bodyWeightIncrease(
+                        data.body.weightDifferenceKg.toString(),
+                      ),
               ),
           ],
         ),
@@ -140,15 +150,24 @@ class BodyDataPage extends ConsumerWidget {
       Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('体重记录', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            appL10n.bodyWeightRecords,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           IconButton(
             onPressed: () => _add(context, ref),
             icon: const Icon(Icons.add),
-            tooltip: '记录体重',
+            tooltip: appL10n.bodyAddWeight,
           ),
         ],
       ),
-      if (data.weights.isEmpty) const EmptyView(message: '还没有体重记录'),
+      if (data.weights.isEmpty)
+        Column(
+          children: [
+            EmptyView(message: appL10n.bodyEmptyWeights),
+            Text(appL10n.bodyEmptyWeightsHint),
+          ],
+        ),
       if (data.weights.isNotEmpty)
         AppCard(
           child: SizedBox(
@@ -165,7 +184,7 @@ class BodyDataPage extends ConsumerWidget {
         (weight) => ListTile(
           title: Text('${weight.weightKg} kg'),
           subtitle: Text(
-            '${weight.measuredOn.month}月${weight.measuredOn.day}日 · BMI ${weight.bmi}',
+            '${_date(weight.measuredOn)} · ${appL10n.bodyBmiValue(weight.bmi.toString())}',
           ),
           trailing: IconButton(
             icon: const Icon(Icons.delete_outline),
@@ -213,7 +232,7 @@ class BodyDataPage extends ConsumerWidget {
             children: [
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text('日期：${measuredOn.month}月${measuredOn.day}日'),
+                title: Text(appL10n.bodyTargetDateValue(_date(measuredOn))),
                 trailing: const Icon(Icons.calendar_today_outlined),
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -235,8 +254,8 @@ class BodyDataPage extends ConsumerWidget {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(
-                  labelText: '体重',
+                decoration: InputDecoration(
+                  labelText: appL10n.bodyWeight,
                   suffixText: 'kg',
                 ),
               ),
@@ -262,16 +281,18 @@ class BodyDataPage extends ConsumerWidget {
                           content: Text(
                             error is ApiException
                                 ? existing == null
-                                      ? '这一天已经有体重记录，可以直接修改已有记录。'
-                                      : '这一天已经有体重记录，请选择其他日期。'
-                                : '保存失败，请重试',
+                                      ? appL10n.bodyDuplicateCreate
+                                      : appL10n.bodyDuplicateUpdate
+                                : appL10n.bodySaveFailed,
                           ),
                         ),
                       );
                     }
                   }
                 },
-                child: Text(existing == null ? '记录体重' : '保存修改'),
+                child: Text(
+                  existing == null ? appL10n.bodyAddWeight : appL10n.bodySave,
+                ),
               ),
             ],
           ),
@@ -289,16 +310,16 @@ class BodyDataPage extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('删除这条体重记录？'),
-        content: const Text('删除后无法恢复。'),
+        title: Text(appL10n.bodyDeleteTitle),
+        content: Text(appL10n.bodyDeleteDescription),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(appL10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('删除'),
+            child: Text(appL10n.bodyDelete),
           ),
         ],
       ),
@@ -309,6 +330,9 @@ class BodyDataPage extends ConsumerWidget {
           .deleteWeight(weight.id);
     }
   }
+
+  String _date(DateTime date) =>
+      DateFormat(appL10n.commonDateFormat, 'zh_CN').format(date);
 }
 
 class _WeightChartPainter extends CustomPainter {

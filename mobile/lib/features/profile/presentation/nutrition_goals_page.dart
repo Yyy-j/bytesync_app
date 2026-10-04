@@ -73,13 +73,17 @@ class _NutritionGoalsPageState extends ConsumerState<NutritionGoalsPage> {
           child: TextButton.icon(
             onPressed: state.recommending ? null : _recommend,
             icon: const Icon(Icons.auto_awesome_outlined),
-            label: Text(state.recommending ? '计算中…' : '根据身体目标重新计算'),
+            label: Text(
+              state.recommending
+                  ? appL10n.nutritionCalculating
+                  : appL10n.nutritionRecalculate,
+            ),
           ),
         ),
-        if (_recommendationError == '请先完善身体数据和目标')
+        if (_recommendationError == appL10n.nutritionIncompleteProfile)
           TextButton(
             onPressed: () => context.push('/profile/body/edit'),
-            child: const Text('完善身体数据和目标'),
+            child: Text(appL10n.nutritionCompleteProfile),
           ),
         SizedBox(height: AppSpacing.lg),
         AppCard(

@@ -1325,4 +1325,291 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trainingTargetPrefix => '目标：';
+
+  @override
+  String get onboardingTitle => '开始使用 BiteSync';
+
+  @override
+  String get onboardingBasicTitle => '先了解一下你';
+
+  @override
+  String get onboardingBasicDescription => '仅用于基础代谢估算';
+
+  @override
+  String get onboardingBirthYear => '出生年份';
+
+  @override
+  String get onboardingSex => '用于热量估算的生理参数';
+
+  @override
+  String get onboardingMale => '男性';
+
+  @override
+  String get onboardingFemale => '女性';
+
+  @override
+  String get onboardingHeight => '身高';
+
+  @override
+  String get onboardingCurrentWeight => '当前体重';
+
+  @override
+  String get onboardingGoalTitle => '你的目标';
+
+  @override
+  String get onboardingTargetWeight => '目标体重';
+
+  @override
+  String get onboardingTargetDate => '目标日期';
+
+  @override
+  String get onboardingTargetDatePrompt => '请选择目标日期';
+
+  @override
+  String get onboardingActivity => '活动量';
+
+  @override
+  String get onboardingSedentary => '久坐为主';
+
+  @override
+  String get onboardingLightActivity => '轻度活动';
+
+  @override
+  String get onboardingModerateActivity => '中等活动';
+
+  @override
+  String get onboardingHighActivity => '高活动量';
+
+  @override
+  String get onboardingVeryHighActivity => '非常高活动量';
+
+  @override
+  String get onboardingRecommendationTitle => '推荐每日目标';
+
+  @override
+  String get onboardingRecommendedCalories => '推荐热量';
+
+  @override
+  String get onboardingEditGoals => '调整目标';
+
+  @override
+  String get onboardingConfirmGoals => '确认目标';
+
+  @override
+  String get onboardingAdoptDate => '采用建议日期';
+
+  @override
+  String get onboardingAggressiveTitle => '这个目标速度有些快';
+
+  @override
+  String onboardingSuggestedDate(Object date) {
+    return '建议将目标日期调整为 $date';
+  }
+
+  @override
+  String get onboardingWhyTitle => '为什么是这个数字';
+
+  @override
+  String get onboardingBmr => '基础代谢';
+
+  @override
+  String get onboardingMaintenance => '维持热量';
+
+  @override
+  String get onboardingMethod => '计算方式';
+
+  @override
+  String get onboardingReadyTitle => '准备好了';
+
+  @override
+  String get onboardingDailyGoals => '每日目标';
+
+  @override
+  String get onboardingSubmit => '开始使用 BiteSync';
+
+  @override
+  String get onboardingSubmitting => '提交中…';
+
+  @override
+  String get onboardingManualGoals => '手动设置目标';
+
+  @override
+  String get onboardingUnderageDescription =>
+      '目前自动热量推荐仅适用于成年人，你仍然可以手动设置每日营养目标。';
+
+  @override
+  String get onboardingInvalidBasic => '请填写合理的身体资料';
+
+  @override
+  String get onboardingInvalidGoal => '请补充目标体重、日期和活动量';
+
+  @override
+  String get onboardingInvalidGoalTimeline => '体重变化目标的日期必须晚于今天';
+
+  @override
+  String get onboardingInvalidNutrition => '请填写有效的营养目标';
+
+  @override
+  String get onboardingRecommendationFailed => '暂时无法获取推荐，请重试';
+
+  @override
+  String get onboardingSubmitFailed => '提交失败，请重试';
+
+  @override
+  String get onboardingConflictRetry => '提交状态发生变化，请重试';
+
+  @override
+  String get bodyTitle => '身体数据';
+
+  @override
+  String get bodyEditProfile => '编辑身体目标';
+
+  @override
+  String get bodyCurrentWeight => '当前体重';
+
+  @override
+  String get bodyNoWeight => '还没有记录';
+
+  @override
+  String bodyBmiValue(Object value) {
+    return 'BMI $value';
+  }
+
+  @override
+  String get bodyGoal => '目标';
+
+  @override
+  String get bodyNoGoal => '还没有设置目标';
+
+  @override
+  String bodyTargetWeightValue(Object weight) {
+    return '目标体重 $weight kg';
+  }
+
+  @override
+  String bodyTargetDateValue(Object date) {
+    return '目标日期 $date';
+  }
+
+  @override
+  String bodyWeightRemaining(Object weight) {
+    return '距离目标还有 $weight kg';
+  }
+
+  @override
+  String bodyWeightIncrease(Object weight) {
+    return '还需要增加 $weight kg';
+  }
+
+  @override
+  String get bodyWeightRecords => '体重记录';
+
+  @override
+  String get bodyAddWeight => '记录体重';
+
+  @override
+  String get bodyEmptyWeights => '还没有体重记录';
+
+  @override
+  String get bodyEmptyWeightsHint => '记录第一笔后，就可以看到变化趋势。';
+
+  @override
+  String get bodyEditWeight => '编辑体重';
+
+  @override
+  String get bodyDate => '日期';
+
+  @override
+  String get bodyWeight => '体重';
+
+  @override
+  String get bodySave => '保存';
+
+  @override
+  String get bodyDuplicateCreate => '这一天已经有体重记录，可以直接修改已有记录。';
+
+  @override
+  String get bodyDuplicateUpdate => '这一天已经有体重记录，请选择其他日期。';
+
+  @override
+  String get bodySaveFailed => '保存失败，请重试';
+
+  @override
+  String get bodyDeleteTitle => '删除这条体重记录？';
+
+  @override
+  String get bodyDeleteDescription => '删除后无法恢复。';
+
+  @override
+  String get bodyDelete => '删除';
+
+  @override
+  String get bodyProfileInvalid => '请填写合理的身体资料和目标日期';
+
+  @override
+  String get bodyProfileSave => '保存修改';
+
+  @override
+  String get bodyProfileSaving => '保存中…';
+
+  @override
+  String get bodyProfileLoadFailed => '加载失败，请重试';
+
+  @override
+  String get bodyProfileSaveFailed => '保存失败，请重试';
+
+  @override
+  String recommendationCaloriesPerDay(Object calories) {
+    return '$calories kcal / 天';
+  }
+
+  @override
+  String recommendationMacros(Object carbs, Object fat, Object protein) {
+    return '蛋白质 ${protein}g · 碳水 ${carbs}g · 脂肪 ${fat}g';
+  }
+
+  @override
+  String recommendationAggressiveMessage(Object date) {
+    return '这个目标速度有些快，建议将目标日期调整到 $date。';
+  }
+
+  @override
+  String recommendationBmrValue(Object value) {
+    return '$value kcal';
+  }
+
+  @override
+  String recommendationMaintenanceValue(Object value) {
+    return '$value kcal';
+  }
+
+  @override
+  String get recommendationWhy => '为什么是这个数字？';
+
+  @override
+  String get recommendationAdjust => '调整目标';
+
+  @override
+  String get recommendationCollapseAdjust => '收起调整';
+
+  @override
+  String get recommendationApply => '使用这个目标';
+
+  @override
+  String get nutritionCalculating => '计算中…';
+
+  @override
+  String get nutritionRecalculate => '根据身体目标重新计算';
+
+  @override
+  String get nutritionCompleteProfile => '完善身体数据和目标';
+
+  @override
+  String get nutritionIncompleteProfile => '请先完善身体数据和目标';
+
+  @override
+  String get nutritionRecommendationFailed => '暂时无法获取推荐，请重试';
+
+  @override
+  String get commonDateFormat => 'M月d日';
 }

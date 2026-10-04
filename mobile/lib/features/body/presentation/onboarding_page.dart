@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:bytesync/l10n/l10n.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/theme/app_theme.dart';
@@ -11,6 +13,7 @@ import '../../auth/domain/auth_state.dart';
 import '../../profile/domain/user_profile.dart';
 import '../data/body_providers.dart';
 import '../domain/body_data.dart';
+import '../domain/body_validation.dart';
 
 class OnboardingPage extends ConsumerStatefulWidget {
   const OnboardingPage({super.key});
@@ -54,7 +57,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('开始使用 BiteSync')),
+    appBar: AppBar(title: Text(appL10n.onboardingTitle)),
     body: SafeArea(
       child: ListView(
         padding: EdgeInsets.all(AppSpacing.pagePadding),
@@ -78,54 +81,69 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     ),
   );
 
-  Widget _basicStep() => _section('先了解一下你', [
-    const Text('这些信息仅用于基础代谢估算。'),
-    _number('出生年份', _birthYear, hint: '例如 1998'),
-    _choice('用于热量估算的生理参数', _sex, {
-      '男性': 'male',
-      '女性': 'female',
+  Widget _basicStep() => _section(appL10n.onboardingBasicTitle, [
+    Text(appL10n.onboardingBasicDescription),
+    _number(appL10n.onboardingBirthYear, _birthYear, hint: '1998'),
+    _choice(appL10n.onboardingSex, _sex, {
+      appL10n.onboardingMale: 'male',
+      appL10n.onboardingFemale: 'female',
     }, (value) => setState(() => _sex = value)),
-    _number('身高', _height, suffix: 'cm'),
-    _number('当前体重', _currentWeight, suffix: 'kg'),
-    _nextButton('下一步', _validateBasic),
+    _number(appL10n.onboardingHeight, _height, suffix: 'cm'),
+    _number(appL10n.onboardingCurrentWeight, _currentWeight, suffix: 'kg'),
+    _nextButton(appL10n.commonContinue, _validateBasic),
   ]);
 
-  Widget _goalStep() => _section('你的目标', [
-    _number('目标体重', _targetWeight, suffix: 'kg'),
+  Widget _goalStep() => _section(appL10n.onboardingGoalTitle, [
+    _number(appL10n.onboardingTargetWeight, _targetWeight, suffix: 'kg'),
     ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(
-        _targetDate == null ? '希望实现目标的日期' : '目标日期：${_date(_targetDate!)}',
+        _targetDate == null
+            ? appL10n.onboardingTargetDatePrompt
+            : appL10n.bodyTargetDateValue(_date(_targetDate!)),
       ),
       trailing: const Icon(Icons.calendar_today_outlined),
       onTap: _pickDate,
     ),
-    _choice('活动量', _activity, const {
-      '久坐为主': 'sedentary',
-      '轻度活动': 'light',
-      '中等活动': 'moderate',
-      '高活动量': 'high',
-      '非常高的活动量': 'very_high',
+    _choice(appL10n.onboardingActivity, _activity, {
+      appL10n.onboardingSedentary: 'sedentary',
+      appL10n.onboardingLightActivity: 'light',
+      appL10n.onboardingModerateActivity: 'moderate',
+      appL10n.onboardingHighActivity: 'high',
+      appL10n.onboardingVeryHighActivity: 'very_high',
     }, (value) => setState(() => _activity = value)),
-    _nextButton('查看推荐', _loadRecommendation),
-    TextButton(onPressed: _manualGoals, child: const Text('手动填写目标')),
+    if (_birthYear.text.isEmpty ||
+        int.tryParse(_birthYear.text) == null ||
+        int.parse(_birthYear.text) > DateTime.now().year - 18)
+      Text(appL10n.onboardingUnderageDescription),
+    _nextButton(appL10n.onboardingRecommendationTitle, _loadRecommendation),
+    TextButton(
+      onPressed: _manualGoals,
+      child: Text(appL10n.onboardingManualGoals),
+    ),
   ]);
 
   Widget _recommendationStep() {
     final recommendation = _recommendation;
     if (recommendation == null) return const LoadingView();
-    return _section('推荐结果', [
+    return _section(appL10n.onboardingRecommendationTitle, [
       AppCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('推荐每日热量'),
+            Text(appL10n.onboardingRecommendedCalories),
             Text(
-              '${recommendation.calories.round()} kcal',
+              appL10n.recommendationCaloriesPerDay(
+                recommendation.calories.round().toString(),
+              ),
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
             ),
             Text(
-              '蛋白质 ${recommendation.protein.round()}g · 碳水 ${recommendation.carbs.round()}g · 脂肪 ${recommendation.fat.round()}g',
+              appL10n.recommendationMacros(
+                recommendation.protein.round().toString(),
+                recommendation.carbs.round().toString(),
+                recommendation.fat.round().toString(),
+              ),
             ),
           ],
         ),
@@ -135,9 +153,13 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('这个目标速度有些快'),
+              Text(appL10n.onboardingAggressiveTitle),
               Text(
-                '按照更稳妥的节奏，建议把目标日期调整到 ${recommendation.recommendedTargetDate == null ? '稍后' : _date(recommendation.recommendedTargetDate!)}。',
+                appL10n.onboardingSuggestedDate(
+                  recommendation.recommendedTargetDate == null
+                      ? '-'
+                      : _date(recommendation.recommendedTargetDate!),
+                ),
               ),
               TextButton(
                 onPressed: recommendation.recommendedTargetDate == null
@@ -149,24 +171,35 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                         );
                         _loadRecommendation();
                       },
-                child: const Text('采用建议日期'),
+                child: Text(appL10n.onboardingAdoptDate),
               ),
             ],
           ),
         ),
-      TextButton(onPressed: _editGoals, child: const Text('调整目标')),
-      _nextButton('确认目标', () => setState(() => _step = 3)),
+      TextButton(
+        onPressed: _editGoals,
+        child: Text(appL10n.onboardingEditGoals),
+      ),
+      _nextButton(
+        appL10n.onboardingConfirmGoals,
+        () => setState(() => _step = 3),
+      ),
     ]);
   }
 
-  Widget _confirmStep() => _section('准备好了', [
-    Text('当前体重：${_currentWeight.text} kg'),
-    Text('目标体重：${_targetWeight.text} kg'),
-    Text('目标日期：${_targetDate == null ? '-' : _date(_targetDate!)}'),
+  Widget _confirmStep() => _section(appL10n.onboardingReadyTitle, [
+    Text('${appL10n.onboardingCurrentWeight}：${_currentWeight.text} kg'),
+    Text('${appL10n.onboardingTargetWeight}：${_targetWeight.text} kg'),
     Text(
-      '每日目标：${_calories.text} kcal · P ${_protein.text}g · C ${_carbs.text}g · F ${_fat.text}g',
+      '${appL10n.onboardingTargetDate}：${_targetDate == null ? '-' : _date(_targetDate!)}',
     ),
-    _nextButton(_busy ? '提交中…' : '开始使用 BiteSync', _submit),
+    Text(
+      '${appL10n.onboardingDailyGoals}：${_calories.text} kcal · P ${_protein.text}g · C ${_carbs.text}g · F ${_fat.text}g',
+    ),
+    _nextButton(
+      _busy ? appL10n.onboardingSubmitting : appL10n.onboardingSubmit,
+      _submit,
+    ),
   ]);
 
   Widget _section(String title, List<Widget> children) => Column(
@@ -233,7 +266,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         weight == null ||
         weight < 20 ||
         weight > 400) {
-      setState(() => _error = '请填写合理的身体资料');
+      setState(() => _error = appL10n.onboardingInvalidBasic);
       return;
     }
     setState(() {
@@ -259,7 +292,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         target > 400 ||
         _targetDate == null ||
         _activity == null) {
-      setState(() => _error = '请补充目标体重、日期和活动量');
+      setState(() => _error = appL10n.onboardingInvalidGoal);
+      return null;
+    }
+    if (!isValidGoalTimeline(
+      currentWeight: double.parse(_currentWeight.text),
+      targetWeight: target,
+      targetDate: _targetDate!,
+    )) {
+      setState(() => _error = appL10n.onboardingInvalidGoalTimeline);
       return null;
     }
     return BodyInput(
@@ -276,7 +317,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   Future<void> _loadRecommendation() async {
     final birthYear = int.tryParse(_birthYear.text);
     if (birthYear == null || birthYear > DateTime.now().year - 18) {
-      setState(() => _error = '未满 18 岁或年龄无法确认，请手动填写营养目标');
+      setState(() => _error = appL10n.onboardingUnderageDescription);
       return;
     }
     final input = _input();
@@ -297,7 +338,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       });
     } catch (error) {
       setState(
-        () => _error = error is ApiException ? error.message : '暂时无法获取推荐，请重试',
+        () => _error = error is ApiException
+            ? error.message
+            : appL10n.onboardingRecommendationFailed,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -328,13 +371,17 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _number('热量', _calories, suffix: 'kcal'),
-          _number('蛋白质', _protein, suffix: 'g'),
-          _number('碳水', _carbs, suffix: 'g'),
-          _number('脂肪', _fat, suffix: 'g'),
+          _number(
+            appL10n.onboardingRecommendedCalories,
+            _calories,
+            suffix: 'kcal',
+          ),
+          _number(appL10n.commonProtein, _protein, suffix: 'g'),
+          _number(appL10n.macroCarbs, _carbs, suffix: 'g'),
+          _number(appL10n.commonFat, _fat, suffix: 'g'),
           FilledButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('完成'),
+            child: Text(appL10n.commonSave),
           ),
         ],
       ),
@@ -356,7 +403,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       goals.carbs,
       goals.fat,
     ].any((value) => value <= 0)) {
-      setState(() => _error = '请填写有效的营养目标');
+      setState(() => _error = appL10n.onboardingInvalidNutrition);
       return;
     }
     setState(() {
@@ -369,19 +416,24 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       if (mounted) context.go('/');
     } on ConflictException {
       await ref.read(authControllerProvider.notifier).refreshCurrentUser();
-      if (ref.read(authControllerProvider) is AuthAuthenticated) {
+      final authState = ref.read(authControllerProvider);
+      if (authState is AuthAuthenticated &&
+          authState.user.onboardingCompleted) {
         if (mounted) context.go('/');
       } else {
-        setState(() => _error = '提交状态发生变化，请重试');
+        setState(() => _error = appL10n.onboardingConflictRetry);
       }
     } catch (error) {
       setState(
-        () => _error = error is ApiException ? error.message : '提交失败，请重试',
+        () => _error = error is ApiException
+            ? error.message
+            : appL10n.onboardingSubmitFailed,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  String _date(DateTime date) => '${date.month}月${date.day}日';
+  String _date(DateTime date) =>
+      DateFormat(appL10n.commonDateFormat, 'zh_CN').format(date);
 }

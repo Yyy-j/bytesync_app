@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:bytesync/l10n/l10n.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/network/api_exception.dart';
 import '../../../core/theme/app_theme.dart';
@@ -7,6 +9,7 @@ import '../../../shared/widgets/state_views.dart';
 import '../../auth/presentation/auth_controller.dart';
 import '../../profile/data/user_providers.dart';
 import '../../profile/domain/user_profile.dart';
+import '../domain/body_validation.dart';
 import 'body_data_page.dart';
 
 class BodyProfileEditPage extends ConsumerStatefulWidget {
@@ -40,14 +43,14 @@ class _BodyProfileEditPageState extends ConsumerState<BodyProfileEditPage> {
     final profile = _profile;
     if (profile == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('编辑身体目标')),
+        appBar: AppBar(title: Text(appL10n.bodyEditProfile)),
         body: FutureBuilder<UserProfile>(
           future: ref.read(userRepositoryProvider).getProfile(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               if (snapshot.hasError) {
                 return ErrorView(
-                  message: '加载失败，请重试',
+                  message: appL10n.bodyProfileLoadFailed,
                   onRetry: () => setState(() {}),
                 );
               }
@@ -60,7 +63,7 @@ class _BodyProfileEditPageState extends ConsumerState<BodyProfileEditPage> {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: const Text('编辑身体目标')),
+      appBar: AppBar(title: Text(appL10n.bodyEditProfile)),
       body: _form(profile),
     );
   }
@@ -79,29 +82,29 @@ class _BodyProfileEditPageState extends ConsumerState<BodyProfileEditPage> {
   Widget _form(UserProfile profile) => ListView(
     padding: EdgeInsets.all(AppSpacing.pagePadding),
     children: [
-      _number('出生年份', _birthYear),
-      _choice('用于热量估算的生理参数', _sex, {
-        '男性': 'male',
-        '女性': 'female',
+      _number(appL10n.onboardingBirthYear, _birthYear),
+      _choice(appL10n.onboardingSex, _sex, {
+        appL10n.onboardingMale: 'male',
+        appL10n.onboardingFemale: 'female',
       }, (value) => setState(() => _sex = value)),
-      _number('身高', _height, suffix: 'cm'),
-      _number('目标体重', _targetWeight, suffix: 'kg'),
+      _number(appL10n.onboardingHeight, _height, suffix: 'cm'),
+      _number(appL10n.onboardingTargetWeight, _targetWeight, suffix: 'kg'),
       ListTile(
         contentPadding: EdgeInsets.zero,
         title: Text(
           _targetDate == null
-              ? '选择目标日期'
-              : '目标日期：${_targetDate!.month}月${_targetDate!.day}日',
+              ? appL10n.onboardingTargetDatePrompt
+              : appL10n.bodyTargetDateValue(_date(_targetDate!)),
         ),
         trailing: const Icon(Icons.calendar_today_outlined),
         onTap: _pickDate,
       ),
-      _choice('活动量', _activity, const {
-        '久坐为主': 'sedentary',
-        '轻度活动': 'light',
-        '中等活动': 'moderate',
-        '高活动量': 'high',
-        '非常高的活动量': 'very_high',
+      _choice(appL10n.onboardingActivity, _activity, {
+        appL10n.onboardingSedentary: 'sedentary',
+        appL10n.onboardingLightActivity: 'light',
+        appL10n.onboardingModerateActivity: 'moderate',
+        appL10n.onboardingHighActivity: 'high',
+        appL10n.onboardingVeryHighActivity: 'very_high',
       }, (value) => setState(() => _activity = value)),
       if (_error != null)
         Text(
@@ -111,7 +114,9 @@ class _BodyProfileEditPageState extends ConsumerState<BodyProfileEditPage> {
       SizedBox(height: AppSpacing.md),
       FilledButton(
         onPressed: _saving ? null : () => _save(profile),
-        child: Text(_saving ? '保存中…' : '保存修改'),
+        child: Text(
+          _saving ? appL10n.bodyProfileSaving : appL10n.bodyProfileSave,
+        ),
       ),
     ],
   );
@@ -165,8 +170,6 @@ class _BodyProfileEditPageState extends ConsumerState<BodyProfileEditPage> {
         ?.body
         .currentWeight
         ?.weightKg;
-    final changing =
-        current != null && target != null && (target - current).abs() > 0.1;
     if (birth == null ||
         birth < 1900 ||
         birth > DateTime.now().year ||
@@ -179,10 +182,14 @@ class _BodyProfileEditPageState extends ConsumerState<BodyProfileEditPage> {
         target > 400 ||
         _activity == null ||
         _targetDate == null ||
-        (changing &&
-            !_targetDate!.isAfter(today) &&
-            !DateUtils.isSameDay(_targetDate!, today))) {
-      setState(() => _error = '请填写合理的身体资料和目标日期');
+        (current != null &&
+            !isValidGoalTimeline(
+              currentWeight: current,
+              targetWeight: target,
+              targetDate: _targetDate!,
+              today: today,
+            ))) {
+      setState(() => _error = appL10n.bodyProfileInvalid);
       return;
     }
     setState(() {
@@ -209,11 +216,16 @@ class _BodyProfileEditPageState extends ConsumerState<BodyProfileEditPage> {
     } catch (error) {
       if (mounted) {
         setState(
-          () => _error = error is ApiException ? error.message : '保存失败，请重试',
+          () => _error = error is ApiException
+              ? error.message
+              : appL10n.bodyProfileSaveFailed,
         );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
+
+  String _date(DateTime date) =>
+      DateFormat(appL10n.commonDateFormat, 'zh_CN').format(date);
 }

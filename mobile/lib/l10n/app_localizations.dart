@@ -2541,6 +2541,534 @@ abstract class AppLocalizations {
   /// In zh, this message translates to:
   /// **'目标：'**
   String get trainingTargetPrefix;
+
+  /// No description provided for @onboardingTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始使用 BiteSync'**
+  String get onboardingTitle;
+
+  /// No description provided for @onboardingBasicTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'先了解一下你'**
+  String get onboardingBasicTitle;
+
+  /// No description provided for @onboardingBasicDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'仅用于基础代谢估算'**
+  String get onboardingBasicDescription;
+
+  /// No description provided for @onboardingBirthYear.
+  ///
+  /// In zh, this message translates to:
+  /// **'出生年份'**
+  String get onboardingBirthYear;
+
+  /// No description provided for @onboardingSex.
+  ///
+  /// In zh, this message translates to:
+  /// **'用于热量估算的生理参数'**
+  String get onboardingSex;
+
+  /// No description provided for @onboardingMale.
+  ///
+  /// In zh, this message translates to:
+  /// **'男性'**
+  String get onboardingMale;
+
+  /// No description provided for @onboardingFemale.
+  ///
+  /// In zh, this message translates to:
+  /// **'女性'**
+  String get onboardingFemale;
+
+  /// No description provided for @onboardingHeight.
+  ///
+  /// In zh, this message translates to:
+  /// **'身高'**
+  String get onboardingHeight;
+
+  /// No description provided for @onboardingCurrentWeight.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前体重'**
+  String get onboardingCurrentWeight;
+
+  /// No description provided for @onboardingGoalTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'你的目标'**
+  String get onboardingGoalTitle;
+
+  /// No description provided for @onboardingTargetWeight.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标体重'**
+  String get onboardingTargetWeight;
+
+  /// No description provided for @onboardingTargetDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标日期'**
+  String get onboardingTargetDate;
+
+  /// No description provided for @onboardingTargetDatePrompt.
+  ///
+  /// In zh, this message translates to:
+  /// **'请选择目标日期'**
+  String get onboardingTargetDatePrompt;
+
+  /// No description provided for @onboardingActivity.
+  ///
+  /// In zh, this message translates to:
+  /// **'活动量'**
+  String get onboardingActivity;
+
+  /// No description provided for @onboardingSedentary.
+  ///
+  /// In zh, this message translates to:
+  /// **'久坐为主'**
+  String get onboardingSedentary;
+
+  /// No description provided for @onboardingLightActivity.
+  ///
+  /// In zh, this message translates to:
+  /// **'轻度活动'**
+  String get onboardingLightActivity;
+
+  /// No description provided for @onboardingModerateActivity.
+  ///
+  /// In zh, this message translates to:
+  /// **'中等活动'**
+  String get onboardingModerateActivity;
+
+  /// No description provided for @onboardingHighActivity.
+  ///
+  /// In zh, this message translates to:
+  /// **'高活动量'**
+  String get onboardingHighActivity;
+
+  /// No description provided for @onboardingVeryHighActivity.
+  ///
+  /// In zh, this message translates to:
+  /// **'非常高活动量'**
+  String get onboardingVeryHighActivity;
+
+  /// No description provided for @onboardingRecommendationTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'推荐每日目标'**
+  String get onboardingRecommendationTitle;
+
+  /// No description provided for @onboardingRecommendedCalories.
+  ///
+  /// In zh, this message translates to:
+  /// **'推荐热量'**
+  String get onboardingRecommendedCalories;
+
+  /// No description provided for @onboardingEditGoals.
+  ///
+  /// In zh, this message translates to:
+  /// **'调整目标'**
+  String get onboardingEditGoals;
+
+  /// No description provided for @onboardingConfirmGoals.
+  ///
+  /// In zh, this message translates to:
+  /// **'确认目标'**
+  String get onboardingConfirmGoals;
+
+  /// No description provided for @onboardingAdoptDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'采用建议日期'**
+  String get onboardingAdoptDate;
+
+  /// No description provided for @onboardingAggressiveTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'这个目标速度有些快'**
+  String get onboardingAggressiveTitle;
+
+  /// No description provided for @onboardingSuggestedDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'建议将目标日期调整为 {date}'**
+  String onboardingSuggestedDate(Object date);
+
+  /// No description provided for @onboardingWhyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'为什么是这个数字'**
+  String get onboardingWhyTitle;
+
+  /// No description provided for @onboardingBmr.
+  ///
+  /// In zh, this message translates to:
+  /// **'基础代谢'**
+  String get onboardingBmr;
+
+  /// No description provided for @onboardingMaintenance.
+  ///
+  /// In zh, this message translates to:
+  /// **'维持热量'**
+  String get onboardingMaintenance;
+
+  /// No description provided for @onboardingMethod.
+  ///
+  /// In zh, this message translates to:
+  /// **'计算方式'**
+  String get onboardingMethod;
+
+  /// No description provided for @onboardingReadyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'准备好了'**
+  String get onboardingReadyTitle;
+
+  /// No description provided for @onboardingDailyGoals.
+  ///
+  /// In zh, this message translates to:
+  /// **'每日目标'**
+  String get onboardingDailyGoals;
+
+  /// No description provided for @onboardingSubmit.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始使用 BiteSync'**
+  String get onboardingSubmit;
+
+  /// No description provided for @onboardingSubmitting.
+  ///
+  /// In zh, this message translates to:
+  /// **'提交中…'**
+  String get onboardingSubmitting;
+
+  /// No description provided for @onboardingManualGoals.
+  ///
+  /// In zh, this message translates to:
+  /// **'手动设置目标'**
+  String get onboardingManualGoals;
+
+  /// No description provided for @onboardingUnderageDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'目前自动热量推荐仅适用于成年人，你仍然可以手动设置每日营养目标。'**
+  String get onboardingUnderageDescription;
+
+  /// No description provided for @onboardingInvalidBasic.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写合理的身体资料'**
+  String get onboardingInvalidBasic;
+
+  /// No description provided for @onboardingInvalidGoal.
+  ///
+  /// In zh, this message translates to:
+  /// **'请补充目标体重、日期和活动量'**
+  String get onboardingInvalidGoal;
+
+  /// No description provided for @onboardingInvalidGoalTimeline.
+  ///
+  /// In zh, this message translates to:
+  /// **'体重变化目标的日期必须晚于今天'**
+  String get onboardingInvalidGoalTimeline;
+
+  /// No description provided for @onboardingInvalidNutrition.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写有效的营养目标'**
+  String get onboardingInvalidNutrition;
+
+  /// No description provided for @onboardingRecommendationFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂时无法获取推荐，请重试'**
+  String get onboardingRecommendationFailed;
+
+  /// No description provided for @onboardingSubmitFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'提交失败，请重试'**
+  String get onboardingSubmitFailed;
+
+  /// No description provided for @onboardingConflictRetry.
+  ///
+  /// In zh, this message translates to:
+  /// **'提交状态发生变化，请重试'**
+  String get onboardingConflictRetry;
+
+  /// No description provided for @bodyTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'身体数据'**
+  String get bodyTitle;
+
+  /// No description provided for @bodyEditProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑身体目标'**
+  String get bodyEditProfile;
+
+  /// No description provided for @bodyCurrentWeight.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前体重'**
+  String get bodyCurrentWeight;
+
+  /// No description provided for @bodyNoWeight.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有记录'**
+  String get bodyNoWeight;
+
+  /// No description provided for @bodyBmiValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'BMI {value}'**
+  String bodyBmiValue(Object value);
+
+  /// No description provided for @bodyGoal.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标'**
+  String get bodyGoal;
+
+  /// No description provided for @bodyNoGoal.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有设置目标'**
+  String get bodyNoGoal;
+
+  /// No description provided for @bodyTargetWeightValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标体重 {weight} kg'**
+  String bodyTargetWeightValue(Object weight);
+
+  /// No description provided for @bodyTargetDateValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'目标日期 {date}'**
+  String bodyTargetDateValue(Object date);
+
+  /// No description provided for @bodyWeightRemaining.
+  ///
+  /// In zh, this message translates to:
+  /// **'距离目标还有 {weight} kg'**
+  String bodyWeightRemaining(Object weight);
+
+  /// No description provided for @bodyWeightIncrease.
+  ///
+  /// In zh, this message translates to:
+  /// **'还需要增加 {weight} kg'**
+  String bodyWeightIncrease(Object weight);
+
+  /// No description provided for @bodyWeightRecords.
+  ///
+  /// In zh, this message translates to:
+  /// **'体重记录'**
+  String get bodyWeightRecords;
+
+  /// No description provided for @bodyAddWeight.
+  ///
+  /// In zh, this message translates to:
+  /// **'记录体重'**
+  String get bodyAddWeight;
+
+  /// No description provided for @bodyEmptyWeights.
+  ///
+  /// In zh, this message translates to:
+  /// **'还没有体重记录'**
+  String get bodyEmptyWeights;
+
+  /// No description provided for @bodyEmptyWeightsHint.
+  ///
+  /// In zh, this message translates to:
+  /// **'记录第一笔后，就可以看到变化趋势。'**
+  String get bodyEmptyWeightsHint;
+
+  /// No description provided for @bodyEditWeight.
+  ///
+  /// In zh, this message translates to:
+  /// **'编辑体重'**
+  String get bodyEditWeight;
+
+  /// No description provided for @bodyDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'日期'**
+  String get bodyDate;
+
+  /// No description provided for @bodyWeight.
+  ///
+  /// In zh, this message translates to:
+  /// **'体重'**
+  String get bodyWeight;
+
+  /// No description provided for @bodySave.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存'**
+  String get bodySave;
+
+  /// No description provided for @bodyDuplicateCreate.
+  ///
+  /// In zh, this message translates to:
+  /// **'这一天已经有体重记录，可以直接修改已有记录。'**
+  String get bodyDuplicateCreate;
+
+  /// No description provided for @bodyDuplicateUpdate.
+  ///
+  /// In zh, this message translates to:
+  /// **'这一天已经有体重记录，请选择其他日期。'**
+  String get bodyDuplicateUpdate;
+
+  /// No description provided for @bodySaveFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败，请重试'**
+  String get bodySaveFailed;
+
+  /// No description provided for @bodyDeleteTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除这条体重记录？'**
+  String get bodyDeleteTitle;
+
+  /// No description provided for @bodyDeleteDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除后无法恢复。'**
+  String get bodyDeleteDescription;
+
+  /// No description provided for @bodyDelete.
+  ///
+  /// In zh, this message translates to:
+  /// **'删除'**
+  String get bodyDelete;
+
+  /// No description provided for @bodyProfileInvalid.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写合理的身体资料和目标日期'**
+  String get bodyProfileInvalid;
+
+  /// No description provided for @bodyProfileSave.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存修改'**
+  String get bodyProfileSave;
+
+  /// No description provided for @bodyProfileSaving.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存中…'**
+  String get bodyProfileSaving;
+
+  /// No description provided for @bodyProfileLoadFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'加载失败，请重试'**
+  String get bodyProfileLoadFailed;
+
+  /// No description provided for @bodyProfileSaveFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'保存失败，请重试'**
+  String get bodyProfileSaveFailed;
+
+  /// No description provided for @recommendationCaloriesPerDay.
+  ///
+  /// In zh, this message translates to:
+  /// **'{calories} kcal / 天'**
+  String recommendationCaloriesPerDay(Object calories);
+
+  /// No description provided for @recommendationMacros.
+  ///
+  /// In zh, this message translates to:
+  /// **'蛋白质 {protein}g · 碳水 {carbs}g · 脂肪 {fat}g'**
+  String recommendationMacros(Object carbs, Object fat, Object protein);
+
+  /// No description provided for @recommendationAggressiveMessage.
+  ///
+  /// In zh, this message translates to:
+  /// **'这个目标速度有些快，建议将目标日期调整到 {date}。'**
+  String recommendationAggressiveMessage(Object date);
+
+  /// No description provided for @recommendationBmrValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{value} kcal'**
+  String recommendationBmrValue(Object value);
+
+  /// No description provided for @recommendationMaintenanceValue.
+  ///
+  /// In zh, this message translates to:
+  /// **'{value} kcal'**
+  String recommendationMaintenanceValue(Object value);
+
+  /// No description provided for @recommendationWhy.
+  ///
+  /// In zh, this message translates to:
+  /// **'为什么是这个数字？'**
+  String get recommendationWhy;
+
+  /// No description provided for @recommendationAdjust.
+  ///
+  /// In zh, this message translates to:
+  /// **'调整目标'**
+  String get recommendationAdjust;
+
+  /// No description provided for @recommendationCollapseAdjust.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起调整'**
+  String get recommendationCollapseAdjust;
+
+  /// No description provided for @recommendationApply.
+  ///
+  /// In zh, this message translates to:
+  /// **'使用这个目标'**
+  String get recommendationApply;
+
+  /// No description provided for @nutritionCalculating.
+  ///
+  /// In zh, this message translates to:
+  /// **'计算中…'**
+  String get nutritionCalculating;
+
+  /// No description provided for @nutritionRecalculate.
+  ///
+  /// In zh, this message translates to:
+  /// **'根据身体目标重新计算'**
+  String get nutritionRecalculate;
+
+  /// No description provided for @nutritionCompleteProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'完善身体数据和目标'**
+  String get nutritionCompleteProfile;
+
+  /// No description provided for @nutritionIncompleteProfile.
+  ///
+  /// In zh, this message translates to:
+  /// **'请先完善身体数据和目标'**
+  String get nutritionIncompleteProfile;
+
+  /// No description provided for @nutritionRecommendationFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂时无法获取推荐，请重试'**
+  String get nutritionRecommendationFailed;
+
+  /// No description provided for @commonDateFormat.
+  ///
+  /// In zh, this message translates to:
+  /// **'M月d日'**
+  String get commonDateFormat;
 }
 
 class _AppLocalizationsDelegate
