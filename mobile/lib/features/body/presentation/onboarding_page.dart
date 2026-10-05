@@ -112,10 +112,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       appL10n.onboardingHighActivity: 'high',
       appL10n.onboardingVeryHighActivity: 'very_high',
     }, (value) => setState(() => _activity = value)),
-    if (_birthYear.text.isEmpty ||
-        int.tryParse(_birthYear.text) == null ||
-        int.parse(_birthYear.text) > DateTime.now().year - 18)
-      Text(appL10n.onboardingUnderageDescription),
+    if (!_canUseRecommendation()) Text(appL10n.onboardingUnderageDescription),
     _nextButton(appL10n.onboardingRecommendationTitle, _loadRecommendation),
     TextButton(
       onPressed: _manualGoals,
@@ -177,13 +174,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           ),
         ),
       TextButton(
-        onPressed: _editGoals,
+        onPressed: () => _showGoalsEditor(advanceToConfirmation: false),
         child: Text(appL10n.onboardingEditGoals),
       ),
-      _nextButton(
-        appL10n.onboardingConfirmGoals,
-        () => setState(() => _step = 3),
-      ),
+      _nextButton(appL10n.onboardingConfirmGoals, _confirmGoals),
     ]);
   }
 
@@ -195,6 +189,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     ),
     Text(
       '${appL10n.onboardingDailyGoals}：${_calories.text} kcal · P ${_protein.text}g · C ${_carbs.text}g · F ${_fat.text}g',
+    ),
+    TextButton(
+      onPressed: () => _showGoalsEditor(advanceToConfirmation: false),
+      child: Text(appL10n.onboardingEditGoals),
     ),
     _nextButton(
       _busy ? appL10n.onboardingSubmitting : appL10n.onboardingSubmit,
@@ -316,7 +314,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
 
   Future<void> _loadRecommendation() async {
     final birthYear = int.tryParse(_birthYear.text);
-    if (birthYear == null || birthYear > DateTime.now().year - 18) {
+    if (birthYear == null || !canUseAdultRecommendation(birthYear)) {
       setState(() => _error = appL10n.onboardingUnderageDescription);
       return;
     }
@@ -347,62 +345,106 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     }
   }
 
-  void _manualGoals() {
+  bool _canUseRecommendation() {
+    final birthYear = int.tryParse(_birthYear.text);
+    return birthYear != null && canUseAdultRecommendation(birthYear);
+  }
+
+  NutritionGoals? _nutritionGoals() {
+    final values = [
+      _calories,
+      _protein,
+      _carbs,
+      _fat,
+    ].map((controller) => double.tryParse(controller.text)).toList();
+    if (values.any((value) => value == null || !value.isFinite || value <= 0)) {
+      return null;
+    }
+    return NutritionGoals(
+      calories: values[0]!,
+      protein: values[1]!,
+      carbs: values[2]!,
+      fat: values[3]!,
+    );
+  }
+
+  Future<void> _manualGoals() => _showGoalsEditor(advanceToConfirmation: true);
+
+  void _confirmGoals() {
+    if (_nutritionGoals() == null) {
+      setState(() => _error = appL10n.onboardingInvalidNutrition);
+      return;
+    }
     setState(() {
       _error = null;
-      _calories.clear();
-      _protein.clear();
-      _carbs.clear();
-      _fat.clear();
       _step = 3;
     });
   }
 
-  void _editGoals() => showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    builder: (context) => Padding(
-      padding: EdgeInsets.fromLTRB(
-        24,
-        24,
-        24,
-        MediaQuery.viewInsetsOf(context).bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _number(
-            appL10n.onboardingRecommendedCalories,
-            _calories,
-            suffix: 'kcal',
+  Future<void> _showGoalsEditor({required bool advanceToConfirmation}) async {
+    String? validationError;
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.viewInsetsOf(context).bottom + 24,
           ),
-          _number(appL10n.commonProtein, _protein, suffix: 'g'),
-          _number(appL10n.macroCarbs, _carbs, suffix: 'g'),
-          _number(appL10n.commonFat, _fat, suffix: 'g'),
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(appL10n.commonSave),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _number(
+                  appL10n.onboardingRecommendedCalories,
+                  _calories,
+                  suffix: 'kcal',
+                ),
+                _number(appL10n.commonProtein, _protein, suffix: 'g'),
+                _number(appL10n.macroCarbs, _carbs, suffix: 'g'),
+                _number(appL10n.commonFat, _fat, suffix: 'g'),
+                if (validationError != null)
+                  Text(
+                    validationError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                FilledButton(
+                  onPressed: () {
+                    if (_nutritionGoals() == null) {
+                      setSheetState(
+                        () => validationError =
+                            appL10n.onboardingInvalidNutrition,
+                      );
+                      return;
+                    }
+                    Navigator.pop(sheetContext, true);
+                  },
+                  child: Text(appL10n.commonSave),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
-    ),
-  );
+    );
+    if (saved == true && mounted) {
+      setState(() {
+        _error = null;
+        if (advanceToConfirmation) _step = 3;
+      });
+    }
+  }
 
   Future<void> _submit() async {
     final input = _input();
     if (input == null) return;
-    final goals = NutritionGoals(
-      calories: double.tryParse(_calories.text) ?? 0,
-      protein: double.tryParse(_protein.text) ?? 0,
-      carbs: double.tryParse(_carbs.text) ?? 0,
-      fat: double.tryParse(_fat.text) ?? 0,
-    );
-    if ([
-      goals.calories,
-      goals.protein,
-      goals.carbs,
-      goals.fat,
-    ].any((value) => value <= 0)) {
+    final goals = _nutritionGoals();
+    if (goals == null) {
       setState(() => _error = appL10n.onboardingInvalidNutrition);
       return;
     }
