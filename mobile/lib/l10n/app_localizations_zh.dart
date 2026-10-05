@@ -1460,6 +1460,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingSubmitFailed => '提交失败，请重试';
 
   @override
+  String get onboardingServiceUnavailable => '服务暂时不可用，请稍后重试。';
+
+  @override
   String get onboardingConflictRetry => '提交状态发生变化，请重试';
 
   @override

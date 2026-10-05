@@ -490,6 +490,7 @@
   "onboardingRecommendationFailed": "暂时无法获取推荐，请重试",
   "recommendationUnavailable": "当前服务器暂不支持热量推荐，请确认服务已更新后重试。你仍可手动设置目标并继续。",
   "onboardingSubmitFailed": "提交失败，请重试",
+  "onboardingServiceUnavailable": "服务暂时不可用，请稍后重试。",
   "onboardingConflictRetry": "提交状态发生变化，请重试",
   "bodyTitle": "身体数据",
   "bodyEditProfile": "编辑身体目标",

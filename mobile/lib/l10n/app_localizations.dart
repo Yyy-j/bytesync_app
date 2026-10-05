@@ -2800,6 +2800,12 @@ abstract class AppLocalizations {
   /// **'提交失败，请重试'**
   String get onboardingSubmitFailed;
 
+  /// No description provided for @onboardingServiceUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'服务暂时不可用，请稍后重试。'**
+  String get onboardingServiceUnavailable;
+
   /// No description provided for @onboardingConflictRetry.
   ///
   /// In zh, this message translates to:

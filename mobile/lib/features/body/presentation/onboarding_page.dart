@@ -423,6 +423,12 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       } else {
         setState(() => _error = appL10n.onboardingConflictRetry);
       }
+    } on ServerException catch (error) {
+      setState(
+        () => _error = error.statusCode == 503
+            ? appL10n.onboardingServiceUnavailable
+            : error.message,
+      );
     } catch (error) {
       setState(
         () => _error = error is ApiException
