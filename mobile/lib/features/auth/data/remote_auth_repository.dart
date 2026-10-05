@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/network/auth_session_manager.dart';
 import '../../../core/network/dio_error_mapper.dart';
 import '../../../core/storage/secure_storage_service.dart';
+import '../../../core/storage/install_state_service.dart';
 import '../domain/auth_user.dart';
 import 'auth_repository.dart';
 import 'dto/auth_dto.dart';
@@ -26,6 +28,7 @@ class RemoteAuthRepository implements AuthRepository {
   RemoteAuthRepository({
     required this.dio,
     required this.storage,
+    required this.installState,
     required this.googleAuthClient,
     required this.errorMapper,
     required this.sessionManager,
@@ -33,14 +36,23 @@ class RemoteAuthRepository implements AuthRepository {
 
   final Dio dio;
   final SecureStorageService storage;
+  final InstallStateService installState;
   final GoogleAuthClient googleAuthClient;
   final DioErrorMapper errorMapper;
   final AuthSessionManager sessionManager;
 
   @override
   Future<AuthUser?> restoreSession() async {
+    await installState.prepareForSessionRestore();
     final accessToken = await storage.readAccessToken();
     final refreshToken = await storage.readRefreshToken();
+    if (kDebugMode) {
+      debugPrint(
+        '[BiteSync] restoreSession: '
+        'hasAccessToken=${accessToken != null && accessToken.isNotEmpty} '
+        'hasRefreshToken=${refreshToken != null && refreshToken.isNotEmpty}',
+      );
+    }
     if ((accessToken == null || accessToken.isEmpty) &&
         (refreshToken == null || refreshToken.isEmpty)) {
       return null;

@@ -1453,6 +1453,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboardingRecommendationFailed => '暂时无法获取推荐，请重试';
 
   @override
+  String get recommendationUnavailable =>
+      '当前服务器暂不支持热量推荐，请确认服务已更新后重试。你仍可手动设置目标并继续。';
+
+  @override
   String get onboardingSubmitFailed => '提交失败，请重试';
 
   @override

@@ -2788,6 +2788,12 @@ abstract class AppLocalizations {
   /// **'暂时无法获取推荐，请重试'**
   String get onboardingRecommendationFailed;
 
+  /// No description provided for @recommendationUnavailable.
+  ///
+  /// In zh, this message translates to:
+  /// **'当前服务器暂不支持热量推荐，请确认服务已更新后重试。你仍可手动设置目标并继续。'**
+  String get recommendationUnavailable;
+
   /// No description provided for @onboardingSubmitFailed.
   ///
   /// In zh, this message translates to:

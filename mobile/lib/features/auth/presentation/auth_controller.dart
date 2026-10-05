@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_exception.dart';
@@ -42,10 +43,24 @@ class AuthController extends Notifier<AuthState> {
       state = user != null
           ? AuthAuthenticated(user)
           : const AuthUnauthenticated();
+      if (kDebugMode) {
+        debugPrint(
+          user == null
+              ? '[BiteSync] auth restoration result: unauthenticated'
+              : '[BiteSync] auth restoration result: authenticated '
+                    'onboardingCompleted=${user.onboardingCompleted}',
+        );
+      }
     } on ApiException catch (error) {
       state = AuthRestoreFailed(message: error.message);
+      if (kDebugMode) {
+        debugPrint('[BiteSync] auth restoration result: failed');
+      }
     } catch (_) {
       state = AuthRestoreFailed(message: appL10n.authRestoreFailed);
+      if (kDebugMode) {
+        debugPrint('[BiteSync] auth restoration result: failed');
+      }
     }
   }
 

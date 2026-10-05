@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:bytesync/l10n/l10n.dart';
 
 import '../../../core/network/api_endpoints.dart';
 import '../../../core/network/dio_error_mapper.dart';
@@ -124,7 +125,11 @@ class RemoteBodyRepository implements BodyRepository {
         ),
       ).toDomain();
     } catch (error) {
-      throw _errorMapper.map(error);
+      final mapped = _errorMapper.map(error);
+      if (mapped is NotFoundException) {
+        throw NotFoundException(appL10n.recommendationUnavailable);
+      }
+      throw mapped;
     }
   }
 

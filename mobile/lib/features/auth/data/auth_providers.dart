@@ -18,6 +18,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return RemoteAuthRepository(
     dio: ref.watch(dioProvider),
     storage: ref.watch(secureStorageServiceProvider),
+    installState: ref.watch(installStateServiceProvider),
     googleAuthClient: ref.watch(googleAuthClientProvider),
     errorMapper: ref.watch(dioErrorMapperProvider),
     sessionManager: ref.watch(authSessionManagerProvider),

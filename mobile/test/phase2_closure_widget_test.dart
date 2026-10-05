@@ -158,6 +158,7 @@ Future<void> _pumpSummary(
 }) async {
   await tester.pumpWidget(
     ProviderScope(
+      key: UniqueKey(),
       overrides: [
         pairControllerProvider.overrideWith(
           () => _FixedPairController(pairState),
@@ -289,6 +290,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
       await tester.pump();
 
+      await tester.drag(find.byType(ListView), const Offset(0, -1000));
+      await tester.pumpAndSettle();
       expect(find.text('账号与隐私'), findsOneWidget);
       expect(find.text('删除账号'), findsNothing);
       await tester.tap(find.text('账号与隐私'));

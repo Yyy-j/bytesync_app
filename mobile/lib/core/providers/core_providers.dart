@@ -5,6 +5,7 @@ import '../network/auth_event_bus.dart';
 import '../network/auth_session_manager.dart';
 import '../network/dio_error_mapper.dart';
 import '../network/dio_factory.dart';
+import '../storage/install_state_service.dart';
 import '../storage/secure_storage_service.dart';
 
 /// Shared, cross-feature infrastructure. Every feature builds on top of
@@ -12,6 +13,13 @@ import '../storage/secure_storage_service.dart';
 /// [SecureStorageService] / [DioErrorMapper].
 final secureStorageServiceProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService();
+});
+
+final installStateServiceProvider = Provider<InstallStateService>((ref) {
+  return InstallStateService(
+    SharedPreferencesInstallMarkerStore(),
+    ref.watch(secureStorageServiceProvider),
+  );
 });
 
 final authEventBusProvider = Provider<AuthEventBus>((ref) {

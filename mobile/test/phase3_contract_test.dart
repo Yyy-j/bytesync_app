@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bytesync/core/network/dio_error_mapper.dart';
+import 'package:bytesync/core/network/api_exception.dart';
 import 'package:bytesync/features/auth/data/dto/current_user_response_dto.dart';
 import 'package:bytesync/features/body/data/remote_body_repository.dart';
 import 'package:bytesync/features/body/domain/body_validation.dart';
@@ -30,15 +31,50 @@ class _Adapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-ResponseBody _json(Map<String, dynamic> body) => ResponseBody.fromString(
-  jsonEncode(body),
-  200,
-  headers: {
-    Headers.contentTypeHeader: ['application/json'],
-  },
-);
+ResponseBody _json(Map<String, dynamic> body, {int statusCode = 200}) =>
+    ResponseBody.fromString(
+      jsonEncode(body),
+      statusCode,
+      headers: {
+        Headers.contentTypeHeader: ['application/json'],
+      },
+    );
 
 void main() {
+  test('recommendation 404 has endpoint-specific guidance', () async {
+    late String requestedPath;
+    final dio = Dio()
+      ..httpClientAdapter = _Adapter((options) {
+        requestedPath = options.path;
+        return _json({'detail': 'Not Found'}, statusCode: 404);
+      });
+    final repository = RemoteBodyRepository(dio, const DioErrorMapper());
+
+    await expectLater(
+      repository.recommend(
+        BodyInput(
+          birthYear: 1998,
+          sexForEnergyEstimate: 'male',
+          heightCm: 170,
+          currentWeightKg: 63,
+          targetWeightKg: 58,
+          targetDate: DateTime(2027, 1, 1),
+          activityLevel: 'moderate',
+        ),
+      ),
+      throwsA(
+        isA<NotFoundException>()
+            .having(
+              (error) => error.message,
+              'message',
+              contains('当前服务器暂不支持热量推荐'),
+            )
+            .having((error) => error.message, 'raw detail', isNot('Not Found')),
+      ),
+    );
+    expect(requestedPath, '/users/me/calorie-recommendation');
+  });
+
   test('current user DTO accepts nullable Phase 3 fields', () {
     final dto = CurrentUserResponseDto.fromJson({
       'id': 'user-1',

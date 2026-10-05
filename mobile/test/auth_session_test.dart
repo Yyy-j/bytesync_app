@@ -11,6 +11,7 @@ import 'package:bytesync/core/network/auth_interceptor.dart';
 import 'package:bytesync/core/network/auth_session_manager.dart';
 import 'package:bytesync/core/network/dio_error_mapper.dart';
 import 'package:bytesync/core/storage/secure_storage_service.dart';
+import 'package:bytesync/core/storage/install_state_service.dart';
 import 'package:bytesync/features/auth/data/google_auth_client.dart';
 import 'package:bytesync/features/auth/data/remote_auth_repository.dart';
 import 'package:bytesync/features/auth/data/auth_providers.dart';
@@ -70,6 +71,21 @@ class _MemorySecureStorage extends SecureStorageService {
   }
 }
 
+class _MemoryInstallMarker implements InstallMarkerStore {
+  _MemoryInstallMarker({required this.initialized});
+
+  bool? initialized;
+
+  @override
+  Future<bool?> readInitialized() async => initialized;
+
+  @override
+  Future<void> markInitialized() async => initialized = true;
+}
+
+InstallStateService _initializedInstallState(SecureStorageService storage) =>
+    InstallStateService(_MemoryInstallMarker(initialized: true), storage);
+
 ResponseBody _json(int status, Map<String, dynamic> body) {
   return ResponseBody.fromString(
     jsonEncode(body),
@@ -120,6 +136,114 @@ class _Harness {
 
 void main() {
   test(
+    'fresh install clears Keychain residue before session restoration',
+    () async {
+      var resourceCalls = 0;
+      final harness = _Harness(
+        resourceHandler: (_) {
+          resourceCalls++;
+          return _json(200, {'id': 'stale-user', 'provider': 'google'});
+        },
+        refreshHandler: (_) => _tokenPair(),
+      );
+      await harness.storage.saveTokenPair(
+        accessToken: 'old-access',
+        refreshToken: 'old-refresh',
+        refreshedAt: DateTime.now().toUtc(),
+      );
+      final marker = _MemoryInstallMarker(initialized: null);
+      final repository = RemoteAuthRepository(
+        dio: harness.resourceDio,
+        storage: harness.storage,
+        installState: InstallStateService(marker, harness.storage),
+        googleAuthClient: GoogleAuthClient(),
+        errorMapper: const DioErrorMapper(),
+        sessionManager: harness.sessionManager,
+      );
+      final container = ProviderContainer(
+        overrides: [authRepositoryProvider.overrideWithValue(repository)],
+      );
+      final unauthenticated = Completer<AuthUnauthenticated>();
+      final subscription = container.listen<AuthState>(authControllerProvider, (
+        _,
+        next,
+      ) {
+        if (next is AuthUnauthenticated && !unauthenticated.isCompleted) {
+          unauthenticated.complete(next);
+        }
+      }, fireImmediately: true);
+
+      await unauthenticated.future;
+
+      expect(harness.storage.clearCount, 1);
+      expect(harness.storage.accessToken, isNull);
+      expect(harness.storage.refreshToken, isNull);
+      expect(marker.initialized, isTrue);
+      expect(resourceCalls, 0);
+      expect(
+        container.read(authControllerProvider),
+        isA<AuthUnauthenticated>(),
+      );
+
+      subscription.close();
+      container.dispose();
+      harness.dispose();
+    },
+  );
+
+  test('normal relaunch keeps tokens and restores the session', () async {
+    var resourceCalls = 0;
+    final harness = _Harness(
+      resourceHandler: (_) {
+        resourceCalls++;
+        return _json(200, {
+          'id': 'user-1',
+          'provider': 'google',
+          'onboarding_completed_at': '2026-09-27T00:00:00Z',
+        });
+      },
+      refreshHandler: (_) => _tokenPair(),
+    );
+    await harness.storage.saveTokenPair(
+      accessToken: 'access-1',
+      refreshToken: 'refresh-1',
+      refreshedAt: DateTime.now().toUtc(),
+    );
+    final repository = RemoteAuthRepository(
+      dio: harness.resourceDio,
+      storage: harness.storage,
+      installState: _initializedInstallState(harness.storage),
+      googleAuthClient: GoogleAuthClient(),
+      errorMapper: const DioErrorMapper(),
+      sessionManager: harness.sessionManager,
+    );
+    final container = ProviderContainer(
+      overrides: [authRepositoryProvider.overrideWithValue(repository)],
+    );
+    final authenticated = Completer<AuthAuthenticated>();
+    final subscription = container.listen<AuthState>(authControllerProvider, (
+      _,
+      next,
+    ) {
+      if (next is AuthAuthenticated && !authenticated.isCompleted) {
+        authenticated.complete(next);
+      }
+    }, fireImmediately: true);
+
+    final restored = await authenticated.future;
+
+    expect(restored.user.id, 'user-1');
+    expect(harness.storage.clearCount, 0);
+    expect(harness.storage.accessToken, 'access-1');
+    expect(harness.storage.refreshToken, 'refresh-1');
+    expect(resourceCalls, 1);
+
+    subscription.close();
+    container.dispose();
+    harness.dispose();
+  });
+
+  test(
     'cold start refreshes an expired access token and restores user',
     () async {
       var refreshCalls = 0;
@@ -147,6 +271,7 @@ void main() {
       final repository = RemoteAuthRepository(
         dio: harness.resourceDio,
         storage: harness.storage,
+        installState: _initializedInstallState(harness.storage),
         googleAuthClient: GoogleAuthClient(),
         errorMapper: const DioErrorMapper(),
         sessionManager: harness.sessionManager,
@@ -254,6 +379,7 @@ void main() {
     final repository = RemoteAuthRepository(
       dio: harness.resourceDio,
       storage: harness.storage,
+      installState: _initializedInstallState(harness.storage),
       googleAuthClient: GoogleAuthClient(),
       errorMapper: const DioErrorMapper(),
       sessionManager: harness.sessionManager,
@@ -351,6 +477,7 @@ void main() {
       final repository = RemoteAuthRepository(
         dio: harness.resourceDio,
         storage: harness.storage,
+        installState: _initializedInstallState(harness.storage),
         googleAuthClient: GoogleAuthClient(),
         errorMapper: const DioErrorMapper(),
         sessionManager: harness.sessionManager,

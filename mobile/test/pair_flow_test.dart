@@ -26,6 +26,11 @@ final _user = AuthUser(
   onboardingCompletedAt: DateTime(2026, 9, 27),
   email: 'one@example.com',
 );
+const _incompleteUser = AuthUser(
+  id: 'user-new',
+  provider: 'google',
+  email: 'new@example.com',
+);
 final _pair = Pair(
   pairId: 'pair-1',
   inviteCode: 'ABC123',
@@ -268,6 +273,24 @@ void main() {
     await _settle(tester);
 
     expect(find.text('使用 Google 登录'), findsOneWidget);
+  });
+
+  testWidgets('恢复的未完成 onboarding session 进入 /onboarding', (tester) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(
+            _FakeAuthRepository(restoredUser: _incompleteUser),
+          ),
+          pairRepositoryProvider.overrideWithValue(_FakePairRepository()),
+        ],
+        child: const BiteSyncApp(),
+      ),
+    );
+    await _settle(tester);
+
+    expect(find.text('开始使用 BiteSync'), findsOneWidget);
+    expect(find.byType(HomeShell), findsNothing);
   });
 
   testWidgets('已登录未配对用户直接进入主页', (tester) async {

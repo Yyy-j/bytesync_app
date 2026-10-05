@@ -10,6 +10,16 @@ import 'package:bytesync/features/summary/domain/daily_summary.dart';
 import 'package:bytesync/features/summary/presentation/summary_controller.dart';
 import 'package:bytesync/features/summary/presentation/summary_page.dart';
 import 'package:bytesync/features/profile/domain/user_character.dart';
+import 'package:bytesync/features/pair/domain/pair_state.dart';
+import 'package:bytesync/features/pair/presentation/pair_controller.dart';
+
+class _FixedPairController extends PairController {
+  @override
+  PairState build() => const PairNotFound();
+
+  @override
+  Future<void> refresh({bool showLoading = true}) async {}
+}
 
 class _FakeSummaryRepository implements SummaryRepository {
   int monthlyCalls = 0;
@@ -310,7 +320,10 @@ void main() {
   test('controller selects dates and reuses monthly cache', () async {
     final repository = _FakeSummaryRepository();
     final container = ProviderContainer(
-      overrides: [summaryRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        summaryRepositoryProvider.overrideWithValue(repository),
+        pairControllerProvider.overrideWith(_FixedPairController.new),
+      ],
     );
     addTearDown(container.dispose);
 
@@ -318,13 +331,16 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(controller.selectedDate.day, DateTime.now().day);
     final initialMonthlyCalls = repository.monthlyCalls;
+    final now = DateTime.now();
+    final currentMonthDate = DateTime(now.year, now.month, 15);
+    final previousMonth = DateTime(now.year, now.month - 1);
 
-    await controller.selectDate(DateTime(2026, 9, 15));
-    expect(controller.selectedDate, DateTime(2026, 9, 15));
-    expect(repository.dailyDates.last, DateTime(2026, 9, 15));
+    await controller.selectDate(currentMonthDate);
+    expect(controller.selectedDate, currentMonthDate);
+    expect(repository.dailyDates.last, currentMonthDate);
 
-    await controller.changeMonth(DateTime(2026, 8));
-    await controller.changeMonth(DateTime(2026, 9));
+    await controller.changeMonth(previousMonth);
+    await controller.changeMonth(DateTime(now.year, now.month));
     expect(repository.monthlyCalls, initialMonthlyCalls + 1);
 
     await controller.goToToday();
@@ -334,7 +350,10 @@ void main() {
   test('monthly failure stays separate from daily state', () async {
     final repository = _FakeSummaryRepository()..failMonthly = true;
     final container = ProviderContainer(
-      overrides: [summaryRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        summaryRepositoryProvider.overrideWithValue(repository),
+        pairControllerProvider.overrideWith(_FixedPairController.new),
+      ],
     );
     addTearDown(container.dispose);
 

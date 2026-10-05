@@ -5,6 +5,7 @@ import 'package:bytesync/core/network/dio_error_mapper.dart';
 import 'package:bytesync/core/network/auth_event_bus.dart';
 import 'package:bytesync/core/network/auth_session_manager.dart';
 import 'package:bytesync/core/storage/secure_storage_service.dart';
+import 'package:bytesync/core/storage/install_state_service.dart';
 import 'package:bytesync/features/auth/data/google_auth_client.dart';
 import 'package:bytesync/features/auth/data/remote_auth_repository.dart';
 import 'package:bytesync/features/profile/data/dto/user_profile_dto.dart';
@@ -41,6 +42,14 @@ class _MemorySecureStorage extends SecureStorageService {
     refreshToken = null;
     refreshedAt = null;
   }
+}
+
+class _InitializedInstallMarker implements InstallMarkerStore {
+  @override
+  Future<bool?> readInitialized() async => true;
+
+  @override
+  Future<void> markInitialized() async {}
 }
 
 void main() {
@@ -89,6 +98,7 @@ void main() {
     final repository = RemoteAuthRepository(
       dio: Dio(),
       storage: storage,
+      installState: InstallStateService(_InitializedInstallMarker(), storage),
       googleAuthClient: GoogleAuthClient(),
       errorMapper: const DioErrorMapper(),
       sessionManager: sessionManager,
