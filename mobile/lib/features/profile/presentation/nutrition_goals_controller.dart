@@ -8,6 +8,7 @@ import '../../summary/presentation/summary_controller.dart';
 import '../data/user_providers.dart';
 import '../data/user_repository.dart';
 import '../domain/user_profile.dart';
+import 'profile_controller.dart';
 
 sealed class NutritionGoalsState {
   const NutritionGoalsState();
@@ -80,6 +81,9 @@ class NutritionGoalsController
     state = NutritionGoalsReady(profile: current.profile, saving: true);
     try {
       final profile = await _repository.updateNutritionGoals(goals);
+      if (ref.exists(profileControllerProvider)) {
+        await ref.read(profileControllerProvider.notifier).refresh();
+      }
       await ref.read(summaryControllerProvider.notifier).refresh();
       state = NutritionGoalsReady(profile: profile);
       return const NutritionGoalsSaveResult.success();

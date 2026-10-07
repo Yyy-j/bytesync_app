@@ -41,6 +41,28 @@ ResponseBody _json(Map<String, dynamic> body, {int statusCode = 200}) =>
     );
 
 void main() {
+  test('network mapper hides server and unknown diagnostics', () {
+    const mapper = DioErrorMapper();
+    final request = RequestOptions(path: '/users/me/body');
+    final server = mapper.map(
+      DioException(
+        requestOptions: request,
+        response: Response<Map<String, dynamic>>(
+          requestOptions: request,
+          statusCode: 503,
+          data: {'detail': 'Database unavailable: private host'},
+        ),
+      ),
+    );
+    final unknown = mapper.map(StateError('private implementation detail'));
+
+    expect(server, isA<ServerException>());
+    expect(server.message, '服务器开小差了，请稍后重试');
+    expect(server.message, isNot(contains('Database')));
+    expect(unknown, isA<UnknownApiException>());
+    expect(unknown.message, isNot(contains('private implementation')));
+  });
+
   test('recommendation 404 has endpoint-specific guidance', () async {
     late String requestedPath;
     final dio = Dio()

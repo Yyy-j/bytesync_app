@@ -16,7 +16,7 @@ class DioErrorMapper {
   ApiException map(Object error) {
     if (error is ApiException) return error;
     if (error is DioException) return _fromDio(error);
-    return UnknownApiException(error.toString());
+    return UnknownApiException();
   }
 
   ApiException _fromDio(DioException error) {
@@ -44,9 +44,11 @@ class DioErrorMapper {
     if (statusCode == 409) return ConflictException(detail);
     if (statusCode == 422) return ValidationException(detail, statusCode);
     if (statusCode >= 500 && statusCode < 600) {
-      return ServerException(detail, statusCode);
+      // Server diagnostics are untrusted and can contain database or stack
+      // details. The UI gets a stable retryable message instead.
+      return ServerException(null, statusCode);
     }
-    return UnknownApiException(detail ?? 'HTTP $statusCode');
+    return UnknownApiException();
   }
 
   /// FastAPI error bodies come in three shapes:
