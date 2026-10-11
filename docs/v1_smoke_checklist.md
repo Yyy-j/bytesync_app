@@ -14,5 +14,6 @@
 - [ ] End Pair；两端回到 Single，历史 shared meal 可读但 edit/delete/refine 不可用，allocation 保留。
 - [ ] Logout 后回 Login；重新登录及 App relaunch 都能恢复合法 session。
 - [ ] Connected 状态下用可丢弃账号执行 Delete Account；确认另一方账号、Meal、Training、Body 仍在且变为 Single。
+- [ ] Light / Dark Mode 各快速浏览一次主要页面，确认无 overflow、不可见按钮、不可操作控件。
 
 失败时记录账号、时间、步骤、HTTP 状态（如可见）与截图；不要粘贴 token、cookie 或完整服务端响应。

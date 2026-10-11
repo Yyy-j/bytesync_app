@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 
 import 'package:bytesync/app/app.dart';
 import 'package:bytesync/app/home_shell.dart';
@@ -156,8 +155,6 @@ Future<void> _pumpRoute(WidgetTester tester) async {
 }
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
   testWidgets('restore retry -> onboarding -> Home -> relaunch -> 401 Login', (
     tester,
   ) async {
